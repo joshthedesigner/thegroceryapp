@@ -8,7 +8,6 @@ import TrendsGraph from '../components/TrendsGraph'
 import IngredientUsageProgress from '../components/IngredientUsageProgress'
 import DashboardTable from '../components/DashboardTable'
 import MetricDetailsModal from '../components/MetricDetailsModal'
-import DebugInfo from '../components/DebugInfo'
 
 const { Title } = Typography
 
@@ -46,9 +45,6 @@ const Dashboard = ({ user }) => {
     setMetricDetailsVisible(true)
   }
 
-  // Check if the error is a database connection issue
-  const isDatabaseError = error && error.includes('does not exist')
-
   return (
     <div className="page-container">
       <div className="page-header">
@@ -57,28 +53,8 @@ const Dashboard = ({ user }) => {
         </Title>
       </div>
 
-      {/* Debug Information */}
-      <DebugInfo 
-        user={user}
-        ingredientsError={ingredientsError}
-        mealsError={mealsError}
-        ingredientsLoading={ingredientsLoading}
-        mealsLoading={mealsLoading}
-      />
-
-      {/* Show database setup message if tables don't exist */}
-      {isDatabaseError && (
-        <Alert
-          message="Database Setup Required"
-          description="The database tables need to be created. Please run the SQL script in your Supabase dashboard to set up the required tables."
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-      )}
-
-      {/* Show other errors */}
-      {error && !isDatabaseError && (
+      {/* Show errors if any */}
+      {error && (
         <Alert
           message="Error Loading Dashboard"
           description={error}
