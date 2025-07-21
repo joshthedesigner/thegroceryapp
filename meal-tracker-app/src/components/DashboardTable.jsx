@@ -9,7 +9,8 @@ import {
   Tag, 
   Tooltip,
   Button,
-  Modal
+  Modal,
+  Progress
 } from 'antd'
 import { 
   SearchOutlined, 
@@ -87,6 +88,19 @@ const DashboardTable = ({
     setDetailsVisible(true)
   }
 
+  // Helper functions for usage calculations
+  const getUsagePercentage = (ingredient) => {
+    if (!ingredient.amount_purchased || ingredient.amount_purchased === 0) return 0
+    return Math.round((ingredient.amount_used / ingredient.amount_purchased) * 100)
+  }
+
+  const getUsageStatus = (ingredient) => {
+    const percentage = getUsagePercentage(ingredient)
+    if (percentage >= 80) return 'success' // Green - mostly used
+    if (percentage >= 30) return 'warning' // Yellow - partially used
+    return 'exception' // Red - barely used
+  }
+
   // Ingredients table columns
   const ingredientColumns = [
     {
@@ -102,35 +116,32 @@ const DashboardTable = ({
       dataIndex: 'price',
       key: 'price',
       render: (price) => (
-        <Space>
-          <DollarOutlined />
-          <Text strong>${price.toFixed(2)}</Text>
-        </Space>
+        <Text strong>${price.toFixed(2)}</Text>
       ),
       sorter: (a, b) => a.price - b.price
-    },
-    {
-      title: 'Amount Used',
-      key: 'amount_used',
-      render: (_, record) => (
-        <Text>
-          {record.amount_used}{record.unit} / {record.amount_purchased}{record.unit}
-        </Text>
-      ),
-      sorter: (a, b) => a.amount_used - b.amount_used
     },
     {
       title: 'Percent Used',
       key: 'percent_used',
       render: (_, record) => {
-        const percentage = record.amount_purchased > 0 
-          ? (record.amount_used / record.amount_purchased) * 100 
-          : 0
-        return <Text>{percentage.toFixed(1)}%</Text>
+        const percentage = getUsagePercentage(record)
+        const status = getUsageStatus(record)
+        
+        return (
+          <div className="progress-container">
+            <Progress 
+              percent={percentage} 
+              status={status}
+              size="small"
+              style={{ flex: 1 }}
+            />
+            <span className="progress-text">{percentage}%</span>
+          </div>
+        )
       },
       sorter: (a, b) => {
-        const aPercent = a.amount_purchased > 0 ? (a.amount_used / a.amount_purchased) * 100 : 0
-        const bPercent = b.amount_purchased > 0 ? (b.amount_used / b.amount_purchased) * 100 : 0
+        const aPercent = getUsagePercentage(a)
+        const bPercent = getUsagePercentage(b)
         return aPercent - bPercent
       }
     },
@@ -141,10 +152,7 @@ const DashboardTable = ({
         const usageRatio = record.amount_remaining / record.amount_purchased
         const remainingValue = record.price * usageRatio
         return (
-          <Space>
-            <DollarOutlined />
-            <Text type="danger">${remainingValue.toFixed(2)}</Text>
-          </Space>
+          <Text type="danger">${remainingValue.toFixed(2)}</Text>
         )
       },
       sorter: (a, b) => {
@@ -157,58 +165,38 @@ const DashboardTable = ({
       title: 'Status',
       key: 'status',
       render: (_, record) => {
-        const percentage = record.amount_purchased > 0 
-          ? (record.amount_used / record.amount_purchased) * 100 
-          : 0
-        
+        const status = getUsageStatus(record)
         let color, text
-        if (percentage >= 80) {
-          color = 'success'
-          text = 'Fully Used'
-        } else if (percentage >= 50) {
-          color = 'warning'
-          text = 'Partially Used'
-        } else {
-          color = 'error'
-          text = 'Unused'
+        
+        switch (status) {
+          case 'success':
+            color = 'green'
+            text = 'Mostly Used'
+            break
+          case 'warning':
+            color = 'orange'
+            text = 'Partially Used'
+            break
+          case 'exception':
+            color = 'red'
+            text = 'Barely Used'
+            break
+          default:
+            color = 'default'
+            text = 'Unknown'
         }
         
         return <Tag color={color}>{text}</Tag>
       },
       filters: [
-        { text: 'Fully Used', value: 'fully' },
-        { text: 'Partially Used', value: 'partial' },
-        { text: 'Unused', value: 'unused' }
+        { text: 'Mostly Used', value: 'success' },
+        { text: 'Partially Used', value: 'warning' },
+        { text: 'Barely Used', value: 'exception' }
       ],
       onFilter: (value, record) => {
-        const percentage = record.amount_purchased > 0 
-          ? (record.amount_used / record.amount_purchased) * 100 
-          : 0
-        
-        switch (value) {
-          case 'fully':
-            return percentage >= 80
-          case 'partial':
-            return percentage >= 50 && percentage < 80
-          case 'unused':
-            return percentage < 50
-          default:
-            return true
-        }
+        const status = getUsageStatus(record)
+        return status === value
       }
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          />
-        </Tooltip>
-      )
     }
   ]
 
