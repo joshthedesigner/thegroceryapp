@@ -9,9 +9,9 @@ const AuthCallback = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Attempt to fetch the current user and redirect
     const checkAuth = async () => {
-      const { user } = await getCurrentUser()
+      const { user, error } = await getCurrentUser()
+      console.log('[AuthCallback] getCurrentUser result:', { user, error })
       if (user) {
         navigate('/dashboard', { replace: true })
       } else {
