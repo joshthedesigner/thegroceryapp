@@ -321,31 +321,40 @@ const DashboardTable = ({
     <>
       <Card>
         <Space direction="vertical" style={{ width: '100%' }}>
-          {/* Header with toggle and search */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={4} style={{ margin: 0 }}>
+          {/* Restore previous working header row layout */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 16,
+              marginBottom: 20,
+              width: '100%',
+            }}
+          >
+            <Title level={4} style={{ margin: 0, minWidth: 180, textAlign: 'left' }}>
               {viewMode === 'ingredients' ? 'Ingredients' : 'Meals'} Overview
             </Title>
-            
-            <Space>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <Search
                 placeholder={`Search ${viewMode}...`}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250 }}
+                style={{ width: 250, minWidth: 150, padding: '6px 12px' }}
                 allowClear
               />
-              
-              <Radio.Group 
-                value={viewMode} 
+              <Radio.Group
+                value={viewMode}
                 onChange={(e) => setViewMode(e.target.value)}
                 buttonStyle="solid"
                 size="small"
+                style={{ minWidth: 180, padding: '6px 12px' }}
               >
                 <Radio.Button value="ingredients">Ingredients</Radio.Button>
                 <Radio.Button value="meals">Meals</Radio.Button>
               </Radio.Group>
-            </Space>
+            </div>
           </div>
 
           {/* Table */}

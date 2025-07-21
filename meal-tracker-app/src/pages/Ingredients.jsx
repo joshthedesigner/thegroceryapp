@@ -169,7 +169,8 @@ const Ingredients = ({ user }) => {
                   background: '#fff',
                   border: '1px solid #e5e7eb', // gray-200
                   borderRadius: 8,
-                  padding: '12px 18px',
+                  height: 48,
+                  padding: '0 18px',
                   boxShadow: 'none',
                   gap: 8,
                 }}
@@ -185,6 +186,7 @@ const Ingredients = ({ user }) => {
                     outline: 'none',
                     display: 'flex',
                     alignItems: 'center',
+                    height: 48,
                   }}
                   aria-label="Previous week"
                 >
@@ -206,6 +208,7 @@ const Ingredients = ({ user }) => {
                     display: 'flex',
                     alignItems: 'center',
                     opacity: isCurrentWeek ? 0.5 : 1,
+                    height: 48,
                   }}
                   aria-label="Next week"
                 >
@@ -216,9 +219,9 @@ const Ingredients = ({ user }) => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => setIsModalVisible(true)}
-                style={{ minWidth: 140, padding: '0 24px', fontSize: 16, display: 'flex', alignItems: 'center', height: 'auto' }}
+                style={{ minWidth: 140, height: 48, padding: '0 24px', fontSize: 16, display: 'flex', alignItems: 'center' }}
               >
-                <span style={{ padding: '12px 0', display: 'inline-block', width: '100%' }}>Add Ingredient</span>
+                <span style={{ display: 'inline-block', width: '100%' }}>Add Ingredient</span>
               </Button>
             </div>
           </div>

@@ -1,13 +1,6 @@
 import React from 'react'
 import { Row, Col, Card, Statistic, Typography, Space } from 'antd'
-import { 
-  ShoppingCartOutlined, 
-  DollarOutlined, 
-  PieChartOutlined,
-  FireOutlined,
-  ClockCircleOutlined,
-  TrophyOutlined
-} from '@ant-design/icons'
+// Removed all icon imports
 
 const { Text } = Typography
 
@@ -94,36 +87,28 @@ const DashboardMetrics = ({
     {
       title: 'Total Ingredients',
       value: totalIngredients,
-      prefix: <ShoppingCartOutlined />,
       suffix: 'items',
-      color: '#1890ff',
       description: 'Ingredients purchased',
       type: 'totalIngredients'
     },
     {
       title: 'Distinct Ingredients',
       value: distinctIngredients,
-      prefix: <PieChartOutlined />,
       suffix: 'types',
-      color: '#52c41a',
       description: 'Unique ingredient types',
       type: 'distinctIngredients'
     },
     {
       title: 'Ingredients Used',
       value: totalUsed,
-      prefix: <FireOutlined />,
       suffix: 'units',
-      color: '#13c2c2',
       description: 'Total amount consumed',
       type: 'ingredientsUsed'
     },
     {
       title: 'Usage Efficiency',
       value: usagePercentage,
-      prefix: <TrophyOutlined />,
       suffix: '%',
-      color: '#722ed1',
       description: 'Percentage of ingredients used',
       formatter: (value) => `${value.toFixed(1)}%`,
       type: 'usageEfficiency'
@@ -131,9 +116,7 @@ const DashboardMetrics = ({
     {
       title: 'Total Value',
       value: totalValue,
-      prefix: <DollarOutlined />,
       suffix: '',
-      color: '#1890ff',
       description: 'Total value of ingredients',
       formatter: (value) => `$${value.toFixed(2)}`,
       type: 'totalValue'
@@ -141,9 +124,7 @@ const DashboardMetrics = ({
     {
       title: 'Unused Value',
       value: unusedValue,
-      prefix: <ClockCircleOutlined />,
       suffix: '',
-      color: '#f5222d',
       description: 'Value of unused ingredients',
       formatter: (value) => `$${value.toFixed(2)}`,
       type: 'unusedValue'
@@ -151,18 +132,14 @@ const DashboardMetrics = ({
     {
       title: 'Meals Logged',
       value: totalMeals,
-      prefix: <FireOutlined />,
       suffix: 'meals',
-      color: '#eb2f96',
       description: 'Total meals prepared',
       type: 'mealsLogged'
     },
     {
       title: 'Average Meal Cost',
       value: averageMealCost,
-      prefix: <DollarOutlined />,
       suffix: '',
-      color: '#fa8c16',
       description: 'Average cost per meal',
       formatter: (value) => `$${value.toFixed(2)}`,
       type: 'averageMealCost'
@@ -175,30 +152,27 @@ const DashboardMetrics = ({
         {metrics.map((metric, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card 
-              hoverable 
               style={{ 
                 height: '100%',
-                borderLeft: `4px solid ${metric.color}`,
-                cursor: 'pointer'
+                cursor: 'default',
+                background: '#fff',
               }}
-              onClick={() => onMetricClick && onMetricClick(metric.type)}
             >
               <Statistic
                 title={
                   <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text strong style={{ color: metric.color }}>
+                    <Text strong style={{ color: '#222' }}>
                       {metric.title}
                     </Text>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                    <Text type="secondary" style={{ fontSize: '12px', color: '#888' }}>
                       {metric.description}
                     </Text>
                   </Space>
                 }
                 value={metric.value}
-                prefix={metric.prefix}
                 suffix={metric.suffix}
                 valueStyle={{ 
-                  color: metric.color,
+                  color: '#222',
                   fontSize: '24px',
                   fontWeight: 'bold'
                 }}

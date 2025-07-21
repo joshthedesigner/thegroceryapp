@@ -105,7 +105,8 @@ const Meals = ({ user }) => {
                 background: '#fff',
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
-                padding: '12px 18px',
+                height: 48,
+                padding: '0 18px',
                 boxShadow: 'none',
                 gap: 8,
               }}
@@ -121,6 +122,7 @@ const Meals = ({ user }) => {
                   outline: 'none',
                   display: 'flex',
                   alignItems: 'center',
+                  height: 48,
                 }}
                 aria-label="Previous week"
               >
@@ -142,6 +144,7 @@ const Meals = ({ user }) => {
                   display: 'flex',
                   alignItems: 'center',
                   opacity: isCurrentWeek ? 0.5 : 1,
+                  height: 48,
                 }}
                 aria-label="Next week"
               >
@@ -152,9 +155,9 @@ const Meals = ({ user }) => {
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleAddMeal}
-              style={{ minWidth: 140, padding: '12px 24px' }}
+              style={{ minWidth: 140, height: 48, padding: '0 24px', fontSize: 16, display: 'flex', alignItems: 'center' }}
             >
-              Log Meal
+              <span style={{ display: 'inline-block', width: '100%' }}>Log Meal</span>
             </Button>
           </div>
         </div>

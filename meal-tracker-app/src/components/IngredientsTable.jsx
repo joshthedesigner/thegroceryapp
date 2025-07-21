@@ -166,23 +166,23 @@ const IngredientsTable = ({
 
   return (
     <div className="table-container">
-      <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
+      <div style={{ padding: '24px 16px 0 16px', borderBottom: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, gap: 16 }}>
+          <span style={{ fontWeight: 600, fontSize: 20 }}>Ingredients Overview</span>
+          <div style={{ display: 'flex', gap: 12 }}>
             <Search
               placeholder="Search ingredients..."
               allowClear
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
+              style={{ minWidth: 180 }}
             />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
             <Select
               placeholder="Filter by status"
               value={statusFilter}
               onChange={setStatusFilter}
-              style={{ width: '100%' }}
+              style={{ minWidth: 180 }}
               prefix={<FilterOutlined />}
             >
               <Option value="all">All Status</Option>
@@ -190,17 +190,10 @@ const IngredientsTable = ({
               <Option value="warning">Partially Used</Option>
               <Option value="exception">Barely Used</Option>
             </Select>
-          </Col>
-          <Col xs={24} sm={24} md={8}>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ color: '#8c8c8c' }}>
-                {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          </Col>
-        </Row>
+          </div>
+        </div>
+        <div style={{ borderBottom: '1px solid #f0f0f0', marginBottom: 8 }} />
       </div>
-      
       <Table
         columns={columns}
         dataSource={filteredIngredients}
@@ -215,6 +208,11 @@ const IngredientsTable = ({
         }}
         scroll={{ x: 800 }}
       />
+      <style>{`
+        .ant-table-pagination {
+          padding-right: 24px;
+        }
+      `}</style>
     </div>
   )
 }

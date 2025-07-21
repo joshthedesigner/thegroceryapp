@@ -13,12 +13,36 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
   ResponsiveContainer 
 } from 'recharts'
 import dayjs from 'dayjs'
 
 const { Title, Text } = Typography
+
+// Custom legend for top right
+const legendColors = {
+  totalValue: '#1890ff',
+  usedValue: '#00d084',
+  unusedValue: '#f5222d',
+}
+const legendLabels = {
+  totalValue: 'Purchased Value',
+  usedValue: 'Consumed Value',
+  unusedValue: 'Wasted Value',
+}
+
+function TrendsLegend() {
+  return (
+    <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'flex-end' }}>
+      {Object.keys(legendLabels).map(key => (
+        <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ display: 'inline-block', width: 14, height: 4, borderRadius: 2, background: legendColors[key] }} />
+          <span style={{ fontSize: 13, color: '#555' }}>{legendLabels[key]}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
 
 const TrendsGraph = ({ 
   ingredients = [], 
@@ -127,7 +151,7 @@ const TrendsGraph = ({
   }
 
   const getTooltipFormatter = (value, name) => {
-    return [`$${value}`, name]
+    return [`$${value}`, legendLabels[name] || name]
   }
 
   const getLegendFormatter = (value) => {
@@ -170,10 +194,13 @@ const TrendsGraph = ({
   return (
     <Card>
       <Space direction="vertical" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <Title level={4} style={{ margin: 0 }}>
             Trends Over Time
           </Title>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            <TrendsLegend />
+          </div>
         </div>
 
         <ResponsiveContainer width="100%" height={400}>
@@ -199,8 +226,6 @@ const TrendsGraph = ({
               formatter={getTooltipFormatter}
               labelFormatter={(label) => `Period: ${label}`}
             />
-            <Legend formatter={getLegendFormatter} />
-            
             <Line 
               type="monotone" 
               dataKey="totalValue" 

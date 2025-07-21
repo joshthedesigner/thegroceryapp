@@ -87,90 +87,60 @@ const Dashboard = ({ user }) => {
 
   return (
     <div className="page-container">
-      {/* Modern header with pill badge, inspired by reference image */}
-      <header
-        style={{
-          width: '100%',
-          padding: '28px 0 18px 0',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          borderBottom: '1px solid #f0f0f0',
-          background: 'transparent',
-          boxSizing: 'border-box',
-          marginBottom: 24,
-          gap: 18,
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-        }}
-      >
-        {/* Left: Dashboard Title */}
-        <Title
-          level={3}
-          style={{
-            margin: 0,
-            fontWeight: 700,
-            fontSize: '2rem',
-            letterSpacing: '-0.5px',
-            color: '#222',
-            lineHeight: 1.1,
-          }}
-        >
-          Dashboard
-        </Title>
-        {/* Right: Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          {/* Custom PeriodSelector */}
-          <PeriodSelector
-            value={timeFilter}
-            onChange={handleTimeFilterChange}
-          />
-          {/* TimeFilter Navigation (arrows + date) */}
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: '12px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <Button
-              icon={<LeftOutlined />}
-              size="small"
-              onClick={() => handleNavigate('prev')}
-              style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+      <div className="page-header">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+          <Title level={2} className="page-title" style={{ margin: 0 }}>
+            Dashboard
+          </Title>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <PeriodSelector
+              value={timeFilter}
+              onChange={handleTimeFilterChange}
             />
-            <Typography.Text strong style={{ fontSize: 14, minWidth: 180, textAlign: 'center' }}>
-              {/* Use TimeFilter's getPeriodDisplay logic inline */}
-              {(() => {
-                const now = dayjs()
-                if (timeFilter === 'week') {
-                  const weekStart = now.subtract(7 * periodOffset, 'day').startOf('week')
-                  const weekEnd = now.subtract(7 * periodOffset, 'day').endOf('week')
-                  return `${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`
-                } else if (timeFilter === 'month') {
-                  const monthDate = now.subtract(30 * periodOffset, 'day')
-                  return monthDate.format('MMMM YYYY')
-                } else if (timeFilter === 'year') {
-                  const yearDate = now.subtract(12 * periodOffset, 'month')
-                  return yearDate.format('YYYY')
-                }
-                return ''
-              })()}
-            </Typography.Text>
-            <Button
-              icon={<RightOutlined />}
-              size="small"
-              onClick={() => handleNavigate('next')}
-              style={{ background: 'none', border: 'none', boxShadow: 'none' }}
-            />
+            <div
+              style={{
+                background: '#fff',
+                border: '1px solid #e5e7eb',
+                borderRadius: 8,
+                padding: '12px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <Button
+                icon={<LeftOutlined />}
+                size="small"
+                onClick={() => handleNavigate('prev')}
+                style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+              />
+              <Typography.Text strong style={{ fontSize: 14, minWidth: 180, textAlign: 'center' }}>
+                {(() => {
+                  const now = dayjs()
+                  if (timeFilter === 'week') {
+                    const weekStart = now.subtract(7 * periodOffset, 'day').startOf('week')
+                    const weekEnd = now.subtract(7 * periodOffset, 'day').endOf('week')
+                    return `${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`
+                  } else if (timeFilter === 'month') {
+                    const monthDate = now.subtract(30 * periodOffset, 'day')
+                    return monthDate.format('MMMM YYYY')
+                  } else if (timeFilter === 'year') {
+                    const yearDate = now.subtract(12 * periodOffset, 'month')
+                    return yearDate.format('YYYY')
+                  }
+                  return ''
+                })()}
+              </Typography.Text>
+              <Button
+                icon={<RightOutlined />}
+                size="small"
+                onClick={() => handleNavigate('next')}
+                style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+              />
+            </div>
           </div>
-          {/* Main CTA placeholder (add if needed) */}
         </div>
-      </header>
+      </div>
 
       {/* Show errors if any */}
       {error && (
