@@ -123,6 +123,7 @@ const DashboardTable = ({
     {
       title: 'Percent Used',
       key: 'percent_used',
+      align: 'left',
       render: (_, record) => {
         const percentage = getUsagePercentage(record)
         const status = getUsageStatus(record)
