@@ -89,16 +89,6 @@ const DashboardMetrics = ({
       type: 'distinctIngredients'
     },
     {
-      title: 'Total Value',
-      value: totalValue,
-      prefix: <DollarOutlined />,
-      suffix: '',
-      color: '#1890ff',
-      description: 'Total value of ingredients',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'totalValue'
-    },
-    {
       title: 'Ingredients Used',
       value: totalUsed,
       prefix: <FireOutlined />,
@@ -116,6 +106,16 @@ const DashboardMetrics = ({
       description: 'Percentage of ingredients used',
       formatter: (value) => `${value.toFixed(1)}%`,
       type: 'usageEfficiency'
+    },
+    {
+      title: 'Total Value',
+      value: totalValue,
+      prefix: <DollarOutlined />,
+      suffix: '',
+      color: '#1890ff',
+      description: 'Total value of ingredients',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'totalValue'
     },
     {
       title: 'Unused Value',
