@@ -89,16 +89,6 @@ const DashboardMetrics = ({
       type: 'distinctIngredients'
     },
     {
-      title: 'Total Value',
-      value: totalValue,
-      prefix: <DollarOutlined />,
-      suffix: '',
-      color: '#faad14',
-      description: 'Value of ingredients purchased',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'totalValue'
-    },
-    {
       title: 'Ingredients Used',
       value: totalUsed,
       prefix: <FireOutlined />,
@@ -106,16 +96,6 @@ const DashboardMetrics = ({
       color: '#13c2c2',
       description: 'Total amount consumed',
       type: 'ingredientsUsed'
-    },
-    {
-      title: 'Unused Value',
-      value: unusedValue,
-      prefix: <ClockCircleOutlined />,
-      suffix: '',
-      color: '#f5222d',
-      description: 'Value of unused ingredients',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'unusedValue'
     },
     {
       title: 'Usage Efficiency',
@@ -126,6 +106,16 @@ const DashboardMetrics = ({
       description: 'Percentage of ingredients used',
       formatter: (value) => `${value.toFixed(1)}%`,
       type: 'usageEfficiency'
+    },
+    {
+      title: 'Unused Value',
+      value: unusedValue,
+      prefix: <ClockCircleOutlined />,
+      suffix: '',
+      color: '#f5222d',
+      description: 'Value of unused ingredients',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'unusedValue'
     },
     {
       title: 'Meals Logged',
