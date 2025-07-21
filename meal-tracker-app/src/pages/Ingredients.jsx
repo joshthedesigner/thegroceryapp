@@ -125,7 +125,7 @@ const Ingredients = ({ user }) => {
 
       <IngredientForm
         visible={isModalVisible}
-        editingIngredient={editingIngredient}
+        initialValues={editingIngredient}
         onCancel={handleCancel}
         onSubmit={handleSubmit}
         loading={formLoading}

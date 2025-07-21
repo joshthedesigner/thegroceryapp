@@ -7,7 +7,8 @@ import {
   DatePicker, 
   Button, 
   Space,
-  message 
+  message,
+  Modal
 } from 'antd'
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -15,6 +16,7 @@ import dayjs from 'dayjs'
 const { Option } = Select
 
 const IngredientForm = ({ 
+  visible,
   onSubmit, 
   initialValues = null, 
   loading = false, 
@@ -107,7 +109,14 @@ const IngredientForm = ({
   }, [initialValues, form])
 
   return (
-    <div className="form-container">
+    <Modal
+      title={initialValues ? "Edit Ingredient" : "Add Ingredient"}
+      open={visible}
+      onCancel={onCancel}
+      footer={null}
+      width={600}
+      destroyOnClose
+    >
       <Form
         form={form}
         layout="vertical"
@@ -233,7 +242,7 @@ const IngredientForm = ({
           </Space>
         </Form.Item>
       </Form>
-    </div>
+    </Modal>
   )
 }
 
