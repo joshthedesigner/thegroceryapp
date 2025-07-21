@@ -27,16 +27,6 @@ const TrendsGraph = ({
   loading = false 
 }) => {
 
-  // Debug logging for incoming data
-  console.log('TrendsGraph props:', {
-    ingredientsCount: ingredients.length,
-    mealsCount: meals.length,
-    timeFilter,
-    loading,
-    sampleIngredients: ingredients.slice(0, 2),
-    sampleMeals: meals.slice(0, 2)
-  })
-
   // Process data for chart
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []
@@ -103,21 +93,11 @@ const TrendsGraph = ({
         unusedValue: Math.round(unusedValue * 100) / 100
       }
 
-      // Debug logging
-      console.log(`Period ${dataPoint.date}:`, {
-        totalValue: dataPoint.totalValue,
-        usedValue: dataPoint.usedValue,
-        unusedValue: dataPoint.unusedValue,
-        periodMealsCount: periodMeals.length,
-        periodIngredientsCount: periodIngredients.length
-      })
-
       dataPoints.push(dataPoint)
 
       current = current.add(1, interval)
     }
 
-    console.log('Final chartData:', dataPoints)
     return dataPoints
   }, [ingredients, meals, timeFilter])
 
@@ -211,10 +191,10 @@ const TrendsGraph = ({
             <Line 
               type="monotone" 
               dataKey="usedValue" 
-              stroke="#52c41a" 
-              strokeWidth={2}
-              dot={{ fill: '#52c41a', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6 }}
+              stroke="#00d084" 
+              strokeWidth={3}
+              dot={{ fill: '#00d084', strokeWidth: 3, r: 5 }}
+              activeDot={{ r: 8 }}
             />
             <Line 
               type="monotone" 
