@@ -5,7 +5,6 @@ import { useMeals } from '../hooks/useMeals'
 import DashboardMetrics from '../components/DashboardMetrics'
 import TimeFilter from '../components/TimeFilter'
 import TrendsGraph from '../components/TrendsGraph'
-import IngredientUsageProgress from '../components/IngredientUsageProgress'
 import DashboardTable from '../components/DashboardTable'
 import MetricDetailsModal from '../components/MetricDetailsModal'
 
@@ -93,18 +92,10 @@ const Dashboard = ({ user }) => {
           {/* Main Content Grid */}
           <Row gutter={[24, 24]}>
             {/* Trends Graph */}
-            <Col xs={24} lg={16}>
+            <Col xs={24}>
               <TrendsGraph
                 ingredients={ingredients || []}
                 meals={meals || []}
-                timeFilter={timeFilter}
-              />
-            </Col>
-
-            {/* Ingredient Usage Progress */}
-            <Col xs={24} lg={8}>
-              <IngredientUsageProgress
-                ingredients={ingredients || []}
                 timeFilter={timeFilter}
               />
             </Col>
