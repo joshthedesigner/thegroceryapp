@@ -180,20 +180,6 @@ const MealsTable = ({
       columns={columns}
       loading={loading}
       rowKey="id"
-      expandable={{
-        expandedRowRender,
-        expandedRowKeys,
-        onExpand: handleExpand,
-        expandRowByClick: true,
-        expandIcon: ({ expanded, onExpand, record }) => (
-          <span
-            onClick={e => onExpand(record, e)}
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', fontSize: 16 }}
-          >
-            <DownOutlined style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
-          </span>
-        )
-      }}
       pagination={{
         pageSize: 10,
         showSizeChanger: true,

@@ -137,7 +137,7 @@ const DashboardTable = ({
       dataIndex: 'price',
       key: 'price',
       render: (price) => (
-        <Text strong>${price.toFixed(2)}</Text>
+        <Text style={{ fontWeight: 400 }}>${price.toFixed(2)}</Text>
       ),
       sorter: (a, b) => a.price - b.price
     },
@@ -150,7 +150,7 @@ const DashboardTable = ({
         const status = getUsageStatus(record)
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 160 }}>
-            <span style={{ minWidth: 38, fontWeight: 500 }}>{percentage}%</span>
+            <span style={{ minWidth: 38, fontWeight: 400 }}>{percentage}%</span>
             <Progress 
               percent={percentage} 
               status={status}
@@ -174,7 +174,7 @@ const DashboardTable = ({
         const usageRatio = record.amount_remaining / record.amount_purchased
         const remainingValue = record.price * usageRatio
         return (
-          <Text type="danger">${remainingValue.toFixed(2)}</Text>
+          <Text style={{ color: '#222', fontWeight: 400 }}>${remainingValue.toFixed(2)}</Text>
         )
       },
       sorter: (a, b) => {
@@ -237,10 +237,7 @@ const DashboardTable = ({
       dataIndex: 'date_cooked',
       key: 'date_cooked',
       render: (date) => (
-        <Space>
-          <CalendarOutlined />
-          <Text>{dayjs(date).format('MMM DD, YYYY')}</Text>
-        </Space>
+        <Text style={{ color: '#222', fontWeight: 400 }}>{dayjs(date).format('MMM DD, YYYY')}</Text>
       ),
       sorter: (a, b) => dayjs(a.date_cooked).unix() - dayjs(b.date_cooked).unix(),
       defaultSortOrder: 'descend'
@@ -250,27 +247,19 @@ const DashboardTable = ({
       key: 'ingredients_used',
       render: (_, record) => {
         if (!record.meal_ingredients || record.meal_ingredients.length === 0) {
-          return <Text type="secondary">No ingredients</Text>
+          return <Text style={{ color: '#222', fontWeight: 400 }}>No ingredients</Text>
         }
-        
-        const ingredientList = record.meal_ingredients
-          .slice(0, 2)
-          .map(ing => `${ing.quantity_used}${ing.unit} ${ing.ingredient_name}`)
-          .join(', ')
-        
         return (
-          <Tooltip 
-            title={
-              record.meal_ingredients.map(ing => 
-                `${ing.quantity_used}${ing.unit} ${ing.ingredient_name}`
-              ).join(', ')
-            }
-          >
-            <Text>
-              {ingredientList}
-              {record.meal_ingredients.length > 2 && ` +${record.meal_ingredients.length - 2} more`}
-            </Text>
-          </Tooltip>
+          <span>
+            {record.meal_ingredients.slice(0, 2).map((ing, idx) => (
+              <Tag key={idx} color="blue" style={{ marginRight: 4, marginBottom: 2 }}>
+                {ing.ingredients?.name || ''}
+              </Tag>
+            ))}
+            {record.meal_ingredients.length > 2 && (
+              <Tag color="blue">+{record.meal_ingredients.length - 2} more</Tag>
+            )}
+          </span>
         )
       }
     },
@@ -279,38 +268,9 @@ const DashboardTable = ({
       dataIndex: 'total_cost',
       key: 'total_cost',
       render: (cost) => (
-        <Space>
-          <DollarOutlined />
-          <Text strong type="success">${cost ? cost.toFixed(2) : '0.00'}</Text>
-        </Space>
+        <Text style={{ color: '#222', fontWeight: 400 }}>${cost ? cost.toFixed(2) : '0.00'}</Text>
       ),
       sorter: (a, b) => (a.total_cost || 0) - (b.total_cost || 0)
-    },
-    {
-      title: 'Average Cost',
-      key: 'average_cost',
-      render: (_, record) => {
-        const avgCost = record.total_cost || 0
-        return (
-          <Space>
-            <DollarOutlined />
-            <Text type="secondary">${avgCost.toFixed(2)}</Text>
-          </Space>
-        )
-      }
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          />
-        </Tooltip>
-      )
     }
   ]
 

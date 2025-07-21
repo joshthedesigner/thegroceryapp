@@ -199,6 +199,9 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
+        initialValues={{
+          date_cooked: dayjs(),
+        }}
       >
         <Form.Item
           name="meal_name"
@@ -216,7 +219,6 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
           <DatePicker 
             style={{ width: '100%' }} 
             placeholder="Select date"
-            defaultValue={dayjs()}
           />
         </Form.Item>
 
