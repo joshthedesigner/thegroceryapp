@@ -1,24 +1,55 @@
 import React, { useState } from 'react'
 import { Typography, Button, Space, message, Modal } from 'antd'
-import { PlusOutlined } from '@ant-design/icons'
+import { PlusOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { useMeals } from '../hooks/useMeals'
 import MealForm from '../components/MealForm'
 import MealsTable from '../components/MealsTable'
+import dayjs from 'dayjs'
 
 const { Title } = Typography
+
+const getWeekRange = (date) => {
+  const start = dayjs(date).startOf('week')
+  const end = dayjs(date).endOf('week')
+  return { start, end }
+}
+
+const formatWeekRange = (start, end) => {
+  return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
+}
 
 const Meals = ({ user }) => {
   const [formVisible, setFormVisible] = useState(false)
   const [editingMeal, setEditingMeal] = useState(null)
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedMeal, setSelectedMeal] = useState(null)
-  
+  // Week navigation state
+  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().startOf('week'))
+
   const { 
     meals, 
     loading, 
     deleteMeal, 
     refreshMeals 
   } = useMeals(user?.id)
+
+  // Filter meals by selected week
+  const { start: weekStart, end: weekEnd } = getWeekRange(selectedWeekStart)
+  const filteredMeals = (meals || []).filter(meal => {
+    const mealDate = dayjs(meal.date_cooked)
+    return mealDate.isSameOrAfter(weekStart, 'day') && mealDate.isSameOrBefore(weekEnd, 'day')
+  })
+
+  const handlePrevWeek = () => {
+    setSelectedWeekStart(prev => dayjs(prev).subtract(1, 'week').startOf('week'))
+  }
+  const handleNextWeek = () => {
+    // Only allow going forward if not on current week
+    if (!dayjs(selectedWeekStart).isSame(dayjs().startOf('week'), 'day')) {
+      setSelectedWeekStart(prev => dayjs(prev).add(1, 'week').startOf('week'))
+    }
+  }
+  const isCurrentWeek = dayjs(selectedWeekStart).isSame(dayjs().startOf('week'), 'day')
 
   const handleAddMeal = () => {
     setEditingMeal(null)
@@ -74,10 +105,18 @@ const Meals = ({ user }) => {
             Log Meal
           </Button>
         </div>
+        {/* Week Navigation */}
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: 16, marginBottom: 16 }}>
+          <Button icon={<LeftOutlined />} onClick={handlePrevWeek} />
+          <span style={{ margin: '0 16px', fontWeight: 500, fontSize: 16 }}>
+            {formatWeekRange(weekStart, weekEnd)}
+          </span>
+          <Button icon={<RightOutlined />} onClick={handleNextWeek} disabled={isCurrentWeek} />
+        </div>
       </div>
       
       <MealsTable
-        meals={meals}
+        meals={filteredMeals}
         loading={loading}
         onEdit={handleEditMeal}
         onDelete={handleDeleteMeal}

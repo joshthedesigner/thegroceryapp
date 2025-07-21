@@ -54,7 +54,8 @@ const DashboardTable = ({
           startDate = new Date(now.getFullYear(), 0, 1)
           break
         default:
-          startDate = new Date(0)
+          // Default to week if unknown
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
       }
       
       const filteredIngredients = ingredients.filter(ing => 
@@ -144,20 +145,18 @@ const DashboardTable = ({
       title: 'Percent Used',
       key: 'percent_used',
       align: 'left',
-      className: 'percent-used-column',
       render: (_, record) => {
         const percentage = getUsagePercentage(record)
         const status = getUsageStatus(record)
-        
         return (
-          <div className="progress-container" style={{ textAlign: 'left' }}>
-            <span className="progress-text">{percentage}%</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 160 }}>
+            <span style={{ minWidth: 38, fontWeight: 500 }}>{percentage}%</span>
             <Progress 
               percent={percentage} 
               status={status}
               size="small"
               format={() => null}
-              style={{ flex: 1 }}
+              style={{ width: 80 }}
             />
           </div>
         )

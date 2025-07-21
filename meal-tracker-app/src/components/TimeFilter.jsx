@@ -26,7 +26,7 @@ const TimeFilter = ({
         const yearDate = now.subtract(12 * currentPeriod, 'month')
         return yearDate.format('YYYY')
       default:
-        return 'All Time'
+        return ''
     }
   }
 
@@ -52,7 +52,7 @@ const TimeFilter = ({
               icon={<ReloadOutlined />} 
               size="small"
               onClick={handleReset}
-              disabled={timeFilter === 'all'}
+              // No longer disables for 'all', since 'all' is removed
             >
               Reset
             </Button>
@@ -68,9 +68,10 @@ const TimeFilter = ({
           <Radio.Button value="week">Week</Radio.Button>
           <Radio.Button value="month">Month</Radio.Button>
           <Radio.Button value="year">Year</Radio.Button>
-          <Radio.Button value="all">All Time</Radio.Button>
+          {/* Removed 'All Time' filter */}
         </Radio.Group>
         
+        {/* Only show navigation for week/month/year */}
         {timeFilter !== 'all' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Button 

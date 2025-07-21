@@ -58,7 +58,7 @@ const TrendsGraph = ({
           endDate = now
           break
         default:
-          startDate = dayjs().subtract(6, 'month')
+          startDate = now.subtract(7, 'day')
           endDate = now
       }
     }
@@ -75,7 +75,7 @@ const TrendsGraph = ({
         interval = 'month'
         break
       default:
-        interval = 'month'
+        interval = 'day'
     }
 
     // Generate date points

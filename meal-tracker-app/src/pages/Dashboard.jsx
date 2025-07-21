@@ -12,7 +12,7 @@ import dayjs from 'dayjs'
 const { Title } = Typography
 
 const Dashboard = ({ user }) => {
-  const [timeFilter, setTimeFilter] = useState('all')
+  const [timeFilter, setTimeFilter] = useState('week')
   const [periodOffset, setPeriodOffset] = useState(0)
   const [metricDetailsVisible, setMetricDetailsVisible] = useState(false)
   const [selectedMetricType, setSelectedMetricType] = useState(null)
@@ -55,9 +55,9 @@ const Dashboard = ({ user }) => {
         start = end.subtract(12, 'month')
         break
       default:
-        // For 'all': show all data from beginning of time
-        start = dayjs(0)
-        end = now
+        // Default to week if unknown
+        end = now.subtract(7 * offset, 'day')
+        start = end.subtract(7, 'day')
     }
 
     return { start, end }

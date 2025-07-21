@@ -101,17 +101,16 @@ const IngredientsTable = ({
       key: 'usage',
       render: (_, record) => {
         const percentage = getUsagePercentage(record)
-        const status = getUsageStatus(record)
-        
+        // No status icons, just percent and progress bar
         return (
-          <div className="progress-container">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 160 }}>
+            <span style={{ minWidth: 38, fontWeight: 500 }}>{percentage}%</span>
             <Progress 
               percent={percentage} 
-              status={status}
+              showInfo={false}
               size="small"
-              style={{ flex: 1 }}
+              style={{ width: 80 }}
             />
-            <span className="progress-text">{percentage}%</span>
           </div>
         )
       }

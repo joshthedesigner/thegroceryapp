@@ -37,7 +37,8 @@ const DashboardMetrics = ({
           startDate = new Date(now.getFullYear(), 0, 1)
           break
         default:
-          startDate = new Date(0)
+          // Default to week if unknown
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
       }
       
       const filteredIngredients = ingredients.filter(ing => 
