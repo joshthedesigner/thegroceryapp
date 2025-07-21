@@ -129,7 +129,7 @@ const DashboardTable = ({
         const status = getUsageStatus(record)
         
         return (
-          <div className="progress-container">
+          <div className="progress-container" style={{ textAlign: 'left' }}>
             <span className="progress-text">{percentage}%</span>
             <Progress 
               percent={percentage} 
