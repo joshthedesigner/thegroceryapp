@@ -28,7 +28,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
   const [error, setError] = useState('')
   
   const { ingredients, loading: ingredientsLoading } = useIngredients(user?.id)
-  const { createMeal, updateMeal, createMealIngredient } = useMeals(user?.id)
+  const { addMeal, updateMeal, addIngredientToMeal } = useMeals(user?.id)
 
   const isEditing = !!editingMeal
 
@@ -152,7 +152,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         mealId = editingMeal.id
       } else {
         // Create new meal
-        const { data, error } = await createMeal(mealData)
+        const { data, error } = await addMeal(mealData)
         if (error) throw error
         mealId = data.id
       }
@@ -160,11 +160,11 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
       // Create meal ingredients
       for (const ingredient of selectedIngredients) {
         if (ingredient.ingredient_id && ingredient.quantity_used > 0) {
-          const { error } = await createMealIngredient({
-            meal_id: mealId,
-            ingredient_id: ingredient.ingredient_id,
-            quantity_used: ingredient.quantity_used
-          })
+          const { error } = await addIngredientToMeal(
+            mealId,
+            ingredient.ingredient_id,
+            ingredient.quantity_used
+          )
           if (error) throw error
         }
       }
