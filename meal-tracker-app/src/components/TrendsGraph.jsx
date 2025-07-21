@@ -90,8 +90,7 @@ const TrendsGraph = ({
         dateKey,
         totalValue: Math.round(totalValue * 100) / 100,
         usedValue: Math.round(usedValue * 100) / 100,
-        unusedValue: Math.round(unusedValue * 100) / 100,
-        mealCost: Math.round(periodMeals.reduce((sum, meal) => sum + (meal.total_cost || 0), 0) * 100) / 100
+        unusedValue: Math.round(unusedValue * 100) / 100
       })
 
       current = current.add(1, interval)
@@ -112,8 +111,7 @@ const TrendsGraph = ({
     const legendMap = {
       totalValue: 'Purchased Value',
       usedValue: 'Consumed Value',
-      unusedValue: 'Wasted Value',
-      mealCost: 'Meal Cost'
+      unusedValue: 'Wasted Value'
     }
     return legendMap[value] || value
   }
@@ -202,15 +200,6 @@ const TrendsGraph = ({
               stroke="#f5222d" 
               strokeWidth={2}
               dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="mealCost" 
-              stroke="#722ed1" 
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={{ fill: '#722ed1', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
