@@ -109,15 +109,19 @@ const MealsTable = ({
         if (!ingredients || ingredients.length === 0) {
           return <Tag color="default">No ingredients</Tag>
         }
+        const firstTwo = ingredients.slice(0, 2)
+        const remaining = ingredients.slice(2)
         return (
           <Space wrap>
-            {ingredients.slice(0, 2).map((ing, index) => (
+            {firstTwo.map((ing, index) => (
               <Tag key={index} color="blue">
                 {ing.ingredients?.name || ''}
               </Tag>
             ))}
-            {ingredients.length > 2 && (
-              <Tag color="blue">+{ingredients.length - 2} more</Tag>
+            {remaining.length > 0 && (
+              <Tooltip title={remaining.map(ing => ing.ingredients?.name).filter(Boolean).join(', ')} placement="top">
+                <Tag color="blue" style={{ cursor: 'pointer' }}>+{remaining.length} more</Tag>
+              </Tooltip>
             )}
           </Space>
         )

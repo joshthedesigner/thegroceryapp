@@ -74,22 +74,20 @@ const Login = () => {
       >
         {/* Branding */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
-          <div style={{ width: 48, height: 48, background: '#fff', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(34,197,94,0.10)', border: '2.5px solid #22C55E' }}>
+          <div style={{ width: 48, height: 48, background: '#fff', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,97,255,0.10)', border: '2.5px solid #0061ff' }}>
+            {/* Minimalist fintech-style G icon for GroceryTrack */}
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              {/* Circle background */}
-              <circle cx="16" cy="16" r="14" fill="#fff" stroke="#22C55E" strokeWidth="2.5"/>
-              {/* Cart body */}
-              <rect x="9" y="15" width="14" height="7" rx="3.5" fill="none" stroke="#22C55E" strokeWidth="2"/>
-              {/* Cart handle */}
-              <path d="M9 15c0-3 14-3 14 0" stroke="#22C55E" strokeWidth="2" strokeLinecap="round"/>
-              {/* Wheels */}
-              <circle cx="12" cy="24" r="1.2" fill="#22C55E"/>
-              <circle cx="20" cy="24" r="1.2" fill="#22C55E"/>
-              {/* Checkmark inside cart */}
-              <path d="M13.5 18.5l2 2 4-4" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              {/* Outer circle (tracker) */}
+              <circle cx="16" cy="16" r="13" stroke="#22272b" strokeWidth="2.2" fill="#fff" />
+              {/* Accent arc (tracking/progress) */}
+              <path d="M16 3a13 13 0 1 1-9.19 22.19" stroke="#0061ff" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+              {/* Inner G shape (geometric, abstract) */}
+              <path d="M22 16c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6v6h6" stroke="#22272b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </svg>
           </div>
-          <span style={{ fontWeight: 900, fontSize: 32, color: '#232946', letterSpacing: -1 }}>GroceryTracker</span>
+          <span style={{ fontWeight: 800, fontSize: 30, color: '#22272b', letterSpacing: -0.5, fontFamily: 'Inter, Satoshi, Space Grotesk, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif', textTransform: 'capitalize' }}>
+            GroceryTrack
+          </span>
         </div>
         {/* Headline */}
         <h1

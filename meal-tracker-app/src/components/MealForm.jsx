@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { 
   Modal, 
   Form, 
@@ -33,12 +33,27 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
   const [mealInfo, setMealInfo] = useState({ meal_name: '', date_cooked: null })
   const [ingredientSelection, setIngredientSelection] = useState([]) // [{id, checked, quantityUsed}]
   const [dirty, setDirty] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   
   const { ingredients, loading: ingredientsLoading } = useIngredients(user?.id)
   const { addMeal, updateMeal, addIngredientToMeal } = useMeals(user?.id)
 
   const isEditing = !!editingMeal
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(handler)
+  }, [search])
+
+  // Filtered ingredients based on search
+  const filteredIngredients = useMemo(() => {
+    if (!debouncedSearch) return ingredients
+    return ingredients.filter(ing =>
+      ing.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    )
+  }, [ingredients, debouncedSearch])
 
   // Reset wizard state on open/close
   useEffect(() => {
@@ -142,19 +157,13 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
     }
   }
 
-  // Warn on close if dirty (only for Cancel button)
+  // Remove discard confirmation modal for Cancel button
   const handleCancelButton = () => {
-    console.log('[MealForm] handleCancelButton called. dirty:', dirty)
-    if (dirty) {
-      setShowConfirm(true)
-    } else {
-      onCancel()
-    }
+    onCancel()
   }
 
   // Always close immediately when X is clicked
   const handleModalCancel = () => {
-    console.log('[MealForm] handleModalCancel (X) called. Closing immediately.')
     onCancel()
   }
 
@@ -213,53 +222,66 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         {/* Step 2: Select Ingredients */}
         {step === 2 && (
           <>
-            <Table
-              dataSource={ingredients}
-              rowKey="id"
-              pagination={false}
-              loading={ingredientsLoading}
-              columns={[
-                {
-                  title: '',
-                  dataIndex: 'select',
-                  key: 'select',
-                  width: 48,
-                  render: (_, ing) => (
-                    <Checkbox
-                      checked={ingredientSelection.find(row => row.id === ing.id)?.checked || false}
-                      onChange={e => handleIngredientCheck(ing.id, e.target.checked)}
-                    />
-                  )
-                },
-                {
-                  title: 'Ingredient',
-                  dataIndex: 'name',
-                  key: 'name',
-                },
-                {
-                  title: 'Remaining',
-                  key: 'remaining',
-                  render: (_, ing) => `${ing.amount_remaining} ${ing.unit}`
-                },
-                {
-                  title: 'Quantity Used',
-                  key: 'quantityUsed',
-                  render: (_, ing) => {
-                    const row = ingredientSelection.find(row => row.id === ing.id)
-                    return (
-                      <InputNumber
-                        min={0}
-                        max={ing.amount_remaining}
-                        value={row?.quantityUsed || 0}
-                        onChange={val => handleQuantityChange(ing.id, val)}
-                        disabled={!row?.checked}
-                        style={{ width: 100 }}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+              <Input
+                placeholder="Search ingredients..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ width: 260, marginRight: 12 }}
+                allowClear
+                aria-label="Search ingredients"
+              />
+            </div>
+            <div style={{ maxHeight: 400, overflowY: 'auto', marginBottom: 16, borderRadius: 8, border: '1px solid #f0f0f0', background: '#fff' }}>
+              <Table
+                dataSource={filteredIngredients}
+                rowKey="id"
+                pagination={false}
+                loading={ingredientsLoading}
+                locale={{ emptyText: search ? 'No matching ingredients found' : 'No ingredients available' }}
+                columns={[
+                  {
+                    title: '',
+                    dataIndex: 'select',
+                    key: 'select',
+                    width: 48,
+                    render: (_, ing) => (
+                      <Checkbox
+                        checked={ingredientSelection.find(row => row.id === ing.id)?.checked || false}
+                        onChange={e => handleIngredientCheck(ing.id, e.target.checked)}
                       />
                     )
+                  },
+                  {
+                    title: 'Ingredient',
+                    dataIndex: 'name',
+                    key: 'name',
+                  },
+                  {
+                    title: 'Remaining',
+                    key: 'remaining',
+                    render: (_, ing) => `${ing.amount_remaining} ${ing.unit}`
+                  },
+                  {
+                    title: 'Quantity Used',
+                    key: 'quantityUsed',
+                    render: (_, ing) => {
+                      const row = ingredientSelection.find(row => row.id === ing.id)
+                      return (
+                        <InputNumber
+                          min={0}
+                          max={ing.amount_remaining}
+                          value={row?.quantityUsed || 0}
+                          onChange={val => handleQuantityChange(ing.id, val)}
+                          disabled={!row?.checked}
+                          style={{ width: 100 }}
+                        />
+                      )
+                    }
                   }
-                }
-              ]}
-            />
+                ]}
+              />
+            </div>
             {error && (
               <Alert
                 message={error}
@@ -279,19 +301,6 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
             </div>
           </>
         )}
-      </Modal>
-      <Modal
-        title="Discard changes?"
-        open={showConfirm}
-        onOk={() => {
-          setShowConfirm(false)
-          onCancel()
-        }}
-        onCancel={() => setShowConfirm(false)}
-        okText="Discard"
-        cancelText="Keep Editing"
-      >
-        You have unsaved changes. Are you sure you want to close?
       </Modal>
     </>
   )

@@ -52,7 +52,7 @@ const Layout = ({ children, user }) => {
 
   return (
     <AntLayout className="layout-container">
-      <Header className="layout-header" style={{ position: 'sticky', top: 0, zIndex: 100, width: '100%' }}>
+      <Header className="layout-header" style={{ position: 'sticky', top: 0, zIndex: 100, width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
