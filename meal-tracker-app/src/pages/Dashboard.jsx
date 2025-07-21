@@ -36,25 +36,31 @@ const Dashboard = ({ user }) => {
   const getDateRange = (timeFilter, offset = 0) => {
     const now = dayjs()
     
+    let start, end
+    
     switch (timeFilter) {
       case 'week':
-        return {
-          start: now.subtract(7 * (offset + 1), 'day').add(7, 'day'),
-          end: now.subtract(7 * offset, 'day')
-        }
+        // For week: show last 7 days, with offset for previous weeks
+        end = now.subtract(7 * offset, 'day')
+        start = end.subtract(7, 'day')
+        break
       case 'month':
-        return {
-          start: now.subtract(30 * (offset + 1), 'day').add(30, 'day'),
-          end: now.subtract(30 * offset, 'day')
-        }
+        // For month: show last 30 days, with offset for previous months
+        end = now.subtract(30 * offset, 'day')
+        start = end.subtract(30, 'day')
+        break
       case 'year':
-        return {
-          start: now.subtract(12 * (offset + 1), 'month').add(12, 'month'),
-          end: now.subtract(12 * offset, 'month')
-        }
+        // For year: show last 12 months, with offset for previous years
+        end = now.subtract(12 * offset, 'month')
+        start = end.subtract(12, 'month')
+        break
       default:
-        return { start: dayjs(0), end: now }
+        // For 'all': show all data from beginning of time
+        start = dayjs(0)
+        end = now
     }
+
+    return { start, end }
   }
 
   const handleTimeFilterChange = (newFilter) => {
