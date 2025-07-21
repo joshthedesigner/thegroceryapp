@@ -133,6 +133,7 @@ const DashboardTable = ({
               percent={percentage} 
               status={status}
               size="small"
+              format={() => null}
               style={{ flex: 1 }}
             />
             <span className="progress-text">{percentage}%</span>
