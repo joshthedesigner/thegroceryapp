@@ -43,20 +43,10 @@ const TimeFilter = ({
   }
 
   return (
-    <Card size="small" style={{ marginBottom: 16 }}>
+    <Card size="small" style={{ marginBottom: 16, paddingTop: 12, paddingBottom: 12 }}>
       <Space direction="vertical" style={{ width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text strong>Time Period</Text>
-          <Space>
-            <Button 
-              icon={<ReloadOutlined />} 
-              size="small"
-              onClick={handleReset}
-              // No longer disables for 'all', since 'all' is removed
-            >
-              Reset
-            </Button>
-          </Space>
         </div>
         
         <Radio.Group 

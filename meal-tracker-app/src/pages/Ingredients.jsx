@@ -147,25 +147,80 @@ const Ingredients = ({ user }) => {
     <ErrorBoundary>
       <div className="page-container">
         <div className="page-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={2} className="page-title">
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              marginBottom: 16,
+            }}
+          >
+            <Title level={2} className="page-title" style={{ margin: 0 }}>
               Ingredients
             </Title>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={() => setIsModalVisible(true)}
-            >
-              Add Ingredient
-            </Button>
-          </div>
-          {/* Week Navigation */}
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: 16, marginBottom: 16 }}>
-            <Button icon={<LeftOutlined />} onClick={handlePrevWeek} />
-            <span style={{ margin: '0 16px', fontWeight: 500, fontSize: 16 }}>
-              {formatWeekRange(weekStart, weekEnd)}
-            </span>
-            <Button icon={<RightOutlined />} onClick={handleNextWeek} disabled={isCurrentWeek} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {/* Date Arrow Filter Container */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: '#fff',
+                  border: '1px solid #e5e7eb', // gray-200
+                  borderRadius: 8,
+                  padding: '12px 18px',
+                  boxShadow: 'none',
+                  gap: 8,
+                }}
+              >
+                <button
+                  onClick={handlePrevWeek}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    padding: 0,
+                    margin: 0,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  aria-label="Previous week"
+                >
+                  <LeftOutlined style={{ fontSize: 18, color: '#222' }} />
+                </button>
+                <span style={{ fontWeight: 500, fontSize: 16, minWidth: 120, textAlign: 'center' }}>
+                  {formatWeekRange(weekStart, weekEnd)}
+                </span>
+                <button
+                  onClick={handleNextWeek}
+                  disabled={isCurrentWeek}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    padding: 0,
+                    margin: 0,
+                    cursor: isCurrentWeek ? 'not-allowed' : 'pointer',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    opacity: isCurrentWeek ? 0.5 : 1,
+                  }}
+                  aria-label="Next week"
+                >
+                  <RightOutlined style={{ fontSize: 18, color: '#222' }} />
+                </button>
+              </div>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setIsModalVisible(true)}
+                style={{ minWidth: 140, padding: '0 24px', fontSize: 16, display: 'flex', alignItems: 'center', height: 'auto' }}
+              >
+                <span style={{ padding: '12px 0', display: 'inline-block', width: '100%' }}>Add Ingredient</span>
+              </Button>
+            </div>
           </div>
         </div>
 

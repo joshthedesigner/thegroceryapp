@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Typography, Row, Col, Spin, Alert, Radio, Button } from 'antd'
+import { Typography, Row, Col, Spin, Alert, Button } from 'antd'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { useIngredients } from '../hooks/useIngredients'
 import { useMeals } from '../hooks/useMeals'
@@ -9,6 +9,7 @@ import TrendsGraph from '../components/TrendsGraph'
 import DashboardTable from '../components/DashboardTable'
 import MetricDetailsModal from '../components/MetricDetailsModal'
 import dayjs from 'dayjs'
+import PeriodSelector from '../components/PeriodSelector'
 
 const { Title } = Typography
 
@@ -119,29 +120,11 @@ const Dashboard = ({ user }) => {
         </Title>
         {/* Right: Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          {/* Week/Month/Year Selector */}
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: '12px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <Radio.Group
-              value={timeFilter}
-              onChange={e => handleTimeFilterChange(e.target.value)}
-              buttonStyle="solid"
-              size="small"
-            >
-              <Radio.Button value="week">Week</Radio.Button>
-              <Radio.Button value="month">Month</Radio.Button>
-              <Radio.Button value="year">Year</Radio.Button>
-            </Radio.Group>
-          </div>
+          {/* Custom PeriodSelector */}
+          <PeriodSelector
+            value={timeFilter}
+            onChange={handleTimeFilterChange}
+          />
           {/* TimeFilter Navigation (arrows + date) */}
           <div
             style={{
@@ -160,7 +143,7 @@ const Dashboard = ({ user }) => {
               onClick={() => handleNavigate('prev')}
               style={{ background: 'none', border: 'none', boxShadow: 'none' }}
             />
-            <Typography.Text strong style={{ fontSize: 14, minWidth: 90, textAlign: 'center' }}>
+            <Typography.Text strong style={{ fontSize: 14, minWidth: 180, textAlign: 'center' }}>
               {/* Use TimeFilter's getPeriodDisplay logic inline */}
               {(() => {
                 const now = dayjs()
