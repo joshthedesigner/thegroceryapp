@@ -11,7 +11,10 @@ import {
   Alert, 
   Divider,
   Typography,
-  Card
+  Card,
+  Table,
+  Checkbox,
+  message
 } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useIngredients } from '../hooks/useIngredients'
@@ -26,11 +29,26 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [step, setStep] = useState(1)
+  const [mealInfo, setMealInfo] = useState({ meal_name: '', date_cooked: null })
+  const [ingredientSelection, setIngredientSelection] = useState([]) // [{id, checked, quantityUsed}]
+  const [dirty, setDirty] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   
   const { ingredients, loading: ingredientsLoading } = useIngredients(user?.id)
   const { addMeal, updateMeal, addIngredientToMeal } = useMeals(user?.id)
 
   const isEditing = !!editingMeal
+
+  // Reset wizard state on open/close
+  useEffect(() => {
+    if (visible && !isEditing) {
+      setStep(1)
+      setMealInfo({ meal_name: '', date_cooked: null })
+      setIngredientSelection(ingredients.map(ing => ({ id: ing.id, checked: false, quantityUsed: 0 })))
+      setDirty(false)
+    }
+  }, [visible, isEditing, ingredients])
 
   useEffect(() => {
     if (visible) {
@@ -61,117 +79,62 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
     }
   }, [visible, editingMeal, form, isEditing])
 
-  const handleAddIngredient = () => {
-    setSelectedIngredients([...selectedIngredients, {
-      ingredient_id: null,
-      ingredient_name: '',
-      quantity_used: 0,
-      unit: '',
-      available_amount: 0
-    }])
-  }
-
-  const handleRemoveIngredient = (index) => {
-    const newIngredients = selectedIngredients.filter((_, i) => i !== index)
-    setSelectedIngredients(newIngredients)
-  }
-
-  const handleIngredientChange = (index, field, value) => {
-    const newIngredients = [...selectedIngredients]
-    
-    if (field === 'ingredient_id') {
-      const ingredient = ingredients.find(ing => ing.id === value)
-      newIngredients[index] = {
-        ...newIngredients[index],
-        ingredient_id: value,
-        ingredient_name: ingredient ? ingredient.name : '',
-        unit: ingredient ? ingredient.unit : '',
-        available_amount: ingredient ? ingredient.amount_remaining : 0
-      }
-    } else {
-      newIngredients[index] = {
-        ...newIngredients[index],
-        [field]: value
-      }
+  // Step 1: Meal Info
+  const handleMealInfoNext = async () => {
+    try {
+      const values = await form.validateFields(['meal_name', 'date_cooked'])
+      setMealInfo({ meal_name: values.meal_name, date_cooked: values.date_cooked })
+      setStep(2)
+      setDirty(true)
+    } catch (err) {
+      // Validation error, do nothing
     }
-    
-    setSelectedIngredients(newIngredients)
   }
 
-  const validateIngredientUsage = () => {
-    for (const ingredient of selectedIngredients) {
-      if (ingredient.quantity_used > ingredient.available_amount) {
-        return `Cannot use ${ingredient.quantity_used}${ingredient.unit} of ${ingredient.ingredient_name}. Only ${ingredient.available_amount}${ingredient.unit} available.`
-      }
-    }
-    return null
+  // Step 2: Ingredient Selection
+  const handleIngredientCheck = (id, checked) => {
+    setIngredientSelection(prev => prev.map(row => row.id === id ? { ...row, checked, quantityUsed: checked ? row.quantityUsed : 0 } : row))
+    setDirty(true)
+  }
+  const handleQuantityChange = (id, value) => {
+    setIngredientSelection(prev => prev.map(row => row.id === id ? { ...row, quantityUsed: value } : row))
+    setDirty(true)
   }
 
-  const calculateTotalCost = () => {
-    let total = 0
-    for (const ingredient of selectedIngredients) {
-      const ingredientData = ingredients.find(ing => ing.id === ingredient.ingredient_id)
-      if (ingredientData && ingredient.quantity_used > 0) {
-        const usageRatio = ingredient.quantity_used / ingredientData.amount_purchased
-        total += ingredientData.price * usageRatio
-      }
-    }
-    return Math.round(total * 100) / 100 // Round to 2 decimal places
-  }
-
-  const handleSubmit = async () => {
+  // Save meal (Step 2 CTA)
+  const handleSaveMeal = async () => {
     try {
       setLoading(true)
       setError('')
-
-      const values = await form.validateFields()
-      
-      // Validate ingredients
-      if (selectedIngredients.length === 0) {
-        setError('Please add at least one ingredient to your meal.')
+      // Validate at least one ingredient selected
+      const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
+      if (selected.length === 0) {
+        setError('Please select at least one ingredient and enter quantity used.')
+        setLoading(false)
         return
       }
-
-      const validationError = validateIngredientUsage()
-      if (validationError) {
-        setError(validationError)
+      // Validate meal info
+      if (!mealInfo.meal_name || !mealInfo.date_cooked) {
+        setError('Please enter meal name and date.')
+        setLoading(false)
+        setStep(1)
         return
       }
-
+      // Create meal
       const mealData = {
-        meal_name: values.meal_name,
-        date_cooked: values.date_cooked.format('YYYY-MM-DD'),
-        total_cost: calculateTotalCost()
+        meal_name: mealInfo.meal_name,
+        date_cooked: mealInfo.date_cooked.format('YYYY-MM-DD'),
+        total_cost: 0 // Will be calculated after adding ingredients
       }
-
-      let mealId
-      if (isEditing) {
-        // Update existing meal
-        const { data, error } = await updateMeal(editingMeal.id, mealData)
-        if (error) throw error
-        mealId = editingMeal.id
-      } else {
-        // Create new meal
-        const { data, error } = await addMeal(mealData)
-        if (error) throw error
-        mealId = data.id
+      const { data, error: mealError } = await addMeal(mealData)
+      if (mealError) throw mealError
+      const mealId = data.id
+      // Add ingredients
+      for (const row of selected) {
+        await addIngredientToMeal(mealId, row.id, row.quantityUsed)
       }
-
-      // Create meal ingredients
-      for (const ingredient of selectedIngredients) {
-        if (ingredient.ingredient_id && ingredient.quantity_used > 0) {
-          const { error } = await addIngredientToMeal(
-            mealId,
-            ingredient.ingredient_id,
-            ingredient.quantity_used
-          )
-          if (error) throw error
-        }
-      }
-
+      setDirty(false)
       onSuccess()
-      form.resetFields()
-      setSelectedIngredients([])
     } catch (err) {
       setError(err.message || 'Failed to save meal. Please try again.')
     } finally {
@@ -179,157 +142,158 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
     }
   }
 
-  const handleCancel = () => {
-    form.resetFields()
-    setSelectedIngredients([])
-    setError('')
+  // Warn on close if dirty (only for Cancel button)
+  const handleCancelButton = () => {
+    console.log('[MealForm] handleCancelButton called. dirty:', dirty)
+    if (dirty) {
+      setShowConfirm(true)
+    } else {
+      onCancel()
+    }
+  }
+
+  // Always close immediately when X is clicked
+  const handleModalCancel = () => {
+    console.log('[MealForm] handleModalCancel (X) called. Closing immediately.')
     onCancel()
   }
 
   return (
-    <Modal
-      title={isEditing ? 'Edit Meal' : 'Log New Meal'}
-      open={visible}
-      onCancel={handleCancel}
-      footer={null}
-      width={800}
-      destroyOnClose
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        initialValues={{
-          date_cooked: dayjs(),
-        }}
+    <>
+      <Modal
+        title={isEditing ? 'Edit Meal' : 'Log New Meal'}
+        open={visible}
+        onCancel={handleModalCancel}
+        footer={null}
+        width={800}
+        destroyOnClose
       >
-        <Form.Item
-          name="meal_name"
-          label="Meal Name"
-          rules={[{ required: true, message: 'Please enter a meal name' }]}
-        >
-          <Input placeholder="e.g., Chicken Stir Fry" />
-        </Form.Item>
-
-        <Form.Item
-          name="date_cooked"
-          label="Date Cooked"
-          rules={[{ required: true, message: 'Please select a date' }]}
-        >
-          <DatePicker 
-            style={{ width: '100%' }} 
-            placeholder="Select date"
-          />
-        </Form.Item>
-
-        <Divider orientation="left">Ingredients Used</Divider>
-
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-        )}
-
-        {selectedIngredients.map((ingredient, index) => (
-          <Card 
-            key={index} 
-            size="small" 
-            style={{ marginBottom: 16 }}
-            extra={
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleRemoveIngredient(index)}
-              />
-            }
+        {/* Step Indicator removed */}
+        {/* Step 1: Meal Info */}
+        {step === 1 && (
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{ date_cooked: dayjs() }}
           >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Form.Item
-                label="Ingredient"
-                required
-                style={{ marginBottom: 8 }}
-              >
-                <Select
-                  placeholder="Select an ingredient"
-                  value={ingredient.ingredient_id}
-                  onChange={(value) => handleIngredientChange(index, 'ingredient_id', value)}
-                  loading={ingredientsLoading}
-                  showSearch
-                  filterOption={(input, option) =>
-                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }
-                >
-                  {ingredients.map(ing => (
-                    <Option key={ing.id} value={ing.id}>
-                      {ing.name} ({ing.amount_remaining}{ing.unit} remaining)
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                label="Quantity Used"
-                required
-                style={{ marginBottom: 8 }}
-              >
-                <InputNumber
-                  min={0}
-                  max={ingredient.available_amount}
-                  value={ingredient.quantity_used}
-                  onChange={(value) => handleIngredientChange(index, 'quantity_used', value)}
-                  addonAfter={ingredient.unit}
-                  style={{ width: '100%' }}
-                  placeholder="0"
-                />
-                {ingredient.available_amount > 0 && (
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    Available: {ingredient.available_amount}{ingredient.unit}
-                  </Text>
-                )}
-              </Form.Item>
-            </Space>
-          </Card>
-        ))}
-
-        <Button
-          type="dashed"
-          icon={<PlusOutlined />}
-          onClick={handleAddIngredient}
-          style={{ width: '100%', marginBottom: 16 }}
-        >
-          Add Ingredient
-        </Button>
-
-        {selectedIngredients.length > 0 && (
-          <Alert
-            message={`Estimated Total Cost: $${calculateTotalCost().toFixed(2)}`}
-            type="info"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-        )}
-
-        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-          <Space>
-            <Button onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={loading}
-              disabled={selectedIngredients.length === 0}
+            <Form.Item
+              name="meal_name"
+              label="Meal Name"
+              rules={[{ required: true, message: 'Please enter a meal name' }]}
             >
-              {isEditing ? 'Update Meal' : 'Log Meal'}
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
-    </Modal>
+              <Input placeholder="e.g., Chicken Stir Fry" onChange={() => setDirty(true)} />
+            </Form.Item>
+            <Form.Item
+              name="date_cooked"
+              label="Date Cooked"
+              rules={[{ required: true, message: 'Please select a date' }]}
+            >
+              <DatePicker 
+                style={{ width: '100%' }} 
+                placeholder="Select date"
+                onChange={() => setDirty(true)}
+              />
+            </Form.Item>
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, gap: 8 }}>
+              <Button onClick={handleCancelButton}>Cancel</Button>
+              <Button type="primary" onClick={handleMealInfoNext}>
+                Next &rarr;
+              </Button>
+            </div>
+          </Form>
+        )}
+        {/* Step 2: Select Ingredients */}
+        {step === 2 && (
+          <>
+            <Table
+              dataSource={ingredients}
+              rowKey="id"
+              pagination={false}
+              loading={ingredientsLoading}
+              columns={[
+                {
+                  title: '',
+                  dataIndex: 'select',
+                  key: 'select',
+                  width: 48,
+                  render: (_, ing) => (
+                    <Checkbox
+                      checked={ingredientSelection.find(row => row.id === ing.id)?.checked || false}
+                      onChange={e => handleIngredientCheck(ing.id, e.target.checked)}
+                    />
+                  )
+                },
+                {
+                  title: 'Ingredient',
+                  dataIndex: 'name',
+                  key: 'name',
+                },
+                {
+                  title: 'Remaining',
+                  key: 'remaining',
+                  render: (_, ing) => `${ing.amount_remaining} ${ing.unit}`
+                },
+                {
+                  title: 'Quantity Used',
+                  key: 'quantityUsed',
+                  render: (_, ing) => {
+                    const row = ingredientSelection.find(row => row.id === ing.id)
+                    return (
+                      <InputNumber
+                        min={0}
+                        max={ing.amount_remaining}
+                        value={row?.quantityUsed || 0}
+                        onChange={val => handleQuantityChange(ing.id, val)}
+                        disabled={!row?.checked}
+                        style={{ width: 100 }}
+                      />
+                    )
+                  }
+                }
+              ]}
+            />
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                style={{ marginTop: 16, marginBottom: 0 }}
+              />
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+              <Button onClick={() => setStep(1)}>&larr; Back</Button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button onClick={handleCancelButton}>Cancel</Button>
+                <Button type="primary" loading={loading} onClick={handleSaveMeal}>
+                  Add Meal
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </Modal>
+      <Modal
+        title="Discard changes?"
+        open={showConfirm}
+        onOk={() => {
+          setShowConfirm(false)
+          onCancel()
+        }}
+        onCancel={() => setShowConfirm(false)}
+        okText="Discard"
+        cancelText="Keep Editing"
+      >
+        You have unsaved changes. Are you sure you want to close?
+      </Modal>
+    </>
   )
 }
 

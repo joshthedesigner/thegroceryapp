@@ -86,6 +86,7 @@ const Meals = ({ user }) => {
   }
 
   const handleFormCancel = () => {
+    console.log('[Meals] handleFormCancel called: closing modal')
     setFormVisible(false)
     setEditingMeal(null)
   }
