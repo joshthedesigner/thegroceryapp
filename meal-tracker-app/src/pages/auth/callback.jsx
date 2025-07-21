@@ -1,24 +1,47 @@
 import React, { useEffect } from 'react'
 import { Spin, Typography } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser } from '../../services/supabase'
+import { supabase } from '../../services/supabase'
 
 const { Text } = Typography
+
+function parseHash(hash) {
+  return hash
+    .substring(1)
+    .split('&')
+    .reduce((acc, part) => {
+      const [key, value] = part.split('=')
+      acc[key] = decodeURIComponent(value)
+      return acc
+    }, {})
+}
 
 const AuthCallback = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { user, error } = await getCurrentUser()
-      console.log('[AuthCallback] getCurrentUser result:', { user, error })
-      if (user) {
-        navigate('/dashboard', { replace: true })
+    const handleAuth = async () => {
+      if (window.location.hash) {
+        const params = parseHash(window.location.hash)
+        if (params.access_token && params.refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token: params.access_token,
+            refresh_token: params.refresh_token,
+          })
+          if (error) {
+            console.error('Error setting session:', error)
+            navigate('/login', { replace: true })
+          } else {
+            navigate('/dashboard', { replace: true })
+          }
+        } else {
+          navigate('/login', { replace: true })
+        }
       } else {
         navigate('/login', { replace: true })
       }
     }
-    checkAuth()
+    handleAuth()
   }, [navigate])
 
   return (
