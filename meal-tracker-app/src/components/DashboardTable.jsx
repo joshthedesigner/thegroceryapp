@@ -129,6 +129,7 @@ const DashboardTable = ({
         
         return (
           <div className="progress-container">
+            <span className="progress-text">{percentage}%</span>
             <Progress 
               percent={percentage} 
               status={status}
@@ -136,7 +137,6 @@ const DashboardTable = ({
               format={() => null}
               style={{ flex: 1 }}
             />
-            <span className="progress-text">{percentage}%</span>
           </div>
         )
       },
