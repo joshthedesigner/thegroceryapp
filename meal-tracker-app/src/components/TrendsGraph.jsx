@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { 
   Card, 
-  Radio, 
   Typography, 
   Space, 
   Empty,
@@ -27,7 +26,6 @@ const TrendsGraph = ({
   timeFilter = 'all',
   loading = false 
 }) => {
-  const [graphType, setGraphType] = useState('value') // 'value' or 'count'
 
   // Process data for chart
   const chartData = useMemo(() => {
@@ -85,20 +83,12 @@ const TrendsGraph = ({
       }, 0)
       const unusedValue = totalValue - usedValue
 
-      const totalCount = periodIngredients.length
-      const usedCount = periodIngredients.filter(ing => ing.amount_used > 0).length
-      const unusedCount = totalCount - usedCount
-
       dataPoints.push({
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
         totalValue: Math.round(totalValue * 100) / 100,
         usedValue: Math.round(usedValue * 100) / 100,
         unusedValue: Math.round(unusedValue * 100) / 100,
-        totalCount,
-        usedCount,
-        unusedCount,
-        mealCount: periodMeals.length,
         mealCost: Math.round(periodMeals.reduce((sum, meal) => sum + (meal.total_cost || 0), 0) * 100) / 100
       })
 
@@ -109,14 +99,11 @@ const TrendsGraph = ({
   }, [ingredients, meals, timeFilter])
 
   const getYAxisLabel = () => {
-    return graphType === 'value' ? 'Value ($)' : 'Count'
+    return 'Value ($)'
   }
 
   const getTooltipFormatter = (value, name) => {
-    if (graphType === 'value') {
-      return [`$${value}`, name]
-    }
-    return [value, name]
+    return [`$${value}`, name]
   }
 
   const getLegendFormatter = (value) => {
@@ -124,10 +111,6 @@ const TrendsGraph = ({
       totalValue: 'Total Value',
       usedValue: 'Used Value',
       unusedValue: 'Unused Value',
-      totalCount: 'Total Ingredients',
-      usedCount: 'Used Ingredients',
-      unusedCount: 'Unused Ingredients',
-      mealCount: 'Meals Logged',
       mealCost: 'Meal Cost'
     }
     return legendMap[value] || value
@@ -168,15 +151,6 @@ const TrendsGraph = ({
           <Title level={4} style={{ margin: 0 }}>
             Trends Over Time
           </Title>
-          <Radio.Group 
-            value={graphType} 
-            onChange={(e) => setGraphType(e.target.value)}
-            buttonStyle="solid"
-            size="small"
-          >
-            <Radio.Button value="value">Value</Radio.Button>
-            <Radio.Button value="count">Count</Radio.Button>
-          </Radio.Group>
         </div>
 
         <ResponsiveContainer width="100%" height={400}>
@@ -204,79 +178,39 @@ const TrendsGraph = ({
             />
             <Legend formatter={getLegendFormatter} />
             
-            {graphType === 'value' ? (
-              <>
-                <Line 
-                  type="monotone" 
-                  dataKey="totalValue" 
-                  stroke="#1890ff" 
-                  strokeWidth={2}
-                  dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="usedValue" 
-                  stroke="#52c41a" 
-                  strokeWidth={2}
-                  dot={{ fill: '#52c41a', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="unusedValue" 
-                  stroke="#f5222d" 
-                  strokeWidth={2}
-                  dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="mealCost" 
-                  stroke="#722ed1" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: '#722ed1', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </>
-            ) : (
-              <>
-                <Line 
-                  type="monotone" 
-                  dataKey="totalCount" 
-                  stroke="#1890ff" 
-                  strokeWidth={2}
-                  dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="usedCount" 
-                  stroke="#52c41a" 
-                  strokeWidth={2}
-                  dot={{ fill: '#52c41a', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="unusedCount" 
-                  stroke="#f5222d" 
-                  strokeWidth={2}
-                  dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="mealCount" 
-                  stroke="#722ed1" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: '#722ed1', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </>
-            )}
+            <Line 
+              type="monotone" 
+              dataKey="totalValue" 
+              stroke="#1890ff" 
+              strokeWidth={2}
+              dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="usedValue" 
+              stroke="#52c41a" 
+              strokeWidth={2}
+              dot={{ fill: '#52c41a', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="unusedValue" 
+              stroke="#f5222d" 
+              strokeWidth={2}
+              dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="mealCost" 
+              stroke="#722ed1" 
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={{ fill: '#722ed1', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </Space>
