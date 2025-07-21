@@ -11,7 +11,9 @@ import {
   Select,
   Row,
   Col,
-  Radio
+  Radio,
+  Empty,
+  Typography
 } from 'antd'
 import { 
   EditOutlined, 
@@ -22,6 +24,7 @@ import {
 
 const { Search } = Input
 const { Option } = Select
+const { Text } = Typography
 
 const IngredientsTable = ({ 
   ingredients, 
@@ -200,6 +203,18 @@ const IngredientsTable = ({
           `${range[0]}-${range[1]} of ${total} ingredients`
       }}
       scroll={{ x: 800 }}
+      locale={{
+        emptyText: (
+          <Empty
+            description="You haven’t added any ingredients yet."
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          >
+            <Text type="secondary">
+              Start by adding your first ingredient to track your groceries!
+            </Text>
+          </Empty>
+        )
+      }}
     />
   )
 }

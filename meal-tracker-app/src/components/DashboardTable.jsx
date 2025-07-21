@@ -10,7 +10,8 @@ import {
   Tooltip,
   Button,
   Modal,
-  Progress
+  Progress,
+  Empty
 } from 'antd'
 import { 
   SearchOutlined, 
@@ -338,11 +339,16 @@ const DashboardTable = ({
             }}
             locale={{
               emptyText: (
-                <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Empty
+                  description={viewMode === 'ingredients' ? 'You haven’t added any ingredients yet.' : 'You haven’t logged any meals yet.'}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                >
                   <Text type="secondary">
-                    No {viewMode} found for the selected time period.
+                    {viewMode === 'ingredients'
+                      ? 'Start by adding your first ingredient to track your groceries!'
+                      : 'Start by logging your first meal to track your cooking!'}
                   </Text>
-                </div>
+                </Empty>
               )
             }}
           />

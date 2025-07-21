@@ -249,29 +249,14 @@ const Ingredients = ({ user }) => {
           />
         )}
 
-        {filteredIngredients.length === 0 && !loading ? (
-          <Empty
-            description="No ingredients added for this week"
-            style={{ marginTop: 48 }}
-          >
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={() => setIsModalVisible(true)}
-            >
-              Add Your First Ingredient
-            </Button>
-          </Empty>
-        ) : (
-          <IngredientsTable
-            ingredients={filteredIngredients}
-            loading={loading}
-            onEdit={handleEdit}
-            onDelete={deleteIngredient}
-            getUsagePercentage={getUsagePercentage}
-            getUsageStatus={getUsageStatus}
-          />
-        )}
+        <IngredientsTable
+          ingredients={filteredIngredients}
+          loading={loading}
+          onEdit={handleEdit}
+          onDelete={deleteIngredient}
+          getUsagePercentage={getUsagePercentage}
+          getUsageStatus={getUsageStatus}
+        />
 
         <IngredientForm
           visible={isModalVisible}
