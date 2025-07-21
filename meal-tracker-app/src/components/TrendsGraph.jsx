@@ -77,10 +77,12 @@ const TrendsGraph = ({
 
       // Calculate metrics for this period
       const totalValue = periodIngredients.reduce((sum, ing) => sum + ing.price, 0)
-      const usedValue = periodIngredients.reduce((sum, ing) => {
-        const usageRatio = ing.amount_used / ing.amount_purchased
-        return sum + (ing.price * usageRatio)
+      
+      // Calculate used value based on actual meal consumption during this period
+      const usedValue = periodMeals.reduce((sum, meal) => {
+        return sum + (meal.total_cost || 0)
       }, 0)
+      
       const unusedValue = totalValue - usedValue
 
       dataPoints.push({
@@ -108,9 +110,9 @@ const TrendsGraph = ({
 
   const getLegendFormatter = (value) => {
     const legendMap = {
-      totalValue: 'Total Value',
-      usedValue: 'Used Value',
-      unusedValue: 'Unused Value',
+      totalValue: 'Purchased Value',
+      usedValue: 'Consumed Value',
+      unusedValue: 'Wasted Value',
       mealCost: 'Meal Cost'
     }
     return legendMap[value] || value
