@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Typography, Row, Col, Spin, Alert } from 'antd'
+import { Typography, Row, Col, Spin, Alert, Radio, Button } from 'antd'
+import { LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { useIngredients } from '../hooks/useIngredients'
 import { useMeals } from '../hooks/useMeals'
 import DashboardMetrics from '../components/DashboardMetrics'
@@ -85,11 +86,108 @@ const Dashboard = ({ user }) => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <Title level={2} className="page-title">
+      {/* Modern header with pill badge, inspired by reference image */}
+      <header
+        style={{
+          width: '100%',
+          padding: '28px 0 18px 0',
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderBottom: '1px solid #f0f0f0',
+          background: 'transparent',
+          boxSizing: 'border-box',
+          marginBottom: 24,
+          gap: 18,
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Left: Dashboard Title */}
+        <Title
+          level={3}
+          style={{
+            margin: 0,
+            fontWeight: 700,
+            fontSize: '2rem',
+            letterSpacing: '-0.5px',
+            color: '#222',
+            lineHeight: 1.1,
+          }}
+        >
           Dashboard
         </Title>
-      </div>
+        {/* Right: Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          {/* Week/Month/Year Selector */}
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              padding: '12px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Radio.Group
+              value={timeFilter}
+              onChange={e => handleTimeFilterChange(e.target.value)}
+              buttonStyle="solid"
+              size="small"
+            >
+              <Radio.Button value="week">Week</Radio.Button>
+              <Radio.Button value="month">Month</Radio.Button>
+              <Radio.Button value="year">Year</Radio.Button>
+            </Radio.Group>
+          </div>
+          {/* TimeFilter Navigation (arrows + date) */}
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              padding: '12px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Button
+              icon={<LeftOutlined />}
+              size="small"
+              onClick={() => handleNavigate('prev')}
+              style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+            />
+            <Typography.Text strong style={{ fontSize: 14, minWidth: 90, textAlign: 'center' }}>
+              {/* Use TimeFilter's getPeriodDisplay logic inline */}
+              {(() => {
+                const now = dayjs()
+                if (timeFilter === 'week') {
+                  const weekStart = now.subtract(7 * periodOffset, 'day').startOf('week')
+                  const weekEnd = now.subtract(7 * periodOffset, 'day').endOf('week')
+                  return `${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`
+                } else if (timeFilter === 'month') {
+                  const monthDate = now.subtract(30 * periodOffset, 'day')
+                  return monthDate.format('MMMM YYYY')
+                } else if (timeFilter === 'year') {
+                  const yearDate = now.subtract(12 * periodOffset, 'month')
+                  return yearDate.format('YYYY')
+                }
+                return ''
+              })()}
+            </Typography.Text>
+            <Button
+              icon={<RightOutlined />}
+              size="small"
+              onClick={() => handleNavigate('next')}
+              style={{ background: 'none', border: 'none', boxShadow: 'none' }}
+            />
+          </div>
+          {/* Main CTA placeholder (add if needed) */}
+        </div>
+      </header>
 
       {/* Show errors if any */}
       {error && (
@@ -111,16 +209,8 @@ const Dashboard = ({ user }) => {
         </div>
       ) : (
         <>
-          {/* Time Filter */}
-          <TimeFilter
-            timeFilter={timeFilter}
-            onTimeFilterChange={handleTimeFilterChange}
-            onNavigate={handleNavigate}
-            currentPeriod={periodOffset}
-          />
-
           {/* Metrics Cards */}
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 24, background: 'transparent', boxShadow: 'none' }}>
             <DashboardMetrics
               ingredients={ingredients || []}
               meals={meals || []}
