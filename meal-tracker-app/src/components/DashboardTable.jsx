@@ -115,11 +115,34 @@ const DashboardTable = ({
     return Math.round((ingredient.amount_used / ingredient.amount_purchased) * 100)
   }
 
+  // Helper for status (copy from IngredientsTable)
   const getUsageStatus = (ingredient) => {
+    if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
     const percentage = getUsagePercentage(ingredient)
+    if (percentage === 100) return 'finished'
     if (percentage >= 80) return 'success' // Green - mostly used
-    if (percentage >= 30) return 'warning' // Yellow - partially used
+    if (percentage >= 30) return 'warning' // Orange - partially used
     return 'exception' // Red - barely used
+  }
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'notused': return 'default'
+      case 'finished': return 'blue'
+      case 'success': return 'green'
+      case 'warning': return 'orange'
+      case 'exception': return 'red'
+      default: return 'default'
+    }
+  }
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'notused': return 'Not Used'
+      case 'finished': return 'Finished'
+      case 'success': return 'Mostly Used'
+      case 'warning': return 'Partially Used'
+      case 'exception': return 'Barely Used'
+      default: return 'Unknown'
+    }
   }
 
   // Ingredients table columns
@@ -188,37 +211,20 @@ const DashboardTable = ({
       key: 'status',
       render: (_, record) => {
         const status = getUsageStatus(record)
-        let color, text
-        
-        switch (status) {
-          case 'success':
-            color = 'green'
-            text = 'Mostly Used'
-            break
-          case 'warning':
-            color = 'orange'
-            text = 'Partially Used'
-            break
-          case 'exception':
-            color = 'red'
-            text = 'Barely Used'
-            break
-          default:
-            color = 'default'
-            text = 'Unknown'
-        }
-        
-        return <Tag color={color}>{text}</Tag>
+        return (
+          <Tag color={getStatusColor(status)}>
+            {getStatusText(status)}
+          </Tag>
+        )
       },
       filters: [
+        { text: 'Not Used', value: 'notused' },
+        { text: 'Finished', value: 'finished' },
         { text: 'Mostly Used', value: 'success' },
         { text: 'Partially Used', value: 'warning' },
         { text: 'Barely Used', value: 'exception' }
       ],
-      onFilter: (value, record) => {
-        const status = getUsageStatus(record)
-        return status === value
-      }
+      onFilter: (value, record) => getUsageStatus(record) === value
     }
   ]
 

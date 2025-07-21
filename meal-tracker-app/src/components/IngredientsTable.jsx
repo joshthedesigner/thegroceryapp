@@ -28,8 +28,7 @@ const IngredientsTable = ({
   loading, 
   onEdit, 
   onDelete, 
-  getUsagePercentage, 
-  getUsageStatus 
+  getUsagePercentage
 }) => {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -44,6 +43,8 @@ const IngredientsTable = ({
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
+      case 'notused': return 'default'
+      case 'finished': return 'blue'
       case 'success': return 'green'
       case 'warning': return 'orange'
       case 'exception': return 'red'
@@ -54,11 +55,23 @@ const IngredientsTable = ({
   // Get status text
   const getStatusText = (status) => {
     switch (status) {
+      case 'notused': return 'Not Used'
+      case 'finished': return 'Finished'
       case 'success': return 'Mostly Used'
       case 'warning': return 'Partially Used'
       case 'exception': return 'Barely Used'
       default: return 'Unknown'
     }
+  }
+
+  // Helper for status
+  const getUsageStatus = (ingredient) => {
+    if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
+    const percentage = getUsagePercentage(ingredient)
+    if (percentage === 100) return 'finished'
+    if (percentage >= 80) return 'success' // Green - mostly used
+    if (percentage >= 30) return 'warning' // Orange - partially used
+    return 'exception' // Red - barely used
   }
 
   // Handle delete
@@ -127,6 +140,8 @@ const IngredientsTable = ({
       title: 'Status',
       key: 'status',
       filters: [
+        { text: 'Not Used', value: 'notused' },
+        { text: 'Finished', value: 'finished' },
         { text: 'Mostly Used', value: 'success' },
         { text: 'Partially Used', value: 'warning' },
         { text: 'Barely Used', value: 'exception' }
