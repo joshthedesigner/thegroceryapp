@@ -27,6 +27,16 @@ const TrendsGraph = ({
   loading = false 
 }) => {
 
+  // Debug logging for incoming data
+  console.log('TrendsGraph props:', {
+    ingredientsCount: ingredients.length,
+    mealsCount: meals.length,
+    timeFilter,
+    loading,
+    sampleIngredients: ingredients.slice(0, 2),
+    sampleMeals: meals.slice(0, 2)
+  })
+
   // Process data for chart
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []
@@ -85,17 +95,29 @@ const TrendsGraph = ({
       
       const unusedValue = totalValue - usedValue
 
-      dataPoints.push({
+      const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
         totalValue: Math.round(totalValue * 100) / 100,
         usedValue: Math.round(usedValue * 100) / 100,
         unusedValue: Math.round(unusedValue * 100) / 100
+      }
+
+      // Debug logging
+      console.log(`Period ${dataPoint.date}:`, {
+        totalValue: dataPoint.totalValue,
+        usedValue: dataPoint.usedValue,
+        unusedValue: dataPoint.unusedValue,
+        periodMealsCount: periodMeals.length,
+        periodIngredientsCount: periodIngredients.length
       })
+
+      dataPoints.push(dataPoint)
 
       current = current.add(1, interval)
     }
 
+    console.log('Final chartData:', dataPoints)
     return dataPoints
   }, [ingredients, meals, timeFilter])
 
