@@ -27,6 +27,8 @@ const DashboardTable = ({
   ingredients = [], 
   meals = [], 
   timeFilter = 'all',
+  periodOffset = 0,
+  getDateRange,
   loading = false 
 }) => {
   const [viewMode, setViewMode] = useState('ingredients') // 'ingredients' or 'meals'
@@ -34,32 +36,50 @@ const DashboardTable = ({
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
 
-  // Filter data based on time filter
+  // Filter data based on time filter using standardized date range
   const getFilteredData = () => {
-    const now = dayjs()
-    let startDate = new Date(0)
-    
-    switch (timeFilter) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        break
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-        break
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1)
-        break
-      default:
-        startDate = new Date(0)
+    if (!getDateRange) {
+      // Fallback to old logic if getDateRange is not provided
+      const now = new Date()
+      let startDate = new Date(0)
+      
+      switch (timeFilter) {
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+          break
+        case 'year':
+          startDate = new Date(now.getFullYear(), 0, 1)
+          break
+        default:
+          startDate = new Date(0)
+      }
+      
+      const filteredIngredients = ingredients.filter(ing => 
+        new Date(ing.purchase_date) >= startDate
+      )
+      
+      const filteredMeals = meals.filter(meal => 
+        new Date(meal.date_cooked) >= startDate
+      )
+      
+      return { filteredIngredients, filteredMeals }
     }
+
+    // Use standardized date range
+    const { start, end } = getDateRange(timeFilter, periodOffset)
     
-    const filteredIngredients = ingredients.filter(ing => 
-      new Date(ing.purchase_date) >= startDate
-    )
+    const filteredIngredients = ingredients.filter(ing => {
+      const purchaseDate = new Date(ing.purchase_date)
+      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
+    })
     
-    const filteredMeals = meals.filter(meal => 
-      new Date(meal.date_cooked) >= startDate
-    )
+    const filteredMeals = meals.filter(meal => {
+      const mealDate = new Date(meal.date_cooked)
+      return mealDate >= start.toDate() && mealDate <= end.toDate()
+    })
     
     return { filteredIngredients, filteredMeals }
   }

@@ -24,6 +24,8 @@ const TrendsGraph = ({
   ingredients = [], 
   meals = [], 
   timeFilter = 'all',
+  periodOffset = 0,
+  getDateRange,
   loading = false 
 }) => {
 
@@ -31,29 +33,48 @@ const TrendsGraph = ({
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []
 
-    const now = dayjs()
     let startDate, endDate, interval
 
-    // Determine date range and interval based on time filter
+    // Use standardized date range if available
+    if (getDateRange) {
+      const dateRange = getDateRange(timeFilter, periodOffset)
+      startDate = dateRange.start
+      endDate = dateRange.end
+    } else {
+      // Fallback to old logic
+      const now = dayjs()
+      
+      switch (timeFilter) {
+        case 'week':
+          startDate = now.subtract(7, 'day')
+          endDate = now
+          break
+        case 'month':
+          startDate = now.subtract(30, 'day')
+          endDate = now
+          break
+        case 'year':
+          startDate = now.subtract(12, 'month')
+          endDate = now
+          break
+        default:
+          startDate = dayjs().subtract(6, 'month')
+          endDate = now
+      }
+    }
+
+    // Determine interval based on time filter
     switch (timeFilter) {
       case 'week':
-        startDate = now.subtract(7, 'day')
-        endDate = now
         interval = 'day'
         break
       case 'month':
-        startDate = now.subtract(30, 'day')
-        endDate = now
         interval = 'day'
         break
       case 'year':
-        startDate = now.subtract(12, 'month')
-        endDate = now
         interval = 'month'
         break
       default:
-        startDate = dayjs().subtract(6, 'month')
-        endDate = now
         interval = 'month'
     }
 
@@ -99,7 +120,7 @@ const TrendsGraph = ({
     }
 
     return dataPoints
-  }, [ingredients, meals, timeFilter])
+  }, [ingredients, meals, timeFilter, periodOffset, getDateRange])
 
   const getYAxisLabel = () => {
     return 'Value ($)'

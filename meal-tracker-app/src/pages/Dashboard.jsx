@@ -7,11 +7,13 @@ import TimeFilter from '../components/TimeFilter'
 import TrendsGraph from '../components/TrendsGraph'
 import DashboardTable from '../components/DashboardTable'
 import MetricDetailsModal from '../components/MetricDetailsModal'
+import dayjs from 'dayjs'
 
 const { Title } = Typography
 
 const Dashboard = ({ user }) => {
   const [timeFilter, setTimeFilter] = useState('all')
+  const [periodOffset, setPeriodOffset] = useState(0)
   const [metricDetailsVisible, setMetricDetailsVisible] = useState(false)
   const [selectedMetricType, setSelectedMetricType] = useState(null)
   
@@ -30,13 +32,44 @@ const Dashboard = ({ user }) => {
   const loading = ingredientsLoading || mealsLoading
   const error = ingredientsError || mealsError
 
+  // Standardized date range calculation
+  const getDateRange = (timeFilter, offset = 0) => {
+    const now = dayjs()
+    
+    switch (timeFilter) {
+      case 'week':
+        return {
+          start: now.subtract(7 * (offset + 1), 'day').add(7, 'day'),
+          end: now.subtract(7 * offset, 'day')
+        }
+      case 'month':
+        return {
+          start: now.subtract(30 * (offset + 1), 'day').add(30, 'day'),
+          end: now.subtract(30 * offset, 'day')
+        }
+      case 'year':
+        return {
+          start: now.subtract(12 * (offset + 1), 'month').add(12, 'month'),
+          end: now.subtract(12 * offset, 'month')
+        }
+      default:
+        return { start: dayjs(0), end: now }
+    }
+  }
+
   const handleTimeFilterChange = (newFilter) => {
     setTimeFilter(newFilter)
+    setPeriodOffset(0) // Reset to current period when changing filter type
   }
 
   const handleNavigate = (direction) => {
-    // TODO: Implement navigation logic for different time periods
-    console.log('Navigate:', direction)
+    if (direction === 'prev') {
+      setPeriodOffset(prev => prev + 1)
+    } else if (direction === 'next') {
+      setPeriodOffset(prev => Math.max(0, prev - 1))
+    } else if (direction === 'reset') {
+      setPeriodOffset(0)
+    }
   }
 
   const handleMetricClick = (metricType) => {
@@ -77,6 +110,7 @@ const Dashboard = ({ user }) => {
             timeFilter={timeFilter}
             onTimeFilterChange={handleTimeFilterChange}
             onNavigate={handleNavigate}
+            currentPeriod={periodOffset}
           />
 
           {/* Metrics Cards */}
@@ -85,6 +119,8 @@ const Dashboard = ({ user }) => {
               ingredients={ingredients || []}
               meals={meals || []}
               timeFilter={timeFilter}
+              periodOffset={periodOffset}
+              getDateRange={getDateRange}
               onMetricClick={handleMetricClick}
             />
           </div>
@@ -97,6 +133,8 @@ const Dashboard = ({ user }) => {
                 ingredients={ingredients || []}
                 meals={meals || []}
                 timeFilter={timeFilter}
+                periodOffset={periodOffset}
+                getDateRange={getDateRange}
               />
             </Col>
           </Row>
@@ -107,6 +145,8 @@ const Dashboard = ({ user }) => {
               ingredients={ingredients || []}
               meals={meals || []}
               timeFilter={timeFilter}
+              periodOffset={periodOffset}
+              getDateRange={getDateRange}
             />
           </div>
         </>
@@ -115,11 +155,13 @@ const Dashboard = ({ user }) => {
       {/* Metric Details Modal */}
       <MetricDetailsModal
         visible={metricDetailsVisible}
+        onCancel={() => setMetricDetailsVisible(false)}
         metricType={selectedMetricType}
         ingredients={ingredients || []}
         meals={meals || []}
         timeFilter={timeFilter}
-        onClose={() => setMetricDetailsVisible(false)}
+        periodOffset={periodOffset}
+        getDateRange={getDateRange}
       />
     </div>
   )

@@ -9,20 +9,22 @@ const TimeFilter = ({
   timeFilter = 'all', 
   onTimeFilterChange, 
   onNavigate,
-  currentPeriod = null 
+  currentPeriod = 0 
 }) => {
   const getPeriodDisplay = () => {
     const now = dayjs()
     
     switch (timeFilter) {
       case 'week':
-        const weekStart = now.startOf('week')
-        const weekEnd = now.endOf('week')
+        const weekStart = now.subtract(7 * currentPeriod, 'day').startOf('week')
+        const weekEnd = now.subtract(7 * currentPeriod, 'day').endOf('week')
         return `${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`
       case 'month':
-        return now.format('MMMM YYYY')
+        const monthDate = now.subtract(30 * currentPeriod, 'day')
+        return monthDate.format('MMMM YYYY')
       case 'year':
-        return now.format('YYYY')
+        const yearDate = now.subtract(12 * currentPeriod, 'month')
+        return yearDate.format('YYYY')
       default:
         return 'All Time'
     }
