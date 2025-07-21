@@ -101,7 +101,8 @@ export const getMeals = async (userId) => {
         ingredients (
           name,
           unit,
-          price
+          price,
+          amount_purchased
         )
       )
     `)
@@ -121,7 +122,8 @@ export const getMeal = async (id) => {
         ingredients (
           name,
           unit,
-          price
+          price,
+          amount_purchased
         )
       )
     `)

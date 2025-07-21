@@ -125,6 +125,12 @@ const IngredientsTable = ({
     {
       title: 'Status',
       key: 'status',
+      filters: [
+        { text: 'Mostly Used', value: 'success' },
+        { text: 'Partially Used', value: 'warning' },
+        { text: 'Barely Used', value: 'exception' }
+      ],
+      onFilter: (value, record) => getUsageStatus(record) === value,
       render: (_, record) => {
         const status = getUsageStatus(record)
         return (
@@ -165,55 +171,20 @@ const IngredientsTable = ({
   ]
 
   return (
-    <div className="table-container">
-      <div style={{ padding: '24px 16px 0 16px', borderBottom: 'none' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, gap: 16 }}>
-          <span style={{ fontWeight: 600, fontSize: 20 }}>Ingredients Overview</span>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Search
-              placeholder="Search ingredients..."
-              allowClear
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined />}
-              style={{ minWidth: 180 }}
-            />
-            <Select
-              placeholder="Filter by status"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              style={{ minWidth: 180 }}
-              prefix={<FilterOutlined />}
-            >
-              <Option value="all">All Status</Option>
-              <Option value="success">Mostly Used</Option>
-              <Option value="warning">Partially Used</Option>
-              <Option value="exception">Barely Used</Option>
-            </Select>
-          </div>
-        </div>
-        <div style={{ borderBottom: '1px solid #f0f0f0', marginBottom: 8 }} />
-      </div>
-      <Table
-        columns={columns}
-        dataSource={filteredIngredients}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => 
-            `${range[0]}-${range[1]} of ${total} ingredients`
-        }}
-        scroll={{ x: 800 }}
-      />
-      <style>{`
-        .ant-table-pagination {
-          padding-right: 24px;
-        }
-      `}</style>
-    </div>
+    <Table
+      columns={columns}
+      dataSource={filteredIngredients}
+      rowKey="id"
+      loading={loading}
+      pagination={{
+        pageSize: 10,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (total, range) => 
+          `${range[0]}-${range[1]} of ${total} ingredients`
+      }}
+      scroll={{ x: 800 }}
+    />
   )
 }
 

@@ -15,7 +15,8 @@ import {
   DeleteOutlined, 
   EyeOutlined,
   DollarOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  DownOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 
@@ -51,10 +52,7 @@ const MealsTable = ({
     }
 
     return (
-      <Card size="small" style={{ margin: '0 50px' }}>
-        <Title level={5} style={{ marginBottom: 16 }}>
-          Ingredients Used
-        </Title>
+      <div style={{ margin: '0 50px', background: '#fff', borderRadius: 8 }}>
         <Table
           dataSource={record.meal_ingredients}
           pagination={false}
@@ -62,33 +60,22 @@ const MealsTable = ({
           columns={[
             {
               title: 'Ingredient',
-              dataIndex: 'ingredient_name',
               key: 'ingredient_name',
-              render: (text) => <Text strong>{text}</Text>
+              render: (_, rec) => <Text strong>{rec.ingredients?.name || ''}</Text>
             },
             {
               title: 'Quantity Used',
               dataIndex: 'quantity_used',
               key: 'quantity_used',
-              render: (quantity, record) => (
+              render: (quantity, rec) => (
                 <Text>
-                  {quantity} {record.unit}
-                </Text>
-              )
-            },
-            {
-              title: 'Cost',
-              dataIndex: 'cost',
-              key: 'cost',
-              render: (cost) => (
-                <Text type="success">
-                  ${cost ? cost.toFixed(2) : '0.00'}
+                  {quantity} {rec.ingredients?.unit || ''}
                 </Text>
               )
             }
           ]}
         />
-      </Card>
+      </div>
     )
   }
 
@@ -126,7 +113,7 @@ const MealsTable = ({
           <Space wrap>
             {ingredients.slice(0, 2).map((ing, index) => (
               <Tag key={index} color="blue">
-                {ing.ingredient_name}
+                {ing.ingredients?.name || ''}
               </Tag>
             ))}
             {ingredients.length > 2 && (
@@ -141,12 +128,9 @@ const MealsTable = ({
       dataIndex: 'total_cost',
       key: 'total_cost',
       render: (cost) => (
-        <Space>
-          <DollarOutlined />
-          <Text strong type="success">
-            ${cost ? cost.toFixed(2) : '0.00'}
-          </Text>
-        </Space>
+        <Text style={{ color: '#222', fontWeight: 400 }}>
+          ${cost ? cost.toFixed(2) : '0.00'}
+        </Text>
       ),
       sorter: (a, b) => (a.total_cost || 0) - (b.total_cost || 0)
     },
@@ -191,39 +175,45 @@ const MealsTable = ({
   ]
 
   return (
-    <div style={{ border: '1.5px solid #e5e7eb', borderRadius: 12, background: '#fff', boxShadow: 'none', padding: 16 }}>
-      <Table
-        dataSource={meals}
-        columns={columns}
-        loading={loading}
-        rowKey="id"
-        expandable={{
-          expandedRowRender,
-          expandedRowKeys,
-          onExpand: handleExpand,
-          expandRowByClick: true
-        }}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => 
-            `${range[0]}-${range[1]} of ${total} meals`
-        }}
-        locale={{
-          emptyText: (
-            <Empty
-              description="No meals logged yet"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            >
-              <Text type="secondary">
-                Start by logging your first meal to track your cooking!
-              </Text>
-            </Empty>
-          )
-        }}
-      />
-    </div>
+    <Table
+      dataSource={meals}
+      columns={columns}
+      loading={loading}
+      rowKey="id"
+      expandable={{
+        expandedRowRender,
+        expandedRowKeys,
+        onExpand: handleExpand,
+        expandRowByClick: true,
+        expandIcon: ({ expanded, onExpand, record }) => (
+          <span
+            onClick={e => onExpand(record, e)}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', fontSize: 16 }}
+          >
+            <DownOutlined style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+          </span>
+        )
+      }}
+      pagination={{
+        pageSize: 10,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (total, range) => 
+          `${range[0]}-${range[1]} of ${total} meals`
+      }}
+      locale={{
+        emptyText: (
+          <Empty
+            description="No meals logged yet"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          >
+            <Text type="secondary">
+              Start by logging your first meal to track your cooking!
+            </Text>
+          </Empty>
+        )
+      }}
+    />
   )
 }
 
