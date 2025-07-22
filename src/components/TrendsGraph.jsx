@@ -102,20 +102,21 @@ const TrendsGraph = ({
         interval = 'day'
     }
 
-    // Calculate cumulative total value using DashboardMetrics logic
-    const filteredIngredients = ingredients.filter(ing => {
-      const purchaseDate = dayjs(ing.purchase_date)
-      return purchaseDate.isAfter(startDate) && purchaseDate.isBefore(endDate.add(1, 'day'))
-    })
-    
-    const totalValue = filteredIngredients.reduce((sum, ing) => sum + ing.price, 0)
-
     // Generate date points
     const dataPoints = []
     let current = startDate.clone()
+    let cumulativeTotal = 0
 
     while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
       const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
+      
+      // Calculate ingredients added up to this current date (cumulative)
+      const ingredientsUpToDate = ingredients.filter(ing => {
+        const purchaseDate = dayjs(ing.purchase_date)
+        return purchaseDate.isAfter(startDate) && purchaseDate.isBefore(current.add(1, 'day'))
+      })
+      
+      cumulativeTotal = ingredientsUpToDate.reduce((sum, ing) => sum + ing.price, 0)
       
       // Filter meals for this specific date point (unchanged)
       const periodMeals = meals.filter(meal => {
@@ -128,12 +129,12 @@ const TrendsGraph = ({
         return sum + (meal.total_cost || 0)
       }, 0)
       
-      const unusedValue = totalValue - usedValue
+      const unusedValue = cumulativeTotal - usedValue
 
       const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
-        totalValue: Math.round(totalValue * 100) / 100, // Same value for all days
+        totalValue: Math.round(cumulativeTotal * 100) / 100, // Cumulative total up to this date
         usedValue: Math.round(usedValue * 100) / 100,
         unusedValue: Math.round(unusedValue * 100) / 100
       }
