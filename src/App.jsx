@@ -6,6 +6,7 @@ import { validateEnv } from './config/env'
 import LoadingSpinner from './components/LoadingSpinner'
 import { WelcomeProvider } from './features/welcome/context/WelcomeContext'
 import AuthenticationGuard from './components/AuthenticationGuard'
+import AuthenticatedApp from './components/AuthenticatedApp'
 
 // Import pages
 import Login from './pages/Login'
@@ -39,7 +40,15 @@ const AuthCallback = () => {
     handleAuthCallback()
   }, [])
 
-  return <LoadingSpinner message="Completing authentication..." variant="card" />
+  return (
+    <div style={{ 
+      backgroundColor: '#f5f5f5',
+      minHeight: '100vh',
+      width: '100%'
+    }}>
+      <LoadingSpinner message="Completing authentication..." variant="immersive" />
+    </div>
+  )
 }
 
 // Error Boundary Component
@@ -150,7 +159,15 @@ function App() {
   // Loading is now handled by AuthenticationGuard for authenticated users
   // Only show loading for unauthenticated users
   if (loading && !user) {
-    return <LoadingSpinner message="Loading..." variant="card" />
+    return (
+      <div style={{ 
+        backgroundColor: '#f5f5f5',
+        minHeight: '100vh',
+        width: '100%'
+      }}>
+        <LoadingSpinner message="Loading..." variant="immersive" />
+      </div>
+    )
   }
 
   if (envError) {
@@ -190,18 +207,10 @@ function App() {
                   {/* Welcome Screen Route */}
                   <Route path="/welcome" element={<WelcomeScreen user={user} />} />
                   
-                  {/* Main App Routes */}
+                  {/* Main App Routes - Use AuthenticatedApp to prevent Layout flash */}
                   <Route path="/*" element={
                     <AuthenticationGuard user={user} authLoading={loading}>
-                      <Layout user={user}>
-                        <Routes>
-                          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                          <Route path="/dashboard" element={<Dashboard user={user} />} />
-                          <Route path="/ingredients" element={<Ingredients user={user} />} />
-                          <Route path="/meals" element={<Meals user={user} />} />
-                          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                        </Routes>
-                      </Layout>
+                      <AuthenticatedApp user={user} authLoading={loading} />
                     </AuthenticationGuard>
                   } />
                 </Routes>

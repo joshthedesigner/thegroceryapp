@@ -35,7 +35,7 @@ const WelcomeScreen = ({ user }) => {
 
   // Show loading state
   if (isLoading) {
-    return <LoadingSpinner message="Loading welcome screen..." variant="card" />
+    return <LoadingSpinner message="Loading welcome screen..." variant="immersive" />
   }
 
   // Show error state

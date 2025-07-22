@@ -32,6 +32,21 @@ const LoadingSpinner = ({
           }
         }
       
+      case 'immersive':
+        return {
+          container: {
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh', // Full viewport height for proper centering
+            width: '100%'
+          },
+          content: {
+            textAlign: 'center',
+            // No background, border, shadow, or padding for immersive feel
+          }
+        }
+      
       case 'padded':
         return {
           container: {

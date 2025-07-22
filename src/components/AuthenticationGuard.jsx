@@ -5,8 +5,8 @@ import LoadingSpinner from './LoadingSpinner'
 
 /**
  * Authentication Guard Component
- * Combines authentication loading with welcome status check
- * to eliminate multiple loading spinners for existing users
+ * Handles authentication loading and welcome redirects
+ * Prevents Layout flash by not rendering children during loading
  */
 const AuthenticationGuard = ({ children, user, authLoading }) => {
   const { isWelcomeActive, isLoading: welcomeLoading, hasSeenWelcome } = useWelcomeContext()
@@ -50,13 +50,6 @@ const AuthenticationGuard = ({ children, user, authLoading }) => {
       return
     }
 
-    // If user has seen welcome, allow rendering
-    if (hasSeenWelcome === true) {
-      console.log('AuthenticationGuard: User has seen welcome, allowing dashboard')
-      setShouldRender(true)
-      return
-    }
-
     // If user hasn't seen welcome but we're not loading, redirect
     if (hasSeenWelcome === false) {
       console.log('AuthenticationGuard: User hasn\'t seen welcome, redirecting')
@@ -65,15 +58,24 @@ const AuthenticationGuard = ({ children, user, authLoading }) => {
       return
     }
 
+    // If user has seen welcome, allow rendering
+    if (hasSeenWelcome === true) {
+      console.log('AuthenticationGuard: User has seen welcome, allowing dashboard')
+      setShouldRender(true)
+      return
+    }
+
     // Default: don't render until we know the state
     setShouldRender(false)
   }, [isWelcomeActive, welcomeLoading, hasSeenWelcome, location.pathname, navigate, forceWelcome, authLoading])
 
   // Show loading state while determining authentication and welcome status
+  // This prevents ANY child components (including Layout/navbar) from rendering
   if (!shouldRender) {
-    return <LoadingSpinner message="Loading..." variant="card" />
+    return <LoadingSpinner message="Loading..." variant="immersive" />
   }
 
+  // Only render children when shouldRender is true
   return children
 }
 

@@ -155,7 +155,7 @@ const Dashboard = ({ user }) => {
       )}
 
       {loading ? (
-        <LoadingSpinner message="Loading dashboard data..." variant="card" />
+        <LoadingSpinner message="Loading dashboard data..." variant="immersive" />
       ) : (
         <>
           {/* Metrics Cards */}

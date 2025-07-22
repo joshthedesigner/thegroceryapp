@@ -67,7 +67,7 @@ const WelcomeGuard = ({ children }) => {
 
   // Show loading state while determining welcome status
   if (!shouldRender) {
-    return <LoadingSpinner message="Loading..." variant="card" />
+    return <LoadingSpinner message="Loading..." variant="immersive" />
   }
 
   return children

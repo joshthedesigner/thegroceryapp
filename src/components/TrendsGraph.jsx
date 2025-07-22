@@ -166,7 +166,7 @@ const TrendsGraph = ({
   if (loading) {
     return (
       <Card>
-        <LoadingSpinner message="Loading trends data..." variant="card" />
+        <LoadingSpinner message="Loading trends data..." variant="immersive" />
       </Card>
     )
   }
