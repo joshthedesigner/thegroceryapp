@@ -53,6 +53,13 @@ const TrendsGraph = ({
   loading = false 
 }) => {
 
+  // DEBUG: Log when component renders
+  console.log('🎯 TrendsGraph Component Rendered:')
+  console.log('  - Ingredients count:', ingredients.length)
+  console.log('  - Meals count:', meals.length)
+  console.log('  - TimeFilter:', timeFilter)
+  console.log('  - Loading:', loading)
+
   // Process data for chart
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []
@@ -87,6 +94,18 @@ const TrendsGraph = ({
       }
     }
 
+    // DEBUG: Log the date range and ingredients
+    console.log('🔍 TrendsGraph Debug:')
+    console.log('  - TimeFilter:', timeFilter)
+    console.log('  - PeriodOffset:', periodOffset)
+    console.log('  - StartDate:', startDate.format('YYYY-MM-DD'))
+    console.log('  - EndDate:', endDate.format('YYYY-MM-DD'))
+    console.log('  - Total ingredients received:', ingredients.length)
+    console.log('  - Ingredients with today\'s date:', ingredients.filter(ing => {
+      const purchaseDate = dayjs(ing.purchase_date)
+      return purchaseDate.isSame(dayjs(), 'day')
+    }).length)
+
     // Determine interval based on time filter
     switch (timeFilter) {
       case 'week':
@@ -113,10 +132,22 @@ const TrendsGraph = ({
       // Calculate ingredients added up to this current date (cumulative)
       const ingredientsUpToDate = ingredients.filter(ing => {
         const purchaseDate = dayjs(ing.purchase_date)
-        return purchaseDate.isBefore(current.add(1, 'day')) // Include ALL ingredients up to this date
+        return purchaseDate.isBefore(current, 'day') // Include ingredients up to (but not including) this date
       })
       
       cumulativeTotal = ingredientsUpToDate.reduce((sum, ing) => sum + ing.price, 0)
+      
+      // DEBUG: Log data for today's date
+      if (current.isSame(dayjs(), 'day')) {
+        console.log('  - Today\'s date in loop:', current.format('YYYY-MM-DD'))
+        console.log('  - Ingredients up to today:', ingredientsUpToDate.length)
+        console.log('  - Cumulative total for today:', cumulativeTotal)
+        console.log('  - Today\'s ingredients:', ingredientsUpToDate.map(ing => ({
+          name: ing.name,
+          price: ing.price,
+          purchase_date: ing.purchase_date
+        })))
+      }
       
       // Filter meals for this specific date point (unchanged)
       const periodMeals = meals.filter(meal => {
@@ -143,6 +174,12 @@ const TrendsGraph = ({
 
       current = current.add(1, interval)
     }
+
+    console.log('  - Total data points generated:', dataPoints.length)
+    console.log('  - Final chart data:', dataPoints.map(dp => ({
+      date: dp.date,
+      totalValue: dp.totalValue
+    })))
 
     return dataPoints
   }, [ingredients, meals, timeFilter, periodOffset, getDateRange])
