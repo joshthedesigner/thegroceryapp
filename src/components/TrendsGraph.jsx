@@ -113,7 +113,7 @@ const TrendsGraph = ({
       // Calculate ingredients added up to this current date (cumulative)
       const ingredientsUpToDate = ingredients.filter(ing => {
         const purchaseDate = dayjs(ing.purchase_date)
-        return purchaseDate.isAfter(startDate) && purchaseDate.isBefore(current.add(1, 'day'))
+        return purchaseDate.isBefore(current.add(1, 'day')) // Include ALL ingredients up to this date
       })
       
       cumulativeTotal = ingredientsUpToDate.reduce((sum, ing) => sum + ing.price, 0)
