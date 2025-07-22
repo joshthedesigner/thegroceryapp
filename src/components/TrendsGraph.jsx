@@ -26,7 +26,7 @@ const legendColors = {
   unusedValue: '#f5222d',
 }
 const legendLabels = {
-  totalValue: 'Purchased Value',
+  totalValue: 'Total Value Added',
   usedValue: 'Consumed Value',
   unusedValue: 'Wasted Value',
 }
@@ -102,6 +102,14 @@ const TrendsGraph = ({
         interval = 'day'
     }
 
+    // Calculate cumulative total value using DashboardMetrics logic
+    const filteredIngredients = ingredients.filter(ing => {
+      const purchaseDate = dayjs(ing.purchase_date)
+      return purchaseDate.isAfter(startDate) && purchaseDate.isBefore(endDate.add(1, 'day'))
+    })
+    
+    const totalValue = filteredIngredients.reduce((sum, ing) => sum + ing.price, 0)
+
     // Generate date points
     const dataPoints = []
     let current = startDate.clone()
@@ -109,20 +117,12 @@ const TrendsGraph = ({
     while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
       const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
       
-      // Filter data for this date point
-      const periodIngredients = ingredients.filter(ing => {
-        const purchaseDate = dayjs(ing.purchase_date)
-        return purchaseDate.isSame(current, interval)
-      })
-
+      // Filter meals for this specific date point (unchanged)
       const periodMeals = meals.filter(meal => {
         const mealDate = dayjs(meal.date_cooked)
         return mealDate.isSame(current, interval)
       })
 
-      // Calculate metrics for this period
-      const totalValue = periodIngredients.reduce((sum, ing) => sum + ing.price, 0)
-      
       // Calculate used value based on actual meal consumption during this period
       const usedValue = periodMeals.reduce((sum, meal) => {
         return sum + (meal.total_cost || 0)
@@ -133,7 +133,7 @@ const TrendsGraph = ({
       const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
-        totalValue: Math.round(totalValue * 100) / 100,
+        totalValue: Math.round(totalValue * 100) / 100, // Same value for all days
         usedValue: Math.round(usedValue * 100) / 100,
         unusedValue: Math.round(unusedValue * 100) / 100
       }
@@ -156,7 +156,7 @@ const TrendsGraph = ({
 
   const getLegendFormatter = (value) => {
     const legendMap = {
-      totalValue: 'Purchased Value',
+      totalValue: 'Total Value Added',
       usedValue: 'Consumed Value',
       unusedValue: 'Wasted Value'
     }
@@ -219,7 +219,7 @@ const TrendsGraph = ({
             />
             <Tooltip 
               formatter={getTooltipFormatter}
-              labelFormatter={(label) => `Period: ${label}`}
+              labelFormatter={(label) => `Date: ${label}`}
             />
             <Line 
               type="monotone" 
