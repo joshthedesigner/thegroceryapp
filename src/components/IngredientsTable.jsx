@@ -10,7 +10,10 @@ import {
   Input,
   Select,
   Row,
-  Col
+  Col,
+  Radio,
+  Empty,
+  Typography
 } from 'antd'
 import { 
   EditOutlined, 
@@ -21,14 +24,14 @@ import {
 
 const { Search } = Input
 const { Option } = Select
+const { Text } = Typography
 
 const IngredientsTable = ({ 
   ingredients, 
   loading, 
   onEdit, 
   onDelete, 
-  getUsagePercentage, 
-  getUsageStatus 
+  getUsagePercentage
 }) => {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -43,6 +46,8 @@ const IngredientsTable = ({
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
+      case 'notused': return 'default'
+      case 'finished': return 'blue'
       case 'success': return 'green'
       case 'warning': return 'orange'
       case 'exception': return 'red'
@@ -53,11 +58,23 @@ const IngredientsTable = ({
   // Get status text
   const getStatusText = (status) => {
     switch (status) {
+      case 'notused': return 'Not Used'
+      case 'finished': return 'Finished'
       case 'success': return 'Mostly Used'
       case 'warning': return 'Partially Used'
       case 'exception': return 'Barely Used'
       default: return 'Unknown'
     }
+  }
+
+  // Helper for status
+  const getUsageStatus = (ingredient) => {
+    if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
+    const percentage = getUsagePercentage(ingredient)
+    if (percentage === 100) return 'finished'
+    if (percentage >= 80) return 'success' // Green - mostly used
+    if (percentage >= 30) return 'warning' // Orange - partially used
+    return 'exception' // Red - barely used
   }
 
   // Handle delete
@@ -101,17 +118,16 @@ const IngredientsTable = ({
       key: 'usage',
       render: (_, record) => {
         const percentage = getUsagePercentage(record)
-        const status = getUsageStatus(record)
-        
+        // No status icons, just percent and progress bar
         return (
-          <div className="progress-container">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 160 }}>
+            <span style={{ minWidth: 38, fontWeight: 500 }}>{percentage}%</span>
             <Progress 
               percent={percentage} 
-              status={status}
+              showInfo={false}
               size="small"
-              style={{ flex: 1 }}
+              style={{ width: 80 }}
             />
-            <span className="progress-text">{percentage}%</span>
           </div>
         )
       }
@@ -126,6 +142,14 @@ const IngredientsTable = ({
     {
       title: 'Status',
       key: 'status',
+      filters: [
+        { text: 'Not Used', value: 'notused' },
+        { text: 'Finished', value: 'finished' },
+        { text: 'Mostly Used', value: 'success' },
+        { text: 'Partially Used', value: 'warning' },
+        { text: 'Barely Used', value: 'exception' }
+      ],
+      onFilter: (value, record) => getUsageStatus(record) === value,
       render: (_, record) => {
         const status = getUsageStatus(record)
         return (
@@ -166,57 +190,32 @@ const IngredientsTable = ({
   ]
 
   return (
-    <div className="table-container">
-      <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0' }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
-            <Search
-              placeholder="Search ingredients..."
-              allowClear
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              prefix={<SearchOutlined />}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Filter by status"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              style={{ width: '100%' }}
-              prefix={<FilterOutlined />}
-            >
-              <Option value="all">All Status</Option>
-              <Option value="success">Mostly Used</Option>
-              <Option value="warning">Partially Used</Option>
-              <Option value="exception">Barely Used</Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={24} md={8}>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ color: '#8c8c8c' }}>
-                {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-          </Col>
-        </Row>
-      </div>
-      
-      <Table
-        columns={columns}
-        dataSource={filteredIngredients}
-        rowKey="id"
-        loading={loading}
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: true,
-          showQuickJumper: true,
-          showTotal: (total, range) => 
-            `${range[0]}-${range[1]} of ${total} ingredients`
-        }}
-        scroll={{ x: 800 }}
-      />
-    </div>
+    <Table
+      columns={columns}
+      dataSource={filteredIngredients}
+      rowKey="id"
+      loading={loading}
+      pagination={{
+        pageSize: 10,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (total, range) => 
+          `${range[0]}-${range[1]} of ${total} ingredients`
+      }}
+      scroll={{ x: 800 }}
+      locale={{
+        emptyText: (
+          <Empty
+            description="You haven’t added any ingredients yet."
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          >
+            <Text type="secondary">
+              Start by adding your first ingredient to track your groceries!
+            </Text>
+          </Empty>
+        )
+      }}
+    />
   )
 }
 

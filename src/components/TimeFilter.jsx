@@ -9,22 +9,24 @@ const TimeFilter = ({
   timeFilter = 'all', 
   onTimeFilterChange, 
   onNavigate,
-  currentPeriod = null 
+  currentPeriod = 0 
 }) => {
   const getPeriodDisplay = () => {
     const now = dayjs()
     
     switch (timeFilter) {
       case 'week':
-        const weekStart = now.startOf('week')
-        const weekEnd = now.endOf('week')
+        const weekStart = now.subtract(7 * currentPeriod, 'day').startOf('week')
+        const weekEnd = now.subtract(7 * currentPeriod, 'day').endOf('week')
         return `${weekStart.format('MMM DD')} - ${weekEnd.format('MMM DD, YYYY')}`
       case 'month':
-        return now.format('MMMM YYYY')
+        const monthDate = now.subtract(30 * currentPeriod, 'day')
+        return monthDate.format('MMMM YYYY')
       case 'year':
-        return now.format('YYYY')
+        const yearDate = now.subtract(12 * currentPeriod, 'month')
+        return yearDate.format('YYYY')
       default:
-        return 'All Time'
+        return ''
     }
   }
 
@@ -41,20 +43,10 @@ const TimeFilter = ({
   }
 
   return (
-    <Card size="small" style={{ marginBottom: 16 }}>
+    <Card size="small" style={{ marginBottom: 16, paddingTop: 12, paddingBottom: 12 }}>
       <Space direction="vertical" style={{ width: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text strong>Time Period</Text>
-          <Space>
-            <Button 
-              icon={<ReloadOutlined />} 
-              size="small"
-              onClick={handleReset}
-              disabled={timeFilter === 'all'}
-            >
-              Reset
-            </Button>
-          </Space>
         </div>
         
         <Radio.Group 
@@ -66,9 +58,10 @@ const TimeFilter = ({
           <Radio.Button value="week">Week</Radio.Button>
           <Radio.Button value="month">Month</Radio.Button>
           <Radio.Button value="year">Year</Radio.Button>
-          <Radio.Button value="all">All Time</Radio.Button>
+          {/* Removed 'All Time' filter */}
         </Radio.Group>
         
+        {/* Only show navigation for week/month/year */}
         {timeFilter !== 'all' && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Button 

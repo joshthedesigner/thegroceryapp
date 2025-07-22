@@ -9,7 +9,9 @@ import {
   Tag, 
   Tooltip,
   Button,
-  Modal
+  Modal,
+  Progress,
+  Empty
 } from 'antd'
 import { 
   SearchOutlined, 
@@ -26,6 +28,8 @@ const DashboardTable = ({
   ingredients = [], 
   meals = [], 
   timeFilter = 'all',
+  periodOffset = 0,
+  getDateRange,
   loading = false 
 }) => {
   const [viewMode, setViewMode] = useState('ingredients') // 'ingredients' or 'meals'
@@ -33,32 +37,51 @@ const DashboardTable = ({
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
 
-  // Filter data based on time filter
+  // Filter data based on time filter using standardized date range
   const getFilteredData = () => {
-    const now = dayjs()
-    let startDate = new Date(0)
-    
-    switch (timeFilter) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        break
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-        break
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1)
-        break
-      default:
-        startDate = new Date(0)
+    if (!getDateRange) {
+      // Fallback to old logic if getDateRange is not provided
+      const now = new Date()
+      let startDate = new Date(0)
+      
+      switch (timeFilter) {
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+          break
+        case 'year':
+          startDate = new Date(now.getFullYear(), 0, 1)
+          break
+        default:
+          // Default to week if unknown
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      }
+      
+      const filteredIngredients = ingredients.filter(ing => 
+        new Date(ing.purchase_date) >= startDate
+      )
+      
+      const filteredMeals = meals.filter(meal => 
+        new Date(meal.date_cooked) >= startDate
+      )
+      
+      return { filteredIngredients, filteredMeals }
     }
+
+    // Use standardized date range
+    const { start, end } = getDateRange(timeFilter, periodOffset)
     
-    const filteredIngredients = ingredients.filter(ing => 
-      new Date(ing.purchase_date) >= startDate
-    )
+    const filteredIngredients = ingredients.filter(ing => {
+      const purchaseDate = new Date(ing.purchase_date)
+      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
+    })
     
-    const filteredMeals = meals.filter(meal => 
-      new Date(meal.date_cooked) >= startDate
-    )
+    const filteredMeals = meals.filter(meal => {
+      const mealDate = new Date(meal.date_cooked)
+      return mealDate >= start.toDate() && mealDate <= end.toDate()
+    })
     
     return { filteredIngredients, filteredMeals }
   }
@@ -87,6 +110,42 @@ const DashboardTable = ({
     setDetailsVisible(true)
   }
 
+  // Helper functions for usage calculations
+  const getUsagePercentage = (ingredient) => {
+    if (!ingredient.amount_purchased || ingredient.amount_purchased === 0) return 0
+    return Math.round((ingredient.amount_used / ingredient.amount_purchased) * 100)
+  }
+
+  // Helper for status (copy from IngredientsTable)
+  const getUsageStatus = (ingredient) => {
+    if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
+    const percentage = getUsagePercentage(ingredient)
+    if (percentage === 100) return 'finished'
+    if (percentage >= 80) return 'success' // Green - mostly used
+    if (percentage >= 30) return 'warning' // Orange - partially used
+    return 'exception' // Red - barely used
+  }
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'notused': return 'default'
+      case 'finished': return 'blue'
+      case 'success': return 'green'
+      case 'warning': return 'orange'
+      case 'exception': return 'red'
+      default: return 'default'
+    }
+  }
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'notused': return 'Not Used'
+      case 'finished': return 'Finished'
+      case 'success': return 'Mostly Used'
+      case 'warning': return 'Partially Used'
+      case 'exception': return 'Barely Used'
+      default: return 'Unknown'
+    }
+  }
+
   // Ingredients table columns
   const ingredientColumns = [
     {
@@ -102,35 +161,33 @@ const DashboardTable = ({
       dataIndex: 'price',
       key: 'price',
       render: (price) => (
-        <Space>
-          <DollarOutlined />
-          <Text strong>${price.toFixed(2)}</Text>
-        </Space>
+        <Text style={{ fontWeight: 400 }}>${price.toFixed(2)}</Text>
       ),
       sorter: (a, b) => a.price - b.price
     },
     {
-      title: 'Amount Used',
-      key: 'amount_used',
-      render: (_, record) => (
-        <Text>
-          {record.amount_used}{record.unit} / {record.amount_purchased}{record.unit}
-        </Text>
-      ),
-      sorter: (a, b) => a.amount_used - b.amount_used
-    },
-    {
       title: 'Percent Used',
       key: 'percent_used',
+      align: 'left',
       render: (_, record) => {
-        const percentage = record.amount_purchased > 0 
-          ? (record.amount_used / record.amount_purchased) * 100 
-          : 0
-        return <Text>{percentage.toFixed(1)}%</Text>
+        const percentage = getUsagePercentage(record)
+        const status = getUsageStatus(record)
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 160 }}>
+            <span style={{ minWidth: 38, fontWeight: 400 }}>{percentage}%</span>
+            <Progress 
+              percent={percentage} 
+              status={status}
+              size="small"
+              format={() => null}
+              style={{ width: 80 }}
+            />
+          </div>
+        )
       },
       sorter: (a, b) => {
-        const aPercent = a.amount_purchased > 0 ? (a.amount_used / a.amount_purchased) * 100 : 0
-        const bPercent = b.amount_purchased > 0 ? (b.amount_used / b.amount_purchased) * 100 : 0
+        const aPercent = getUsagePercentage(a)
+        const bPercent = getUsagePercentage(b)
         return aPercent - bPercent
       }
     },
@@ -141,10 +198,7 @@ const DashboardTable = ({
         const usageRatio = record.amount_remaining / record.amount_purchased
         const remainingValue = record.price * usageRatio
         return (
-          <Space>
-            <DollarOutlined />
-            <Text type="danger">${remainingValue.toFixed(2)}</Text>
-          </Space>
+          <Text style={{ color: '#222', fontWeight: 400 }}>${remainingValue.toFixed(2)}</Text>
         )
       },
       sorter: (a, b) => {
@@ -157,58 +211,21 @@ const DashboardTable = ({
       title: 'Status',
       key: 'status',
       render: (_, record) => {
-        const percentage = record.amount_purchased > 0 
-          ? (record.amount_used / record.amount_purchased) * 100 
-          : 0
-        
-        let color, text
-        if (percentage >= 80) {
-          color = 'success'
-          text = 'Fully Used'
-        } else if (percentage >= 50) {
-          color = 'warning'
-          text = 'Partially Used'
-        } else {
-          color = 'error'
-          text = 'Unused'
-        }
-        
-        return <Tag color={color}>{text}</Tag>
+        const status = getUsageStatus(record)
+        return (
+          <Tag color={getStatusColor(status)}>
+            {getStatusText(status)}
+          </Tag>
+        )
       },
       filters: [
-        { text: 'Fully Used', value: 'fully' },
-        { text: 'Partially Used', value: 'partial' },
-        { text: 'Unused', value: 'unused' }
+        { text: 'Not Used', value: 'notused' },
+        { text: 'Finished', value: 'finished' },
+        { text: 'Mostly Used', value: 'success' },
+        { text: 'Partially Used', value: 'warning' },
+        { text: 'Barely Used', value: 'exception' }
       ],
-      onFilter: (value, record) => {
-        const percentage = record.amount_purchased > 0 
-          ? (record.amount_used / record.amount_purchased) * 100 
-          : 0
-        
-        switch (value) {
-          case 'fully':
-            return percentage >= 80
-          case 'partial':
-            return percentage >= 50 && percentage < 80
-          case 'unused':
-            return percentage < 50
-          default:
-            return true
-        }
-      }
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          />
-        </Tooltip>
-      )
+      onFilter: (value, record) => getUsageStatus(record) === value
     }
   ]
 
@@ -227,10 +244,7 @@ const DashboardTable = ({
       dataIndex: 'date_cooked',
       key: 'date_cooked',
       render: (date) => (
-        <Space>
-          <CalendarOutlined />
-          <Text>{dayjs(date).format('MMM DD, YYYY')}</Text>
-        </Space>
+        <Text style={{ color: '#222', fontWeight: 400 }}>{dayjs(date).format('MMM DD, YYYY')}</Text>
       ),
       sorter: (a, b) => dayjs(a.date_cooked).unix() - dayjs(b.date_cooked).unix(),
       defaultSortOrder: 'descend'
@@ -240,27 +254,19 @@ const DashboardTable = ({
       key: 'ingredients_used',
       render: (_, record) => {
         if (!record.meal_ingredients || record.meal_ingredients.length === 0) {
-          return <Text type="secondary">No ingredients</Text>
+          return <Text style={{ color: '#222', fontWeight: 400 }}>No ingredients</Text>
         }
-        
-        const ingredientList = record.meal_ingredients
-          .slice(0, 2)
-          .map(ing => `${ing.quantity_used}${ing.unit} ${ing.ingredient_name}`)
-          .join(', ')
-        
         return (
-          <Tooltip 
-            title={
-              record.meal_ingredients.map(ing => 
-                `${ing.quantity_used}${ing.unit} ${ing.ingredient_name}`
-              ).join(', ')
-            }
-          >
-            <Text>
-              {ingredientList}
-              {record.meal_ingredients.length > 2 && ` +${record.meal_ingredients.length - 2} more`}
-            </Text>
-          </Tooltip>
+          <span>
+            {record.meal_ingredients.slice(0, 2).map((ing, idx) => (
+              <Tag key={idx} color="blue" style={{ marginRight: 4, marginBottom: 2 }}>
+                {ing.ingredients?.name || ''}
+              </Tag>
+            ))}
+            {record.meal_ingredients.length > 2 && (
+              <Tag color="blue">+{record.meal_ingredients.length - 2} more</Tag>
+            )}
+          </span>
         )
       }
     },
@@ -269,38 +275,9 @@ const DashboardTable = ({
       dataIndex: 'total_cost',
       key: 'total_cost',
       render: (cost) => (
-        <Space>
-          <DollarOutlined />
-          <Text strong type="success">${cost ? cost.toFixed(2) : '0.00'}</Text>
-        </Space>
+        <Text style={{ color: '#222', fontWeight: 400 }}>${cost ? cost.toFixed(2) : '0.00'}</Text>
       ),
       sorter: (a, b) => (a.total_cost || 0) - (b.total_cost || 0)
-    },
-    {
-      title: 'Average Cost',
-      key: 'average_cost',
-      render: (_, record) => {
-        const avgCost = record.total_cost || 0
-        return (
-          <Space>
-            <DollarOutlined />
-            <Text type="secondary">${avgCost.toFixed(2)}</Text>
-          </Space>
-        )
-      }
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          />
-        </Tooltip>
-      )
     }
   ]
 
@@ -311,31 +288,40 @@ const DashboardTable = ({
     <>
       <Card>
         <Space direction="vertical" style={{ width: '100%' }}>
-          {/* Header with toggle and search */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Title level={4} style={{ margin: 0 }}>
+          {/* Restore previous working header row layout */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 16,
+              marginBottom: 20,
+              width: '100%',
+            }}
+          >
+            <Title level={4} style={{ margin: 0, minWidth: 180, textAlign: 'left' }}>
               {viewMode === 'ingredients' ? 'Ingredients' : 'Meals'} Overview
             </Title>
-            
-            <Space>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <Search
                 placeholder={`Search ${viewMode}...`}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250 }}
+                style={{ width: 250, minWidth: 150, padding: '6px 12px' }}
                 allowClear
               />
-              
-              <Radio.Group 
-                value={viewMode} 
+              <Radio.Group
+                value={viewMode}
                 onChange={(e) => setViewMode(e.target.value)}
                 buttonStyle="solid"
                 size="small"
+                style={{ minWidth: 180, padding: '6px 12px' }}
               >
                 <Radio.Button value="ingredients">Ingredients</Radio.Button>
                 <Radio.Button value="meals">Meals</Radio.Button>
               </Radio.Group>
-            </Space>
+            </div>
           </div>
 
           {/* Table */}
@@ -353,11 +339,16 @@ const DashboardTable = ({
             }}
             locale={{
               emptyText: (
-                <div style={{ textAlign: 'center', padding: '20px' }}>
+                <Empty
+                  description={viewMode === 'ingredients' ? 'You haven’t added any ingredients yet.' : 'You haven’t logged any meals yet.'}
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                >
                   <Text type="secondary">
-                    No {viewMode} found for the selected time period.
+                    {viewMode === 'ingredients'
+                      ? 'Start by adding your first ingredient to track your groceries!'
+                      : 'Start by logging your first meal to track your cooking!'}
                   </Text>
-                </div>
+                </Empty>
               )
             }}
           />

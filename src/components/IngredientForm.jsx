@@ -7,7 +7,8 @@ import {
   DatePicker, 
   Button, 
   Space,
-  message 
+  message,
+  Modal
 } from 'antd'
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -15,6 +16,7 @@ import dayjs from 'dayjs'
 const { Option } = Select
 
 const IngredientForm = ({ 
+  visible,
   onSubmit, 
   initialValues = null, 
   loading = false, 
@@ -26,11 +28,36 @@ const IngredientForm = ({
 
   // Common ingredient names for typeahead
   const commonIngredients = [
-    'Chicken Breast', 'Ground Beef', 'Salmon', 'Tuna', 'Shrimp',
-    'Rice', 'Pasta', 'Bread', 'Potatoes', 'Onions', 'Garlic',
-    'Tomatoes', 'Lettuce', 'Spinach', 'Carrots', 'Broccoli',
-    'Milk', 'Cheese', 'Eggs', 'Butter', 'Olive Oil', 'Salt',
-    'Pepper', 'Flour', 'Sugar', 'Honey', 'Lemon', 'Lime'
+    // Produce
+    'Apples', 'Asparagus', 'Avocado', 'Bananas', 'Basil', 'Beets', 'Bell Peppers', 'Blueberries', 'Broccoli', 'Brussels Sprouts', 'Cabbage', 'Carrots', 'Cauliflower', 'Celery', 'Cilantro', 'Corn', 'Cucumbers', 'Eggplant', 'Garlic', 'Ginger', 'Grapes', 'Green Beans', 'Kale', 'Kiwi', 'Lemons', 'Lettuce', 'Lime', 'Mango', 'Mushrooms', 'Onions', 'Oranges', 'Parsley', 'Peaches', 'Pears', 'Pineapple', 'Potatoes', 'Radishes', 'Raspberries', 'Spinach', 'Strawberries', 'Sweet Potatoes', 'Tomatoes', 'Zucchini',
+    // Meat - Chicken
+    'Chicken Breast', 'Chicken Thigh', 'Chicken Drumstick', 'Chicken Wings', 'Whole Chicken',
+    // Meat - Beef
+    'Beef Brisket', 'Beef Chuck', 'Beef Filet', 'Beef Flank', 'Beef Ground', 'Beef Ribeye', 'Beef Roast', 'Beef Short Ribs', 'Beef Sirloin', 'Beef Stew Meat', 'Beef Striploin', 'Beef Tenderloin', 'Beef Top Round', 'Beef Tri-Tip', 'Steak',
+    // Meat - Pork
+    'Pork Bacon', 'Pork Belly', 'Pork Chops', 'Pork Ground', 'Pork Loin', 'Pork Ribs', 'Pork Roast', 'Pork Sausage', 'Pork Shoulder', 'Pork Tenderloin',
+    // Meat - Lamb
+    'Lamb Chops', 'Lamb Ground', 'Lamb Leg', 'Lamb Rack', 'Lamb Shank',
+    // Seafood - Fish
+    'Anchovy', 'Barramundi', 'Bass', 'Black Cod', 'Catfish', 'Cod', 'Flounder', 'Grouper', 'Halibut', 'Haddock', 'Hake', 'Mackerel', 'Mahi Mahi', 'Monkfish', 'Perch', 'Pollock', 'Red Snapper', 'Rockfish', 'Salmon', 'Sardines', 'Sea Bass', 'Swordfish', 'Tilapia', 'Trout', 'Tuna', 'Walleye', 'Whitefish', 'Yellowtail',
+    // Seafood - Shellfish
+    'Clams', 'Crab', 'Lobster', 'Mussels', 'Oysters', 'Scallops', 'Shrimp',
+    // Dairy & Eggs
+    'Butter', 'Cheddar Cheese', 'Cottage Cheese', 'Cream Cheese', 'Eggs', 'Feta Cheese', 'Greek Yogurt', 'Heavy Cream', 'Milk', 'Mozzarella', 'Parmesan', 'Sour Cream', 'Swiss Cheese', 'Yogurt',
+    // Grains & Bakery
+    'Bagels', 'Baguette', 'Bread', 'Brown Rice', 'Cereal', 'Couscous', 'Crackers', 'English Muffins', 'Flour', 'Oats', 'Pita', 'Quinoa', 'Rice', 'Rolls', 'Spaghetti', 'Tortillas', 'White Rice', 'Whole Wheat Bread',
+    // Canned & Jarred
+    'Black Beans', 'Canned Corn', 'Canned Peaches', 'Canned Pineapple', 'Chickpeas', 'Coconut Milk', 'Green Beans (Canned)', 'Kidney Beans', 'Marinara Sauce', 'Olives', 'Peanut Butter', 'Pickles', 'Salsa', 'Tomato Paste', 'Tomato Sauce', 'Tuna (Canned)', 'White Beans',
+    // Spices & Seasonings
+    'Basil (Dried)', 'Bay Leaves', 'Black Pepper', 'Cayenne', 'Chili Powder', 'Cinnamon', 'Cloves', 'Coriander', 'Cumin', 'Curry Powder', 'Dill', 'Garlic Powder', 'Ginger (Ground)', 'Italian Seasoning', 'Nutmeg', 'Oregano', 'Paprika', 'Parsley (Dried)', 'Red Pepper Flakes', 'Rosemary', 'Sage', 'Salt', 'Thyme', 'Turmeric', 'Vanilla Extract',
+    // Condiments & Sauces
+    'Barbecue Sauce', 'Dijon Mustard', 'Honey', 'Hot Sauce', 'Ketchup', 'Mayonnaise', 'Mustard', 'Ranch Dressing', 'Soy Sauce', 'Sriracha', 'Teriyaki Sauce', 'Vinegar (Apple Cider)', 'Vinegar (Balsamic)', 'Vinegar (White)', 'Vinegar (Red Wine)', 'Worcestershire Sauce',
+    // Oils & Fats
+    'Butter', 'Canola Oil', 'Coconut Oil', 'Olive Oil', 'Sesame Oil', 'Vegetable Oil',
+    // Baking & Sweets
+    'Baking Powder', 'Baking Soda', 'Brown Sugar', 'Chocolate Chips', 'Cocoa Powder', 'Cornstarch', 'Granulated Sugar', 'Maple Syrup', 'Molasses', 'Powdered Sugar', 'Yeast',
+    // Snacks & Miscellaneous
+    'Almonds', 'Cashews', 'Chips', 'Granola Bars', 'Peanuts', 'Popcorn', 'Pretzels', 'Raisins', 'Sunflower Seeds', 'Trail Mix'
   ]
 
   // Unit options
@@ -107,7 +134,14 @@ const IngredientForm = ({
   }, [initialValues, form])
 
   return (
-    <div className="form-container">
+    <Modal
+      title={initialValues ? "Edit Ingredient" : "Add Ingredient"}
+      open={visible}
+      onCancel={onCancel}
+      footer={null}
+      width={600}
+      destroyOnClose
+    >
       <Form
         form={form}
         layout="vertical"
@@ -233,7 +267,7 @@ const IngredientForm = ({
           </Space>
         </Form.Item>
       </Form>
-    </div>
+    </Modal>
   )
 }
 

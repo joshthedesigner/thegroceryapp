@@ -1,13 +1,6 @@
 import React from 'react'
 import { Row, Col, Card, Statistic, Typography, Space } from 'antd'
-import { 
-  ShoppingCartOutlined, 
-  DollarOutlined, 
-  PieChartOutlined,
-  FireOutlined,
-  ClockCircleOutlined,
-  TrophyOutlined
-} from '@ant-design/icons'
+// Removed all icon imports
 
 const { Text } = Typography
 
@@ -15,34 +8,55 @@ const DashboardMetrics = ({
   ingredients = [], 
   meals = [], 
   timeFilter = 'all',
+  periodOffset = 0,
+  getDateRange,
   onMetricClick 
 }) => {
-  // Calculate metrics based on time filter
+  // Calculate metrics based on time filter using standardized date range
   const getFilteredData = () => {
-    const now = new Date()
-    let startDate = new Date(0) // Beginning of time
-    
-    switch (timeFilter) {
-      case 'week':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-        break
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-        break
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1)
-        break
-      default:
-        startDate = new Date(0)
+    if (!getDateRange) {
+      // Fallback to old logic if getDateRange is not provided
+      const now = new Date()
+      let startDate = new Date(0) // Beginning of time
+      
+      switch (timeFilter) {
+        case 'week':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
+        case 'month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+          break
+        case 'year':
+          startDate = new Date(now.getFullYear(), 0, 1)
+          break
+        default:
+          // Default to week if unknown
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      }
+      
+      const filteredIngredients = ingredients.filter(ing => 
+        new Date(ing.purchase_date) >= startDate
+      )
+      
+      const filteredMeals = meals.filter(meal => 
+        new Date(meal.date_cooked) >= startDate
+      )
+      
+      return { filteredIngredients, filteredMeals }
     }
+
+    // Use standardized date range
+    const { start, end } = getDateRange(timeFilter, periodOffset)
     
-    const filteredIngredients = ingredients.filter(ing => 
-      new Date(ing.purchase_date) >= startDate
-    )
+    const filteredIngredients = ingredients.filter(ing => {
+      const purchaseDate = new Date(ing.purchase_date)
+      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
+    })
     
-    const filteredMeals = meals.filter(meal => 
-      new Date(meal.date_cooked) >= startDate
-    )
+    const filteredMeals = meals.filter(meal => {
+      const mealDate = new Date(meal.date_cooked)
+      return mealDate >= start.toDate() && mealDate <= end.toDate()
+    })
     
     return { filteredIngredients, filteredMeals }
   }
@@ -73,75 +87,59 @@ const DashboardMetrics = ({
     {
       title: 'Total Ingredients',
       value: totalIngredients,
-      prefix: <ShoppingCartOutlined />,
       suffix: 'items',
-      color: '#1890ff',
       description: 'Ingredients purchased',
       type: 'totalIngredients'
     },
     {
       title: 'Distinct Ingredients',
       value: distinctIngredients,
-      prefix: <PieChartOutlined />,
       suffix: 'types',
-      color: '#52c41a',
       description: 'Unique ingredient types',
       type: 'distinctIngredients'
     },
     {
-      title: 'Total Value',
-      value: totalValue,
-      prefix: <DollarOutlined />,
-      suffix: '',
-      color: '#faad14',
-      description: 'Value of ingredients purchased',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'totalValue'
-    },
-    {
       title: 'Ingredients Used',
       value: totalUsed,
-      prefix: <FireOutlined />,
       suffix: 'units',
-      color: '#13c2c2',
       description: 'Total amount consumed',
       type: 'ingredientsUsed'
     },
     {
-      title: 'Unused Value',
-      value: unusedValue,
-      prefix: <ClockCircleOutlined />,
-      suffix: '',
-      color: '#f5222d',
-      description: 'Value of unused ingredients',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'unusedValue'
-    },
-    {
       title: 'Usage Efficiency',
       value: usagePercentage,
-      prefix: <TrophyOutlined />,
       suffix: '%',
-      color: '#722ed1',
       description: 'Percentage of ingredients used',
       formatter: (value) => `${value.toFixed(1)}%`,
       type: 'usageEfficiency'
     },
     {
+      title: 'Total Value',
+      value: totalValue,
+      suffix: '',
+      description: 'Total value of ingredients',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'totalValue'
+    },
+    {
+      title: 'Unused Value',
+      value: unusedValue,
+      suffix: '',
+      description: 'Value of unused ingredients',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'unusedValue'
+    },
+    {
       title: 'Meals Logged',
       value: totalMeals,
-      prefix: <FireOutlined />,
       suffix: 'meals',
-      color: '#eb2f96',
       description: 'Total meals prepared',
       type: 'mealsLogged'
     },
     {
       title: 'Average Meal Cost',
       value: averageMealCost,
-      prefix: <DollarOutlined />,
       suffix: '',
-      color: '#fa8c16',
       description: 'Average cost per meal',
       formatter: (value) => `$${value.toFixed(2)}`,
       type: 'averageMealCost'
@@ -154,30 +152,27 @@ const DashboardMetrics = ({
         {metrics.map((metric, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card 
-              hoverable 
               style={{ 
                 height: '100%',
-                borderLeft: `4px solid ${metric.color}`,
-                cursor: 'pointer'
+                cursor: 'default',
+                background: '#fff',
               }}
-              onClick={() => onMetricClick && onMetricClick(metric.type)}
             >
               <Statistic
                 title={
                   <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text strong style={{ color: metric.color }}>
+                    <Text strong style={{ color: '#222' }}>
                       {metric.title}
                     </Text>
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                    <Text type="secondary" style={{ fontSize: '12px', color: '#888' }}>
                       {metric.description}
                     </Text>
                   </Space>
                 }
                 value={metric.value}
-                prefix={metric.prefix}
                 suffix={metric.suffix}
                 valueStyle={{ 
-                  color: metric.color,
+                  color: '#222',
                   fontSize: '24px',
                   fontWeight: 'bold'
                 }}

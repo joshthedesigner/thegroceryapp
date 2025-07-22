@@ -44,6 +44,17 @@ CREATE TABLE meal_ingredients (
     UNIQUE(meal_id, ingredient_id)
 );
 
+-- 4. User_Preferences Table (Welcome Screen & User Settings)
+CREATE TABLE user_preferences (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+    has_seen_welcome BOOLEAN DEFAULT FALSE,
+    welcome_completed_at TIMESTAMP WITH TIME ZONE,
+    welcome_step_completed INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_ingredients_user_id ON ingredients(user_id);
 CREATE INDEX idx_ingredients_name ON ingredients(name);
@@ -51,6 +62,7 @@ CREATE INDEX idx_meals_user_id ON meals(user_id);
 CREATE INDEX idx_meals_date_cooked ON meals(date_cooked);
 CREATE INDEX idx_meal_ingredients_meal_id ON meal_ingredients(meal_id);
 CREATE INDEX idx_meal_ingredients_ingredient_id ON meal_ingredients(ingredient_id);
+CREATE INDEX idx_user_preferences_user_id ON user_preferences(user_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -65,11 +77,13 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_ingredients_updated_at BEFORE UPDATE ON ingredients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_meals_updated_at BEFORE UPDATE ON meals FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_meal_ingredients_updated_at BEFORE UPDATE ON meal_ingredients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_preferences_updated_at BEFORE UPDATE ON user_preferences FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE ingredients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meal_ingredients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for ingredients
 CREATE POLICY "Users can view their own ingredients" ON ingredients
@@ -133,6 +147,19 @@ CREATE POLICY "Users can delete meal ingredients for their meals" ON meal_ingred
             AND meals.user_id = auth.uid()
         )
     );
+
+-- Create RLS policies for user_preferences
+CREATE POLICY "Users can view their own preferences" ON user_preferences
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own preferences" ON user_preferences
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own preferences" ON user_preferences
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own preferences" ON user_preferences
+    FOR DELETE USING (auth.uid() = user_id);
 
 -- Create function to update ingredient usage when meal_ingredients are added/updated/deleted
 CREATE OR REPLACE FUNCTION update_ingredient_usage()

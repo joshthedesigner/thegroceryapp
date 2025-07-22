@@ -1,11 +1,9 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { 
   Card, 
-  Radio, 
   Typography, 
   Space, 
-  Empty,
-  Spin
+  Empty
 } from 'antd'
 import { 
   LineChart, 
@@ -14,49 +12,94 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
   ResponsiveContainer 
 } from 'recharts'
 import dayjs from 'dayjs'
+import LoadingSpinner from './LoadingSpinner'
 
 const { Title, Text } = Typography
+
+// Custom legend for top right
+const legendColors = {
+  totalValue: '#1890ff',
+  usedValue: '#00d084',
+  unusedValue: '#f5222d',
+}
+const legendLabels = {
+  totalValue: 'Purchased Value',
+  usedValue: 'Consumed Value',
+  unusedValue: 'Wasted Value',
+}
+
+function TrendsLegend() {
+  return (
+    <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'flex-end' }}>
+      {Object.keys(legendLabels).map(key => (
+        <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ display: 'inline-block', width: 14, height: 4, borderRadius: 2, background: legendColors[key] }} />
+          <span style={{ fontSize: 13, color: '#555' }}>{legendLabels[key]}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
 
 const TrendsGraph = ({ 
   ingredients = [], 
   meals = [], 
   timeFilter = 'all',
+  periodOffset = 0,
+  getDateRange,
   loading = false 
 }) => {
-  const [graphType, setGraphType] = useState('value') // 'value' or 'count'
 
   // Process data for chart
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []
 
-    const now = dayjs()
     let startDate, endDate, interval
 
-    // Determine date range and interval based on time filter
+    // Use standardized date range if available
+    if (getDateRange) {
+      const dateRange = getDateRange(timeFilter, periodOffset)
+      startDate = dateRange.start
+      endDate = dateRange.end
+    } else {
+      // Fallback to old logic
+      const now = dayjs()
+      
+      switch (timeFilter) {
+        case 'week':
+          startDate = now.subtract(7, 'day')
+          endDate = now
+          break
+        case 'month':
+          startDate = now.subtract(30, 'day')
+          endDate = now
+          break
+        case 'year':
+          startDate = now.subtract(12, 'month')
+          endDate = now
+          break
+        default:
+          startDate = now.subtract(7, 'day')
+          endDate = now
+      }
+    }
+
+    // Determine interval based on time filter
     switch (timeFilter) {
       case 'week':
-        startDate = now.subtract(7, 'day')
-        endDate = now
         interval = 'day'
         break
       case 'month':
-        startDate = now.subtract(30, 'day')
-        endDate = now
         interval = 'day'
         break
       case 'year':
-        startDate = now.subtract(12, 'month')
-        endDate = now
         interval = 'month'
         break
       default:
-        startDate = dayjs().subtract(6, 'month')
-        endDate = now
-        interval = 'month'
+        interval = 'day'
     }
 
     // Generate date points
@@ -79,56 +122,43 @@ const TrendsGraph = ({
 
       // Calculate metrics for this period
       const totalValue = periodIngredients.reduce((sum, ing) => sum + ing.price, 0)
-      const usedValue = periodIngredients.reduce((sum, ing) => {
-        const usageRatio = ing.amount_used / ing.amount_purchased
-        return sum + (ing.price * usageRatio)
+      
+      // Calculate used value based on actual meal consumption during this period
+      const usedValue = periodMeals.reduce((sum, meal) => {
+        return sum + (meal.total_cost || 0)
       }, 0)
+      
       const unusedValue = totalValue - usedValue
 
-      const totalCount = periodIngredients.length
-      const usedCount = periodIngredients.filter(ing => ing.amount_used > 0).length
-      const unusedCount = totalCount - usedCount
-
-      dataPoints.push({
+      const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
         totalValue: Math.round(totalValue * 100) / 100,
         usedValue: Math.round(usedValue * 100) / 100,
-        unusedValue: Math.round(unusedValue * 100) / 100,
-        totalCount,
-        usedCount,
-        unusedCount,
-        mealCount: periodMeals.length,
-        mealCost: Math.round(periodMeals.reduce((sum, meal) => sum + (meal.total_cost || 0), 0) * 100) / 100
-      })
+        unusedValue: Math.round(unusedValue * 100) / 100
+      }
+
+      dataPoints.push(dataPoint)
 
       current = current.add(1, interval)
     }
 
     return dataPoints
-  }, [ingredients, meals, timeFilter])
+  }, [ingredients, meals, timeFilter, periodOffset, getDateRange])
 
   const getYAxisLabel = () => {
-    return graphType === 'value' ? 'Value ($)' : 'Count'
+    return 'Value ($)'
   }
 
   const getTooltipFormatter = (value, name) => {
-    if (graphType === 'value') {
-      return [`$${value}`, name]
-    }
-    return [value, name]
+    return [`$${value}`, legendLabels[name] || name]
   }
 
   const getLegendFormatter = (value) => {
     const legendMap = {
-      totalValue: 'Total Value',
-      usedValue: 'Used Value',
-      unusedValue: 'Unused Value',
-      totalCount: 'Total Ingredients',
-      usedCount: 'Used Ingredients',
-      unusedCount: 'Unused Ingredients',
-      mealCount: 'Meals Logged',
-      mealCost: 'Meal Cost'
+      totalValue: 'Purchased Value',
+      usedValue: 'Consumed Value',
+      unusedValue: 'Wasted Value'
     }
     return legendMap[value] || value
   }
@@ -136,12 +166,7 @@ const TrendsGraph = ({
   if (loading) {
     return (
       <Card>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Spin size="large" />
-          <div style={{ marginTop: 16 }}>
-            <Text>Loading trends data...</Text>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading trends data..." variant="card" />
       </Card>
     )
   }
@@ -164,19 +189,13 @@ const TrendsGraph = ({
   return (
     <Card>
       <Space direction="vertical" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <Title level={4} style={{ margin: 0 }}>
             Trends Over Time
           </Title>
-          <Radio.Group 
-            value={graphType} 
-            onChange={(e) => setGraphType(e.target.value)}
-            buttonStyle="solid"
-            size="small"
-          >
-            <Radio.Button value="value">Value</Radio.Button>
-            <Radio.Button value="count">Count</Radio.Button>
-          </Radio.Group>
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            <TrendsLegend />
+          </div>
         </div>
 
         <ResponsiveContainer width="100%" height={400}>
@@ -202,81 +221,30 @@ const TrendsGraph = ({
               formatter={getTooltipFormatter}
               labelFormatter={(label) => `Period: ${label}`}
             />
-            <Legend formatter={getLegendFormatter} />
-            
-            {graphType === 'value' ? (
-              <>
-                <Line 
-                  type="monotone" 
-                  dataKey="totalValue" 
-                  stroke="#1890ff" 
-                  strokeWidth={2}
-                  dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="usedValue" 
-                  stroke="#52c41a" 
-                  strokeWidth={2}
-                  dot={{ fill: '#52c41a', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="unusedValue" 
-                  stroke="#f5222d" 
-                  strokeWidth={2}
-                  dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="mealCost" 
-                  stroke="#722ed1" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: '#722ed1', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </>
-            ) : (
-              <>
-                <Line 
-                  type="monotone" 
-                  dataKey="totalCount" 
-                  stroke="#1890ff" 
-                  strokeWidth={2}
-                  dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="usedCount" 
-                  stroke="#52c41a" 
-                  strokeWidth={2}
-                  dot={{ fill: '#52c41a', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="unusedCount" 
-                  stroke="#f5222d" 
-                  strokeWidth={2}
-                  dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="mealCount" 
-                  stroke="#722ed1" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: '#722ed1', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </>
-            )}
+            <Line 
+              type="monotone" 
+              dataKey="totalValue" 
+              stroke="#1890ff" 
+              strokeWidth={2}
+              dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="usedValue" 
+              stroke="#00d084" 
+              strokeWidth={3}
+              dot={{ fill: '#00d084', strokeWidth: 3, r: 5 }}
+              activeDot={{ r: 8 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="unusedValue" 
+              stroke="#f5222d" 
+              strokeWidth={2}
+              dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </Space>

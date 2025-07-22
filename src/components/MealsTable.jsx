@@ -15,7 +15,8 @@ import {
   DeleteOutlined, 
   EyeOutlined,
   DollarOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  DownOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 
@@ -51,10 +52,7 @@ const MealsTable = ({
     }
 
     return (
-      <Card size="small" style={{ margin: '0 50px' }}>
-        <Title level={5} style={{ marginBottom: 16 }}>
-          Ingredients Used
-        </Title>
+      <div style={{ margin: '0 50px', background: '#fff', borderRadius: 8 }}>
         <Table
           dataSource={record.meal_ingredients}
           pagination={false}
@@ -62,33 +60,22 @@ const MealsTable = ({
           columns={[
             {
               title: 'Ingredient',
-              dataIndex: 'ingredient_name',
               key: 'ingredient_name',
-              render: (text) => <Text strong>{text}</Text>
+              render: (_, rec) => <Text strong>{rec.ingredients?.name || ''}</Text>
             },
             {
               title: 'Quantity Used',
               dataIndex: 'quantity_used',
               key: 'quantity_used',
-              render: (quantity, record) => (
+              render: (quantity, rec) => (
                 <Text>
-                  {quantity} {record.unit}
-                </Text>
-              )
-            },
-            {
-              title: 'Cost',
-              dataIndex: 'cost',
-              key: 'cost',
-              render: (cost) => (
-                <Text type="success">
-                  ${cost ? cost.toFixed(2) : '0.00'}
+                  {quantity} {rec.ingredients?.unit || ''}
                 </Text>
               )
             }
           ]}
         />
-      </Card>
+      </div>
     )
   }
 
@@ -122,15 +109,19 @@ const MealsTable = ({
         if (!ingredients || ingredients.length === 0) {
           return <Tag color="default">No ingredients</Tag>
         }
+        const firstTwo = ingredients.slice(0, 2)
+        const remaining = ingredients.slice(2)
         return (
           <Space wrap>
-            {ingredients.slice(0, 2).map((ing, index) => (
+            {firstTwo.map((ing, index) => (
               <Tag key={index} color="blue">
-                {ing.ingredient_name}
+                {ing.ingredients?.name || ''}
               </Tag>
             ))}
-            {ingredients.length > 2 && (
-              <Tag color="blue">+{ingredients.length - 2} more</Tag>
+            {remaining.length > 0 && (
+              <Tooltip title={remaining.map(ing => ing.ingredients?.name).filter(Boolean).join(', ')} placement="top">
+                <Tag color="blue" style={{ cursor: 'pointer' }}>+{remaining.length} more</Tag>
+              </Tooltip>
             )}
           </Space>
         )
@@ -141,12 +132,9 @@ const MealsTable = ({
       dataIndex: 'total_cost',
       key: 'total_cost',
       render: (cost) => (
-        <Space>
-          <DollarOutlined />
-          <Text strong type="success">
-            ${cost ? cost.toFixed(2) : '0.00'}
-          </Text>
-        </Space>
+        <Text style={{ color: '#222', fontWeight: 400 }}>
+          ${cost ? cost.toFixed(2) : '0.00'}
+        </Text>
       ),
       sorter: (a, b) => (a.total_cost || 0) - (b.total_cost || 0)
     },
@@ -196,12 +184,6 @@ const MealsTable = ({
       columns={columns}
       loading={loading}
       rowKey="id"
-      expandable={{
-        expandedRowRender,
-        expandedRowKeys,
-        onExpand: handleExpand,
-        expandRowByClick: true
-      }}
       pagination={{
         pageSize: 10,
         showSizeChanger: true,

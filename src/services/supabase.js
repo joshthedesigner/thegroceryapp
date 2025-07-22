@@ -8,16 +8,42 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Authentication helpers
 export const signInWithGoogle = async () => {
   try {
+    console.log('Starting Google OAuth sign in...')
+    console.log('Current origin:', window.location.origin)
+    console.log('Current URL:', window.location.href)
+    console.log('Environment:', import.meta.env.MODE)
+    
+    // Always use current origin for redirect - this works with any Site URL
+    const redirectUrl = `${window.location.origin}/auth/callback`
+    console.log('Redirect URL:', redirectUrl)
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: redirectUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     })
+    
+    if (error) {
+      console.error('OAuth error:', error)
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        name: error.name
+      })
+      return { data: null, error }
+    }
+    
+    console.log('OAuth initiated successfully:', data)
+    console.log('OAuth URL:', data?.url)
     return { data, error }
   } catch (error) {
-    console.warn('Authentication error (likely due to missing Supabase credentials):', error)
-    return { data: null, error: { message: 'Please configure Supabase credentials to enable authentication' } }
+    console.error('Authentication error:', error)
+    return { data: null, error: { message: 'OAuth authentication failed. Please check your Supabase OAuth settings.' } }
   }
 }
 
@@ -101,7 +127,8 @@ export const getMeals = async (userId) => {
         ingredients (
           name,
           unit,
-          price
+          price,
+          amount_purchased
         )
       )
     `)
@@ -121,7 +148,8 @@ export const getMeal = async (id) => {
         ingredients (
           name,
           unit,
-          price
+          price,
+          amount_purchased
         )
       )
     `)

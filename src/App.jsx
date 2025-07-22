@@ -3,91 +3,220 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ConfigProvider } from 'antd'
 import { supabase, getCurrentUser } from './services/supabase'
 import { validateEnv } from './config/env'
+import LoadingSpinner from './components/LoadingSpinner'
+import { WelcomeProvider } from './features/welcome/context/WelcomeContext'
+import AuthenticationGuard from './components/AuthenticationGuard'
 
-// Import pages (we'll create these next)
+// Import pages
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Ingredients from './pages/Ingredients'
 import Meals from './pages/Meals'
 import Layout from './components/Layout'
 
+// Import welcome feature
+import WelcomeScreen from './features/welcome/components/WelcomeScreen'
+
 // Import styles
 import 'antd/dist/reset.css'
 import './styles/App.css'
 
-function App() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
+// OAuth Callback Component
+const AuthCallback = () => {
   useEffect(() => {
-    // Validate environment variables
-    validateEnv()
-
-    // Get initial session
-    const getInitialSession = async () => {
-      const { user } = await getCurrentUser()
-      setUser(user)
-      setLoading(false)
+    const handleAuthCallback = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Auth callback error:', error)
+        }
+        // The auth state will be updated automatically by the listener in App.jsx
+      } catch (error) {
+        console.error('Auth callback error:', error)
+      }
     }
 
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
+    handleAuthCallback()
   }, [])
 
-  if (loading) {
+  return <LoadingSpinner message="Completing authentication..." variant="card" />
+}
+
+// Error Boundary Component
+const ErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const handleError = (error) => {
+      console.error('App error:', error)
+      setError(error)
+      setHasError(true)
+    }
+
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleError)
+
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleError)
+    }
+  }, [])
+
+  if (hasError) {
     return (
       <div style={{ 
         display: 'flex', 
+        flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100vh' 
+        height: '100vh',
+        padding: '20px',
+        textAlign: 'center'
       }}>
-        <div>Loading...</div>
+        <h2>Something went wrong</h2>
+        <p>Please check your environment configuration and try again.</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{
+            padding: '10px 20px',
+            background: '#1890ff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Reload Page
+        </button>
       </div>
     )
   }
 
-  // Demo mode for testing without Supabase credentials
-  const isDemoMode = false // Disabled since real credentials are available
+  return children
+}
+
+function App() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [envError, setEnvError] = useState(false)
+
+  // Check for test user session
+  const isTestUser = localStorage.getItem('test-user') === 'true'
+
+  useEffect(() => {
+    // Validate environment variables
+    try {
+      validateEnv()
+    } catch (error) {
+      console.error('Environment validation error:', error)
+      setEnvError(true)
+    }
+
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        // Check for test user first
+        if (isTestUser) {
+          console.log('Test user session detected')
+          setUser({ id: 'test-user', email: 'test@example.com' })
+          setLoading(false)
+          return
+        }
+        
+        const { user } = await getCurrentUser()
+        setUser(user)
+      } catch (error) {
+        console.warn('Authentication error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    getInitialSession()
+
+    // Listen for auth changes (only if not test user)
+    if (!isTestUser) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      )
+      return () => subscription.unsubscribe()
+    }
+  }, [])
+
+  // Loading is now handled by AuthenticationGuard for authenticated users
+  // Only show loading for unauthenticated users
+  if (loading && !user) {
+    return <LoadingSpinner message="Loading..." variant="card" />
+  }
+
+  if (envError) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        padding: '20px',
+        textAlign: 'center'
+      }}>
+        <h2>Configuration Error</h2>
+        <p>Missing required environment variables. Please check your Supabase configuration.</p>
+        <p style={{ fontSize: '14px', color: '#666' }}>
+          Required: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+        </p>
+      </div>
+    )
+  }
 
   return (
-    <ConfigProvider
-      theme={{
-        token: {
-          colorPrimary: '#1890ff',
-        },
-      }}
-    >
-      <Router>
-        <div className="App">
-          {user ? (
-            <Layout user={user}>
-              <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard user={user} />} />
-                <Route path="/ingredients" element={<Ingredients user={user} />} />
-                <Route path="/meals" element={<Meals user={user} />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Layout>
-          ) : (
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          )}
-        </div>
-      </Router>
-    </ConfigProvider>
+    <ErrorBoundary>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary: '#1890ff',
+          },
+        }}
+      >
+        <WelcomeProvider userId={user?.id}>
+          <Router>
+            <div className="App">
+              {user ? (
+                <Routes>
+                  {/* Welcome Screen Route */}
+                  <Route path="/welcome" element={<WelcomeScreen user={user} />} />
+                  
+                  {/* Main App Routes */}
+                  <Route path="/*" element={
+                    <AuthenticationGuard user={user} authLoading={loading}>
+                      <Layout user={user}>
+                        <Routes>
+                          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                          <Route path="/dashboard" element={<Dashboard user={user} />} />
+                          <Route path="/ingredients" element={<Ingredients user={user} />} />
+                          <Route path="/meals" element={<Meals user={user} />} />
+                          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        </Routes>
+                      </Layout>
+                    </AuthenticationGuard>
+                  } />
+                </Routes>
+              ) : (
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+              )}
+            </div>
+          </Router>
+        </WelcomeProvider>
+      </ConfigProvider>
+    </ErrorBoundary>
   )
 }
 

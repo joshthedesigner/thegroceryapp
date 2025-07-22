@@ -77,7 +77,16 @@
 
 .progress-text {
   min-width: 60px;
-  text-align: right;
+  text-align: left;
+}
+
+/* Percent Used column alignment */
+.percent-used-column {
+  text-align: left !important;
+}
+
+.percent-used-column .ant-table-cell {
+  text-align: left !important;
 }
 
 /* Responsive styles */

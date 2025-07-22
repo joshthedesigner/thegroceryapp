@@ -29,14 +29,21 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     try {
+      console.log('Login button clicked')
       const { error } = await signInWithGoogle()
       if (error) {
         console.error('Login error:', error)
+        alert(`Login failed: ${error.message}`)
+      } else {
+        console.log('Login initiated successfully')
       }
     } catch (error) {
       console.error('Login error:', error)
+      alert(`Login failed: ${error.message}`)
     }
   }
+
+
 
   return (
     <div
@@ -133,7 +140,7 @@ const Login = () => {
             transition: 'transform 0.15s, box-shadow 0.15s, background 0.2s',
             height: 56,
             outline: 'none',
-            marginBottom: 8,
+            marginBottom: 16,
           }}
           onMouseOver={e => {
             e.currentTarget.style.transform = 'scale(1.045)';

@@ -19,17 +19,14 @@ const Layout = ({ children, user }) => {
   const menuItems = [
     {
       key: '/dashboard',
-      icon: <DashboardOutlined />,
       label: 'Dashboard',
     },
     {
       key: '/ingredients',
-      icon: <ShoppingOutlined />,
       label: 'Ingredients',
     },
     {
       key: '/meals',
-      icon: <CoffeeOutlined />,
       label: 'Meals',
     },
   ]
@@ -37,12 +34,10 @@ const Layout = ({ children, user }) => {
   const userMenuItems = [
     {
       key: 'profile',
-      icon: <UserOutlined />,
       label: 'Profile',
     },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
       label: 'Logout',
       onClick: async () => {
         await signOut()
@@ -57,7 +52,7 @@ const Layout = ({ children, user }) => {
 
   return (
     <AntLayout className="layout-container">
-      <Header className="layout-header">
+      <Header className="layout-header" style={{ position: 'sticky', top: 0, zIndex: 100, width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -72,7 +67,7 @@ const Layout = ({ children, user }) => {
               fontSize: '20px',
               fontWeight: 'bold'
             }}>
-              Meal Tracker
+              Grocery Tracker
             </h1>
             <Menu
               mode="horizontal"
@@ -91,6 +86,8 @@ const Layout = ({ children, user }) => {
             menu={{ items: userMenuItems }}
             placement="bottomRight"
             arrow
+            trigger={['click']}
+            overlayStyle={{ marginTop: -4 }}
           >
             <Button 
               type="text" 
@@ -99,15 +96,25 @@ const Layout = ({ children, user }) => {
                 alignItems: 'center', 
                 gap: 8,
                 height: 'auto',
-                padding: '8px 12px'
+                padding: '8px 12px',
+                background: 'none',
+                boxShadow: 'none',
+                outline: 'none',
+                border: 'none',
+                transition: 'none',
               }}
             >
               <Avatar 
                 size="small" 
                 src={user?.user_metadata?.avatar_url}
-                icon={<UserOutlined />}
-              />
+                style={{ backgroundColor: '#1890ff', color: '#fff', fontWeight: 600 }}
+              >
+                {user?.user_metadata?.full_name
+                  ? user.user_metadata.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
+                  : user?.email?.[0]?.toUpperCase()}
+              </Avatar>
               <span>{user?.user_metadata?.full_name || user?.email}</span>
+              <span style={{ fontSize: 12, marginLeft: 4, color: '#888' }}>▼</span>
             </Button>
           </Dropdown>
         </div>
@@ -116,6 +123,13 @@ const Layout = ({ children, user }) => {
       <Content className="layout-content">
         {children}
       </Content>
+      <style>{`
+        .ant-btn-text:hover, .ant-btn-text:focus {
+          background: none !important;
+          color: inherit !important;
+          text-decoration: none !important;
+        }
+      `}</style>
     </AntLayout>
   )
 }
