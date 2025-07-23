@@ -29,6 +29,13 @@ const MealsTable = ({
   onDelete, 
   onViewDetails 
 }) => {
+  // Add debugging
+  console.log('MealsTable received meals:', meals);
+  console.log('MealsTable meals length:', meals?.length);
+  if (meals && meals.length > 0) {
+    console.log('First meal ingredients:', meals[0].meal_ingredients);
+  }
+
   const [expandedRowKeys, setExpandedRowKeys] = useState([])
 
   const handleExpand = (expanded, record) => {
@@ -51,17 +58,31 @@ const MealsTable = ({
       )
     }
 
+    // Filter out meal_ingredients with null ingredients
+    const validMealIngredients = record.meal_ingredients.filter(ing => ing.ingredients && ing.ingredients.name);
+    
+    if (validMealIngredients.length === 0) {
+      return (
+        <Card size="small" style={{ margin: '0 50px' }}>
+          <Empty 
+            description="Ingredients data is missing" 
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        </Card>
+      )
+    }
+
     return (
       <div style={{ margin: '0 50px', background: '#fff', borderRadius: 8 }}>
         <Table
-          dataSource={record.meal_ingredients}
+          dataSource={validMealIngredients}
           pagination={false}
           size="small"
           columns={[
             {
               title: 'Ingredient',
               key: 'ingredient_name',
-              render: (_, rec) => <Text strong>{rec.ingredients?.name || ''}</Text>
+              render: (_, rec) => <Text strong>{rec.ingredients.name}</Text>
             },
             {
               title: 'Quantity Used',
@@ -69,7 +90,7 @@ const MealsTable = ({
               key: 'quantity_used',
               render: (quantity, rec) => (
                 <Text>
-                  {quantity} {rec.ingredients?.unit || ''}
+                  {quantity} {rec.ingredients.unit}
                 </Text>
               )
             }
@@ -106,20 +127,33 @@ const MealsTable = ({
       dataIndex: 'meal_ingredients',
       key: 'ingredients_count',
       render: (ingredients) => {
+        console.log('Ingredients render function called with:', ingredients);
         if (!ingredients || ingredients.length === 0) {
+          console.log('No ingredients found, showing "No ingredients" tag');
           return <Tag color="default">No ingredients</Tag>
         }
-        const firstTwo = ingredients.slice(0, 2)
-        const remaining = ingredients.slice(2)
+        
+        // Check if any ingredients have valid ingredient data
+        const validIngredients = ingredients.filter(ing => ing.ingredients && ing.ingredients.name);
+        console.log('Valid ingredients found:', validIngredients.length);
+        
+        if (validIngredients.length === 0) {
+          console.log('No valid ingredients found, showing "Ingredients missing" tag');
+          return <Tag color="orange">Ingredients missing</Tag>
+        }
+        
+        console.log('Valid ingredients found, rendering tags for:', validIngredients);
+        const firstTwo = validIngredients.slice(0, 2)
+        const remaining = validIngredients.slice(2)
         return (
           <Space wrap>
             {firstTwo.map((ing, index) => (
               <Tag key={index} color="blue">
-                {ing.ingredients?.name || ''}
+                {ing.ingredients.name}
               </Tag>
             ))}
             {remaining.length > 0 && (
-              <Tooltip title={remaining.map(ing => ing.ingredients?.name).filter(Boolean).join(', ')} placement="top">
+              <Tooltip title={remaining.map(ing => ing.ingredients.name).join(', ')} placement="top">
                 <Tag color="blue" style={{ cursor: 'pointer' }}>+{remaining.length} more</Tag>
               </Tooltip>
             )}
