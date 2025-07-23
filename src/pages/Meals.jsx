@@ -39,6 +39,11 @@ const Meals = ({ user }) => {
     const mealDate = dayjs(meal.date_cooked)
     return mealDate.isSameOrAfter(weekStart, 'day') && mealDate.isSameOrBefore(weekEnd, 'day')
   })
+  
+  // Debug filtering
+  console.log('Meals page - all meals:', meals?.length)
+  console.log('Meals page - week range:', weekStart.format('YYYY-MM-DD'), 'to', weekEnd.format('YYYY-MM-DD'))
+  console.log('Meals page - filtered meals:', filteredMeals?.length)
 
   const handlePrevWeek = () => {
     setSelectedWeekStart(prev => dayjs(prev).subtract(1, 'week').startOf('week'))
@@ -171,6 +176,10 @@ const Meals = ({ user }) => {
         onDelete={handleDeleteMeal}
         onViewDetails={handleViewDetails}
       />
+      
+      {/* Add debugging */}
+      {console.log('Meals page filteredMeals:', filteredMeals)}
+      {console.log('Meals page filteredMeals length:', filteredMeals?.length)}
 
       <MealForm
         visible={formVisible}
@@ -204,13 +213,18 @@ const Meals = ({ user }) => {
             <p><strong>Date:</strong> {new Date(selectedMeal.date_cooked).toLocaleDateString()}</p>
             <p><strong>Total Cost:</strong> ${selectedMeal.total_cost?.toFixed(2) || '0.00'}</p>
             
+            {/* Debug info */}
+            {console.log('Modal selectedMeal:', selectedMeal)}
+            {console.log('Modal meal_ingredients:', selectedMeal.meal_ingredients)}
+            {console.log('Modal meal_ingredients length:', selectedMeal.meal_ingredients?.length)}
+            
             {selectedMeal.meal_ingredients && selectedMeal.meal_ingredients.length > 0 ? (
               <div>
                 <Title level={5}>Ingredients Used:</Title>
                 <ul>
                   {selectedMeal.meal_ingredients.map((ingredient, index) => (
                     <li key={index}>
-                      {ingredient.ingredient_name} - {ingredient.quantity_used} {ingredient.unit}
+                      {ingredient.ingredients?.name || 'Unknown ingredient'} - {ingredient.quantity_used} {ingredient.ingredients?.unit || ''}
                     </li>
                   ))}
                 </ul>
