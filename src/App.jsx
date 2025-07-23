@@ -8,6 +8,8 @@ import { WelcomeProvider } from './features/welcome/context/WelcomeContext'
 import AuthenticationGuard from './components/AuthenticationGuard'
 import AuthenticatedApp from './components/AuthenticatedApp'
 
+// Force deployment to clear caching issues - API now working with ingredients
+
 // Import pages
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -110,13 +112,19 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [envError, setEnvError] = useState(false)
 
+  // Debug log to verify component is rendering
+  console.log('App component rendering - user:', user, 'loading:', loading)
+
   // Check for test user session
   const isTestUser = localStorage.getItem('test-user') === 'true'
 
   useEffect(() => {
     // Validate environment variables
     try {
-      validateEnv()
+      const envValid = validateEnv()
+      if (!envValid) {
+        console.warn('Environment validation failed, but continuing in development mode')
+      }
     } catch (error) {
       console.error('Environment validation error:', error)
       setEnvError(true)
