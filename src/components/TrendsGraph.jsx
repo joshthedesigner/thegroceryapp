@@ -135,6 +135,20 @@ const TrendsGraph = ({
       // Calculate used value based on actual meal consumption during this period
       const usedValue = periodMeals.reduce((sum, meal) => {
         console.log('🔍 Line graph - meal:', meal.meal_name, 'total_cost:', meal.total_cost)
+        
+        // Calculate cost from meal ingredients if total_cost is 0
+        if (!meal.total_cost || meal.total_cost === 0) {
+          const mealCost = (meal.meal_ingredients || []).reduce((mealSum, mi) => {
+            if (mi.ingredients && mi.quantity_used && mi.ingredients.amount_purchased && mi.ingredients.price) {
+              const proportion = mi.quantity_used / mi.ingredients.amount_purchased
+              return mealSum + (mi.ingredients.price * proportion)
+            }
+            return mealSum
+          }, 0)
+          console.log('🔍 Line graph - calculated meal cost:', mealCost)
+          return sum + mealCost
+        }
+        
         return sum + (meal.total_cost || 0)
       }, 0)
       
