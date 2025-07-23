@@ -53,12 +53,7 @@ const TrendsGraph = ({
   loading = false 
 }) => {
 
-  // DEBUG: Log when component renders
-  console.log('🎯 TrendsGraph Component Rendered:')
-  console.log('  - Ingredients count:', ingredients.length)
-  console.log('  - Meals count:', meals.length)
-  console.log('  - TimeFilter:', timeFilter)
-  console.log('  - Loading:', loading)
+
 
   // Process data for chart
   const chartData = useMemo(() => {
@@ -94,17 +89,7 @@ const TrendsGraph = ({
       }
     }
 
-    // DEBUG: Log the date range and ingredients
-    console.log('🔍 TrendsGraph Debug:')
-    console.log('  - TimeFilter:', timeFilter)
-    console.log('  - PeriodOffset:', periodOffset)
-    console.log('  - StartDate:', startDate.format('YYYY-MM-DD'))
-    console.log('  - EndDate:', endDate.format('YYYY-MM-DD'))
-    console.log('  - Total ingredients received:', ingredients.length)
-    console.log('  - Ingredients with today\'s date:', ingredients.filter(ing => {
-      const purchaseDate = dayjs(ing.purchase_date)
-      return purchaseDate.isSame(dayjs(), 'day')
-    }).length)
+
 
     // Determine interval based on time filter
     switch (timeFilter) {
@@ -129,25 +114,17 @@ const TrendsGraph = ({
     while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
       const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
       
+
+      
       // Calculate ingredients added up to this current date (cumulative)
       const ingredientsUpToDate = ingredients.filter(ing => {
         const purchaseDate = dayjs(ing.purchase_date)
-        return purchaseDate.isBefore(current, 'day') // Include ingredients up to (but not including) this date
+        return purchaseDate.isBefore(current) || purchaseDate.isSame(current, 'day') // Include ALL ingredients up to and including this date
       })
       
       cumulativeTotal = ingredientsUpToDate.reduce((sum, ing) => sum + ing.price, 0)
       
-      // DEBUG: Log data for today's date
-      if (current.isSame(dayjs(), 'day')) {
-        console.log('  - Today\'s date in loop:', current.format('YYYY-MM-DD'))
-        console.log('  - Ingredients up to today:', ingredientsUpToDate.length)
-        console.log('  - Cumulative total for today:', cumulativeTotal)
-        console.log('  - Today\'s ingredients:', ingredientsUpToDate.map(ing => ({
-          name: ing.name,
-          price: ing.price,
-          purchase_date: ing.purchase_date
-        })))
-      }
+
       
       // Filter meals for this specific date point (unchanged)
       const periodMeals = meals.filter(meal => {
@@ -157,8 +134,11 @@ const TrendsGraph = ({
 
       // Calculate used value based on actual meal consumption during this period
       const usedValue = periodMeals.reduce((sum, meal) => {
+        console.log('🔍 Line graph - meal:', meal.meal_name, 'total_cost:', meal.total_cost)
         return sum + (meal.total_cost || 0)
       }, 0)
+      
+      console.log('🔍 Line graph - periodMeals count:', periodMeals.length, 'usedValue:', usedValue)
       
       const unusedValue = cumulativeTotal - usedValue
 
@@ -169,17 +149,13 @@ const TrendsGraph = ({
         usedValue: Math.round(usedValue * 100) / 100,
         unusedValue: Math.round(unusedValue * 100) / 100
       }
+      
+
 
       dataPoints.push(dataPoint)
 
       current = current.add(1, interval)
     }
-
-    console.log('  - Total data points generated:', dataPoints.length)
-    console.log('  - Final chart data:', dataPoints.map(dp => ({
-      date: dp.date,
-      totalValue: dp.totalValue
-    })))
 
     return dataPoints
   }, [ingredients, meals, timeFilter, periodOffset, getDateRange])
@@ -263,16 +239,16 @@ const TrendsGraph = ({
               type="monotone" 
               dataKey="totalValue" 
               stroke="#1890ff" 
-              strokeWidth={2}
+              strokeWidth={5}
               dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6 }}
             />
             <Line 
               type="monotone" 
               dataKey="usedValue" 
-              stroke="#00d084" 
+              stroke="#ff6b35" 
               strokeWidth={3}
-              dot={{ fill: '#00d084', strokeWidth: 3, r: 5 }}
+              dot={{ fill: '#ff6b35', strokeWidth: 3, r: 5 }}
               activeDot={{ r: 8 }}
             />
             <Line 
