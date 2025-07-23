@@ -8,7 +8,7 @@ import { WelcomeProvider } from './features/welcome/context/WelcomeContext'
 import AuthenticationGuard from './components/AuthenticationGuard'
 import AuthenticatedApp from './components/AuthenticatedApp'
 
-// Force deployment to clear caching issues - API now working with ingredients - Final fix
+// Force deployment to clear caching issues - API now working with ingredients - Meal costs fixed - Line graph should show consumed values
 
 // Import pages
 import Login from './pages/Login'
