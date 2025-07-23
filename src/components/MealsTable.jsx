@@ -139,7 +139,7 @@ const MealsTable = ({
         
         if (validIngredients.length === 0) {
           console.log('No valid ingredients found, showing "Ingredients missing" tag');
-          return <Tag color="orange">Ingredients missing</Tag>
+          return <Tag color="orange" style={{ backgroundColor: '#fa8c16', color: 'white', border: '2px solid red' }}>Ingredients missing</Tag>
         }
         
         console.log('Valid ingredients found, rendering tags for:', validIngredients);
