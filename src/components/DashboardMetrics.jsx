@@ -56,7 +56,6 @@ const DashboardMetrics = ({
 
   // Calculate ingredient metrics using shared utilities
   const totalIngredients = ingredientsData.length
-  const distinctIngredients = new Set(ingredientsData.map(ing => ing.name)).size
   const totalValue = calculateTotalValue(ingredientsData)
   const usedValue = calculateUsedValue(filteredMeals)
   const unusedValue = calculateUnusedValue(ingredientsData, filteredMeals)
