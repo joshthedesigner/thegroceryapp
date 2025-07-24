@@ -53,7 +53,10 @@ const TrendsGraph = ({
   loading = false 
 }) => {
 
-
+  // Create a key that changes when meals data changes to force re-render
+  const chartKey = useMemo(() => {
+    return `meals-${meals.length}-${meals.map(m => m.id).join('-')}`
+  }, [meals])
 
   // Process ingredients data for the chart
   const processIngredientsData = () => {
@@ -119,8 +122,6 @@ const TrendsGraph = ({
       }
     }
 
-
-
     // Determine interval based on time filter
     switch (timeFilter) {
       case 'week':
@@ -144,8 +145,6 @@ const TrendsGraph = ({
     while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
       const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
       
-
-      
       // Calculate ingredients added up to this current date (cumulative)
       const ingredientsUpToDate = ingredients.filter(ing => {
         const purchaseDate = dayjs(ing.purchase_date)
@@ -153,8 +152,6 @@ const TrendsGraph = ({
       })
       
       cumulativeTotal = ingredientsUpToDate.reduce((sum, ing) => sum + ing.price, 0)
-      
-
       
       // Filter meals for this specific date point (unchanged)
       const periodMeals = meals.filter(meal => {
@@ -194,10 +191,7 @@ const TrendsGraph = ({
         unusedValue: Math.round(unusedValue * 100) / 100
       }
       
-
-
       dataPoints.push(dataPoint)
-
       current = current.add(1, interval)
     }
 
@@ -257,7 +251,7 @@ const TrendsGraph = ({
         </div>
 
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData}>
+          <LineChart data={chartData} key={chartKey}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="date" 
