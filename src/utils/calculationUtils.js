@@ -1,5 +1,6 @@
 // Shared calculation utilities for dashboard components
 // Ensures consistent calculations across metrics and graphs
+import dayjs from 'dayjs'
 
 /**
  * Get filtered data for a specific time period
@@ -94,4 +95,68 @@ export const calculateTotalMealCost = (meals) => {
  */
 export const calculateAverageMealCost = (meals) => {
   return meals.length > 0 ? calculateTotalMealCost(meals) / meals.length : 0
+}
+
+/**
+ * Get filtered data for a specific date (using same logic as metrics)
+ * @param {Array} ingredients - Array of ingredient objects
+ * @param {Array} meals - Array of meal objects
+ * @param {Date} targetDate - Target date to filter for
+ * @returns {Object} Object containing filteredIngredients and filteredMeals for that date
+ */
+export const getFilteredDataForDate = (ingredients, meals, targetDate) => {
+  // Use the SAME filtering logic as metrics, but for a single date
+  const startDate = dayjs(targetDate).startOf('day')
+  const endDate = dayjs(targetDate).endOf('day')
+  
+  const filteredIngredients = ingredients.filter(ing => {
+    if (!ing.purchase_date) return false
+    const purchaseDate = new Date(ing.purchase_date)
+    return purchaseDate >= startDate.toDate() && purchaseDate <= endDate.toDate()
+  })
+  
+  const filteredMeals = meals.filter(meal => {
+    if (!meal.date_cooked) return false
+    const mealDate = new Date(meal.date_cooked)
+    return mealDate >= startDate.toDate() && mealDate <= endDate.toDate()
+  })
+  
+  return { filteredIngredients, filteredMeals }
+}
+
+/**
+ * Get cumulative data up to a specific date (using same logic as metrics)
+ * @param {Array} ingredients - Array of ingredient objects
+ * @param {Array} meals - Array of meal objects
+ * @param {Date} targetDate - Target date to calculate cumulative totals up to
+ * @returns {Object} Object containing cumulative totals
+ */
+export const getCumulativeDataUpToDate = (ingredients, meals, targetDate) => {
+  // Use the SAME filtering logic as metrics, but up to the target date
+  const endDate = dayjs(targetDate).endOf('day')
+  
+  const filteredIngredients = ingredients.filter(ing => {
+    if (!ing.purchase_date) return false
+    const purchaseDate = new Date(ing.purchase_date)
+    return purchaseDate <= endDate.toDate()
+  })
+  
+  const filteredMeals = meals.filter(meal => {
+    if (!meal.date_cooked) return false
+    const mealDate = new Date(meal.date_cooked)
+    return mealDate <= endDate.toDate()
+  })
+  
+  // Use the SAME calculation functions as metrics
+  const totalValue = calculateTotalValue(filteredIngredients)
+  const totalMealCost = calculateTotalMealCost(filteredMeals)
+  const unusedValue = calculateUnusedValue(filteredIngredients)
+  
+  return {
+    totalValue,
+    usedValue: totalMealCost,
+    unusedValue,
+    ingredientCount: filteredIngredients.length,
+    mealCount: filteredMeals.length
+  }
 } 

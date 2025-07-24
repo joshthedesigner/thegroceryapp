@@ -16,7 +16,12 @@ import {
 } from 'recharts'
 import dayjs from 'dayjs'
 import LoadingSpinner from './LoadingSpinner'
-import { getFilteredDataForPeriod, calculateTotalValue } from '../utils/calculationUtils'
+import { 
+  getFilteredDataForPeriod, 
+  calculateTotalValue, 
+  getFilteredDataForDate,
+  getCumulativeDataUpToDate 
+} from '../utils/calculationUtils'
 
 const { Title, Text } = Typography
 
@@ -145,50 +150,24 @@ const TrendsGraph = ({
     while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
       const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
       
-      // Calculate ingredients for this specific date/period only (period-specific)
-      const ingredientsForDate = ingredients.filter(ing => {
-        const purchaseDate = dayjs(ing.purchase_date)
-        return purchaseDate.isSame(current, interval) // Only ingredients for this specific date/period
-      })
+      // Use the SAME infrastructure as metrics for daily data
+      const { filteredIngredients: dailyIngredients, filteredMeals: dailyMeals } = getFilteredDataForDate(
+        ingredients, meals, current.toDate()
+      )
       
-      const periodTotal = calculateTotalValue(ingredientsForDate)
+      // Use the SAME infrastructure as metrics for cumulative data
+      const cumulativeData = getCumulativeDataUpToDate(ingredients, meals, current.toDate())
       
-      // Filter meals for this specific date point (unchanged)
-      const periodMeals = meals.filter(meal => {
-        const mealDate = dayjs(meal.date_cooked)
-        return mealDate.isSame(current, interval)
-      })
-
-      // Calculate used value based on actual meal consumption during this period
-      const usedValue = periodMeals.reduce((sum, meal) => {
-        console.log('🔍 Line graph - meal:', meal.meal_name, 'total_cost:', meal.total_cost)
-        
-        // Calculate cost from meal ingredients if total_cost is 0
-        if (!meal.total_cost || meal.total_cost === 0) {
-          const mealCost = (meal.meal_ingredients || []).reduce((mealSum, mi) => {
-            if (mi.ingredients && mi.quantity_used && mi.ingredients.amount_purchased && mi.ingredients.price) {
-              const proportion = mi.quantity_used / mi.ingredients.amount_purchased
-              return mealSum + (mi.ingredients.price * proportion)
-            }
-            return mealSum
-          }, 0)
-          console.log('🔍 Line graph - calculated meal cost:', mealCost)
-          return sum + mealCost
-        }
-        
-        return sum + (meal.total_cost || 0)
-      }, 0)
-      
-      console.log('🔍 Line graph - periodMeals count:', periodMeals.length, 'usedValue:', usedValue)
-      
-      const unusedValue = periodTotal - usedValue
+      // Calculate daily addition using same calculation function as metrics
+      const dailyAdded = calculateTotalValue(dailyIngredients)
 
       const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
-        totalValue: Math.round(periodTotal * 100) / 100, // Period-specific total
-        usedValue: Math.round(usedValue * 100) / 100,
-        unusedValue: Math.round(unusedValue * 100) / 100
+        totalValue: Math.round(cumulativeData.totalValue * 100) / 100, // Cumulative total (matches metrics)
+        usedValue: Math.round(cumulativeData.usedValue * 100) / 100,   // Cumulative used (matches metrics)
+        unusedValue: Math.round(cumulativeData.unusedValue * 100) / 100, // Cumulative unused (matches metrics)
+        dailyAdded: Math.round(dailyAdded * 100) / 100 // Daily addition for reference
       }
       
       dataPoints.push(dataPoint)
@@ -202,8 +181,15 @@ const TrendsGraph = ({
     return 'Value ($)'
   }
 
-  const getTooltipFormatter = (value, name) => {
-    return [`$${value}`, legendLabels[name] || name]
+  const getTooltipFormatter = (value, name, props) => {
+    const dailyAdded = props.payload.dailyAdded || 0
+    const baseLabel = legendLabels[name] || name
+    
+    if (name === 'totalValue') {
+      return [`$${value}`, `${baseLabel} (Added today: $${dailyAdded})`]
+    }
+    
+    return [`$${value}`, baseLabel]
   }
 
   const getLegendFormatter = (value) => {
