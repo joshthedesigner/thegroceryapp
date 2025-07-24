@@ -30,12 +30,12 @@ export const getFilteredDataForPeriod = (ingredients, meals, timeFilter, periodO
 }
 
 /**
- * Calculate total value of ingredients (price × amount_purchased)
+ * Calculate total value of ingredients (price is already total cost)
  * @param {Array} ingredients - Array of ingredient objects
  * @returns {number} Total value
  */
 export const calculateTotalValue = (ingredients) => {
-  return ingredients.reduce((sum, ing) => sum + (ing.price * ing.amount_purchased), 0)
+  return ingredients.reduce((sum, ing) => sum + ing.price, 0)
 }
 
 /**
