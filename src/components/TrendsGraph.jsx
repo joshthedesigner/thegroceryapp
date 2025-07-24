@@ -17,10 +17,9 @@ import {
 import dayjs from 'dayjs'
 import LoadingSpinner from './LoadingSpinner'
 import { 
-  getFilteredDataForPeriod, 
-  calculateTotalValue, 
-  getFilteredDataForDate,
-  getCumulativeDataUpToDate 
+  getFilteredDataForDate, 
+  getCumulativeDataWithinPeriod,
+  calculateTotalValue 
 } from '../utils/calculationUtils'
 
 const { Title, Text } = Typography
@@ -98,46 +97,16 @@ const TrendsGraph = ({
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []
 
-    let startDate, endDate, interval
-
-    // Use standardized date range if available
-    if (getDateRange) {
-      const dateRange = getDateRange(timeFilter, periodOffset)
-      startDate = dateRange.start
-      endDate = dateRange.end
-    } else {
-      // Fallback to old logic
-      const now = dayjs()
-      
-      switch (timeFilter) {
-        case 'week':
-          startDate = now.subtract(7, 'day')
-          endDate = now
-          break
-        case 'month':
-          startDate = now.subtract(30, 'day')
-          endDate = now
-          break
-        case 'year':
-          startDate = now.subtract(12, 'month')
-          endDate = now
-          break
-        default:
-          startDate = now.subtract(7, 'day')
-          endDate = now
-      }
-    }
-
+    const { start: startDate, end: endDate } = getDateRange(timeFilter, periodOffset)
+    
     // Determine interval based on time filter
+    let interval
     switch (timeFilter) {
-      case 'week':
-        interval = 'day'
-        break
-      case 'month':
-        interval = 'day'
-        break
       case 'year':
         interval = 'month'
+        break
+      case 'month':
+        interval = 'week'
         break
       default:
         interval = 'day'
@@ -155,8 +124,10 @@ const TrendsGraph = ({
         ingredients, meals, current.toDate()
       )
       
-      // Use the SAME infrastructure as metrics for cumulative data
-      const cumulativeData = getCumulativeDataUpToDate(ingredients, meals, current.toDate())
+      // Use the NEW infrastructure that respects time filter like metrics
+      const cumulativeData = getCumulativeDataWithinPeriod(
+        ingredients, meals, timeFilter, periodOffset, getDateRange, current.toDate()
+      )
       
       // Calculate daily addition using same calculation function as metrics
       const dailyAdded = calculateTotalValue(dailyIngredients)
@@ -164,9 +135,9 @@ const TrendsGraph = ({
       const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
-        totalValue: Math.round(cumulativeData.totalValue * 100) / 100, // Cumulative total (matches metrics)
-        usedValue: Math.round(cumulativeData.usedValue * 100) / 100,   // Cumulative used (matches metrics)
-        unusedValue: Math.round(cumulativeData.unusedValue * 100) / 100, // Cumulative unused (matches metrics)
+        totalValue: Math.round(cumulativeData.totalValue * 100) / 100, // Cumulative total within time period (matches metrics)
+        usedValue: Math.round(cumulativeData.usedValue * 100) / 100,   // Cumulative used within time period (matches metrics)
+        unusedValue: Math.round(cumulativeData.unusedValue * 100) / 100, // Cumulative unused within time period (matches metrics)
         dailyAdded: Math.round(dailyAdded * 100) / 100 // Daily addition for reference
       }
       

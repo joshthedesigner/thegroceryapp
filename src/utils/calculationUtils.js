@@ -159,4 +159,52 @@ export const getCumulativeDataUpToDate = (ingredients, meals, targetDate) => {
     ingredientCount: filteredIngredients.length,
     mealCount: filteredMeals.length
   }
+}
+
+/**
+ * Get cumulative data within a time period (respects time filter like metrics)
+ * @param {Array} ingredients - Array of ingredient objects
+ * @param {Array} meals - Array of meal objects
+ * @param {string} timeFilter - Time filter ('week', 'month', 'year')
+ * @param {number} periodOffset - Period offset (0 = current, 1 = previous, etc.)
+ * @param {Function} getDateRange - Function to get date range for filtering
+ * @param {Date} targetDate - Target date to calculate cumulative totals up to
+ * @returns {Object} Object containing cumulative totals within the time period
+ */
+export const getCumulativeDataWithinPeriod = (ingredients, meals, timeFilter, periodOffset, getDateRange, targetDate) => {
+  // Get the date range for the time filter
+  const { start: periodStart, end: periodEnd } = getDateRange(timeFilter, periodOffset)
+  
+  // Filter ingredients within the time period AND up to the target date
+  const filteredIngredients = ingredients.filter(ing => {
+    if (!ing.purchase_date) return false
+    const purchaseDate = new Date(ing.purchase_date)
+    const targetEndDate = dayjs(targetDate).endOf('day').toDate()
+    
+    // Must be within the time period AND up to the target date
+    return purchaseDate >= periodStart && purchaseDate <= periodEnd && purchaseDate <= targetEndDate
+  })
+  
+  // Filter meals within the time period AND up to the target date
+  const filteredMeals = meals.filter(meal => {
+    if (!meal.date_cooked) return false
+    const mealDate = new Date(meal.date_cooked)
+    const targetEndDate = dayjs(targetDate).endOf('day').toDate()
+    
+    // Must be within the time period AND up to the target date
+    return mealDate >= periodStart && mealDate <= periodEnd && mealDate <= targetEndDate
+  })
+  
+  // Use the SAME calculation functions as metrics
+  const totalValue = calculateTotalValue(filteredIngredients)
+  const totalMealCost = calculateTotalMealCost(filteredMeals)
+  const unusedValue = calculateUnusedValue(filteredIngredients)
+  
+  return {
+    totalValue,
+    usedValue: totalMealCost,
+    unusedValue,
+    ingredientCount: filteredIngredients.length,
+    mealCount: filteredMeals.length
+  }
 } 
