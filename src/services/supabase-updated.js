@@ -235,10 +235,23 @@ export const calculateDashboardMetrics = async (userId) => {
   const { data: meals, error: mealsError } = await getMeals(userId)
   if (mealsError) return { error: mealsError }
   
-  // Calculate metrics
+  // Calculate metrics using new per-ingredient method
   const totalPurchased = ingredients.reduce((sum, i) => sum + (i.price * i.amount_purchased), 0)
   const totalConsumed = meals.reduce((sum, meal) => sum + calculateMealCost(meal), 0)
-  const unusedValue = totalPurchased - totalConsumed
+  
+  // Calculate unused value using per-ingredient method (more accurate)
+  const unusedValue = ingredients.reduce((sum, ing) => {
+    const amountUsed = ing.amount_used || 0
+    const amountPurchased = ing.amount_purchased || 0
+    
+    if (amountPurchased === 0) return sum
+    
+    const unusedRatio = (amountPurchased - amountUsed) / amountPurchased
+    const unusedValue = ing.price * unusedRatio
+    
+    return sum + unusedValue
+  }, 0)
+  
   const averageMealCost = meals.length > 0 ? totalConsumed / meals.length : 0
   
   return {
