@@ -5,7 +5,12 @@ import {
   ExclamationCircleOutlined, 
   CloseCircleOutlined 
 } from '@ant-design/icons'
-import { getIngredientUsagePercentage } from '../utils/calculationUtils'
+import { 
+  getIngredientUsagePercentage,
+  getIngredientUsageStatus,
+  getStatusColor,
+  getStatusText
+} from '../utils/calculationUtils'
 
 const { Text, Title } = Typography
 
@@ -16,22 +21,10 @@ const IngredientUsageProgress = ({
 }) => {
   const getUsagePercentage = getIngredientUsagePercentage
 
-  const getUsageStatus = (percentage) => {
-    if (percentage >= 80) return 'success'
-    if (percentage >= 50) return 'warning'
-    return 'exception'
-  }
-
   const getStatusIcon = (percentage) => {
     if (percentage >= 80) return <CheckCircleOutlined style={{ color: '#52c41a' }} />
     if (percentage >= 50) return <ExclamationCircleOutlined style={{ color: '#faad14' }} />
     return <CloseCircleOutlined style={{ color: '#f5222d' }} />
-  }
-
-  const getStatusText = (percentage) => {
-    if (percentage >= 80) return 'Fully Used'
-    if (percentage >= 50) return 'Partially Used'
-    return 'Unused'
   }
 
   const getRemainingValue = (ingredient) => {
@@ -59,7 +52,7 @@ const IngredientUsageProgress = ({
       <Space direction="vertical" style={{ width: '100%' }}>
         {sortedIngredients.map((ingredient) => {
           const percentage = getUsagePercentage(ingredient)
-          const status = getUsageStatus(percentage)
+          const status = getIngredientUsageStatus(ingredient)
           const remainingValue = getRemainingValue(ingredient)
 
           return (
@@ -77,7 +70,7 @@ const IngredientUsageProgress = ({
                     ${remainingValue.toFixed(2)} remaining
                   </Text>
                   <Text strong style={{ color: status === 'success' ? '#52c41a' : status === 'warning' ? '#faad14' : '#f5222d' }}>
-                    {getStatusText(percentage)}
+                    {getStatusText(status)}
                   </Text>
                 </Space>
               </div>

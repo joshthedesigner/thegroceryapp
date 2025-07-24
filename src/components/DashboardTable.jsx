@@ -30,7 +30,10 @@ import {
   calculateUsagePercentage,
   calculateTotalMealCost,
   calculateAverageMealCost,
-  getIngredientUsagePercentage
+  getIngredientUsagePercentage,
+  getIngredientUsageStatus,
+  getStatusColor,
+  getStatusText
 } from '../utils/calculationUtils'
 
 const { Search } = Input
@@ -127,36 +130,7 @@ const DashboardTable = ({
 
   // Helper functions for usage calculations
   const getUsagePercentage = getIngredientUsagePercentage
-
-  // Helper for status (copy from IngredientsTable)
-  const getUsageStatus = (ingredient) => {
-    if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
-    const percentage = getUsagePercentage(ingredient)
-    if (percentage === 100) return 'finished'
-    if (percentage >= 80) return 'success' // Green - mostly used
-    if (percentage >= 30) return 'warning' // Orange - partially used
-    return 'exception' // Red - barely used
-  }
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'notused': return 'default'
-      case 'finished': return 'blue'
-      case 'success': return 'green'
-      case 'warning': return 'orange'
-      case 'exception': return 'red'
-      default: return 'default'
-    }
-  }
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'notused': return 'Not Used'
-      case 'finished': return 'Finished'
-      case 'success': return 'Mostly Used'
-      case 'warning': return 'Partially Used'
-      case 'exception': return 'Barely Used'
-      default: return 'Unknown'
-    }
-  }
+  const getUsageStatus = getIngredientUsageStatus
 
   // Ingredients table columns
   const ingredientColumns = [

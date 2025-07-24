@@ -21,6 +21,7 @@ import {
   SearchOutlined,
   FilterOutlined 
 } from '@ant-design/icons'
+import { getIngredientUsageStatus, getStatusColor, getStatusText } from '../utils/calculationUtils'
 
 const { Search } = Input
 const { Option } = Select
@@ -39,43 +40,9 @@ const IngredientsTable = ({
   // Filter ingredients based on search and status
   const filteredIngredients = ingredients.filter(ingredient => {
     const matchesSearch = ingredient.name.toLowerCase().includes(searchText.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || getUsageStatus(ingredient) === statusFilter
+    const matchesStatus = statusFilter === 'all' || getIngredientUsageStatus(ingredient) === statusFilter
     return matchesSearch && matchesStatus
   })
-
-  // Get status color
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'notused': return 'default'
-      case 'finished': return 'blue'
-      case 'success': return 'green'
-      case 'warning': return 'orange'
-      case 'exception': return 'red'
-      default: return 'default'
-    }
-  }
-
-  // Get status text
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'notused': return 'Not Used'
-      case 'finished': return 'Finished'
-      case 'success': return 'Mostly Used'
-      case 'warning': return 'Partially Used'
-      case 'exception': return 'Barely Used'
-      default: return 'Unknown'
-    }
-  }
-
-  // Helper for status
-  const getUsageStatus = (ingredient) => {
-    if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
-    const percentage = getUsagePercentage(ingredient)
-    if (percentage === 100) return 'finished'
-    if (percentage >= 80) return 'success' // Green - mostly used
-    if (percentage >= 30) return 'warning' // Orange - partially used
-    return 'exception' // Red - barely used
-  }
 
   // Handle delete
   const handleDelete = async (id) => {
@@ -122,7 +89,7 @@ const IngredientsTable = ({
           <Progress 
             percent={percentage} 
             size="small" 
-            status={getUsageStatus(record)}
+            status={getIngredientUsageStatus(record)}
             format={(percent) => `${percent}%`}
           />
         )
@@ -143,9 +110,9 @@ const IngredientsTable = ({
         { text: 'Partially Used', value: 'warning' },
         { text: 'Barely Used', value: 'exception' }
       ],
-      onFilter: (value, record) => getUsageStatus(record) === value,
+      onFilter: (value, record) => getIngredientUsageStatus(record) === value,
       render: (_, record) => {
-        const status = getUsageStatus(record)
+        const status = getIngredientUsageStatus(record)
         const statusText = {
           success: 'Mostly Used',
           warning: 'Partially Used',

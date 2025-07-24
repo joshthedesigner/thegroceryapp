@@ -257,4 +257,50 @@ export const getIngredientUsagePercentage = (ingredient) => {
   if (!ingredient.amount_purchased || ingredient.amount_purchased === 0) return 0
   const usedAmount = ingredient.amount_used || 0
   return Math.round((usedAmount / ingredient.amount_purchased) * 100)
+}
+
+/**
+ * Get usage status for an ingredient
+ * @param {Object} ingredient - Ingredient object with amount_purchased and amount_used
+ * @returns {string} Status code: 'notused', 'finished', 'success', 'warning', or 'exception'
+ */
+export const getIngredientUsageStatus = (ingredient) => {
+  if (!ingredient.amount_used || ingredient.amount_used === 0) return 'notused'
+  const percentage = getIngredientUsagePercentage(ingredient)
+  if (percentage === 100) return 'finished'
+  if (percentage >= 80) return 'success' // Green - mostly used
+  if (percentage >= 30) return 'warning' // Orange - partially used
+  return 'exception' // Red - barely used
+}
+
+/**
+ * Get color for a usage status
+ * @param {string} status - Status code from getIngredientUsageStatus
+ * @returns {string} Color code for the status
+ */
+export const getStatusColor = (status) => {
+  switch (status) {
+    case 'notused': return 'default'
+    case 'finished': return 'blue'
+    case 'success': return 'green'
+    case 'warning': return 'orange'
+    case 'exception': return 'red'
+    default: return 'default'
+  }
+}
+
+/**
+ * Get display text for a usage status
+ * @param {string} status - Status code from getIngredientUsageStatus
+ * @returns {string} Human-readable status text
+ */
+export const getStatusText = (status) => {
+  switch (status) {
+    case 'notused': return 'Not Used'
+    case 'finished': return 'Finished'
+    case 'success': return 'Mostly Used'
+    case 'warning': return 'Partially Used'
+    case 'exception': return 'Barely Used'
+    default: return 'Unknown'
+  }
 } 
