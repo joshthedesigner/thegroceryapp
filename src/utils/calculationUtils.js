@@ -48,15 +48,25 @@ export const calculateUsedValue = (meals) => {
 }
 
 /**
- * Calculate unused value using subtraction method (Total - Used = Unused)
+ * Calculate unused value using per-ingredient calculation (respects time filters)
  * @param {Array} ingredients - Array of ingredient objects
- * @param {Array} meals - Array of meal objects
+ * @param {Array} meals - Array of meal objects (not used in this calculation)
  * @returns {number} Unused value
  */
 export const calculateUnusedValue = (ingredients, meals) => {
-  const totalValue = calculateTotalValue(ingredients)
-  const usedValue = calculateUsedValue(meals)
-  return totalValue - usedValue
+  return ingredients.reduce((sum, ing) => {
+    // Calculate unused portion for this ingredient
+    const amountUsed = ing.amount_used || 0
+    const amountPurchased = ing.amount_purchased || 0
+    
+    if (amountPurchased === 0) return sum
+    
+    // Calculate unused ratio and multiply by price
+    const unusedRatio = (amountPurchased - amountUsed) / amountPurchased
+    const unusedValue = ing.price * unusedRatio
+    
+    return sum + unusedValue
+  }, 0)
 }
 
 /**
