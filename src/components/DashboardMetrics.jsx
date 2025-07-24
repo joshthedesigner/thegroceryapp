@@ -4,6 +4,7 @@ import {
   getFilteredDataForPeriod, 
   calculateTotalValue, 
   calculateUnusedValue,
+  calculateUsedValue,
   calculateTotalPurchased,
   calculateTotalUsed,
   calculateUsagePercentage,
@@ -57,7 +58,8 @@ const DashboardMetrics = ({
   const totalIngredients = ingredientsData.length
   const distinctIngredients = new Set(ingredientsData.map(ing => ing.name)).size
   const totalValue = calculateTotalValue(ingredientsData)
-  const unusedValue = calculateUnusedValue(ingredientsData)
+  const usedValue = calculateUsedValue(filteredMeals)
+  const unusedValue = calculateUnusedValue(ingredientsData, filteredMeals)
 
   const metrics = [
     {
@@ -96,6 +98,14 @@ const DashboardMetrics = ({
       description: 'Total value of ingredients',
       formatter: (value) => `$${value.toFixed(2)}`,
       type: 'totalValue'
+    },
+    {
+      title: 'Used Value',
+      value: usedValue,
+      suffix: '',
+      description: 'Value of ingredients consumed in meals',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'usedValue'
     },
     {
       title: 'Unused Value',

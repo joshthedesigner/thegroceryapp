@@ -19,7 +19,9 @@ import LoadingSpinner from './LoadingSpinner'
 import { 
   getFilteredDataForDate, 
   getCumulativeDataWithinPeriod,
-  calculateTotalValue 
+  calculateTotalValue,
+  calculateUsedValue,
+  calculateUnusedValue
 } from '../utils/calculationUtils'
 
 const { Title, Text } = Typography

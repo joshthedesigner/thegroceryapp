@@ -30,24 +30,33 @@ export const getFilteredDataForPeriod = (ingredients, meals, timeFilter, periodO
 }
 
 /**
- * Calculate total value of ingredients
+ * Calculate total value of ingredients (price × amount_purchased)
  * @param {Array} ingredients - Array of ingredient objects
  * @returns {number} Total value
  */
 export const calculateTotalValue = (ingredients) => {
-  return ingredients.reduce((sum, ing) => sum + ing.price, 0)
+  return ingredients.reduce((sum, ing) => sum + (ing.price * ing.amount_purchased), 0)
 }
 
 /**
- * Calculate unused value of ingredients
+ * Calculate used value from meal costs (authoritative source)
+ * @param {Array} meals - Array of meal objects
+ * @returns {number} Total used value
+ */
+export const calculateUsedValue = (meals) => {
+  return meals.reduce((sum, meal) => sum + calculateMealCost(meal), 0)
+}
+
+/**
+ * Calculate unused value using subtraction method (Total - Used = Unused)
  * @param {Array} ingredients - Array of ingredient objects
+ * @param {Array} meals - Array of meal objects
  * @returns {number} Unused value
  */
-export const calculateUnusedValue = (ingredients) => {
-  return ingredients.reduce((sum, ing) => {
-    const usageRatio = (ing.amount_purchased - (ing.amount_used || 0)) / ing.amount_purchased
-    return sum + (ing.price * usageRatio)
-  }, 0)
+export const calculateUnusedValue = (ingredients, meals) => {
+  const totalValue = calculateTotalValue(ingredients)
+  const usedValue = calculateUsedValue(meals)
+  return totalValue - usedValue
 }
 
 /**
@@ -150,7 +159,7 @@ export const getCumulativeDataUpToDate = (ingredients, meals, targetDate) => {
   // Use the SAME calculation functions as metrics
   const totalValue = calculateTotalValue(filteredIngredients)
   const totalMealCost = calculateTotalMealCost(filteredMeals)
-  const unusedValue = calculateUnusedValue(filteredIngredients)
+  const unusedValue = calculateUnusedValue(filteredIngredients, filteredMeals)
   
   return {
     totalValue,
@@ -198,7 +207,7 @@ export const getCumulativeDataWithinPeriod = (ingredients, meals, timeFilter, pe
   // Use the SAME calculation functions as metrics
   const totalValue = calculateTotalValue(filteredIngredients)
   const totalMealCost = calculateTotalMealCost(filteredMeals)
-  const unusedValue = calculateUnusedValue(filteredIngredients)
+  const unusedValue = calculateUnusedValue(filteredIngredients, filteredMeals)
   
   return {
     totalValue,
