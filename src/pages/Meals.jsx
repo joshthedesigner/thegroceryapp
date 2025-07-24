@@ -224,7 +224,7 @@ const Meals = ({ user }) => {
                 <ul>
                   {selectedMeal.meal_ingredients.map((ingredient, index) => (
                     <li key={index}>
-                      {ingredient.ingredients?.name || 'Unknown ingredient'} - {ingredient.quantity_used} {ingredient.ingredients?.unit || ''}
+                      {ingredient.ingredients?.name || 'Unknown ingredient'} - {ingredient.quantity_used} units
                     </li>
                   ))}
                 </ul>

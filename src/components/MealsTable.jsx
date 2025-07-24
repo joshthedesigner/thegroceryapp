@@ -90,7 +90,7 @@ const MealsTable = ({
               key: 'quantity_used',
               render: (quantity, rec) => (
                 <Text>
-                  {quantity} {rec.ingredients.unit}
+                  {quantity} {rec.ingredients.unit || 'units'}
                 </Text>
               )
             }

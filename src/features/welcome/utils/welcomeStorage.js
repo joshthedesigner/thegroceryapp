@@ -22,9 +22,9 @@ export const getUserPreferences = async (userId) => {
 
     return data || {
       user_id: userId,
-      has_seen_welcome: false,
-      welcome_completed_at: null,
-      welcome_step_completed: 0
+      welcome_completed: false,
+      time_filter: 'week',
+      period_offset: 0
     }
   } catch (error) {
     console.error('Error in getUserPreferences:', error)
@@ -70,8 +70,7 @@ export const updateUserPreferences = async (userId, preferences) => {
 export const markWelcomeSeen = async (userId) => {
   try {
     const result = await updateUserPreferences(userId, {
-      has_seen_welcome: true,
-      welcome_completed_at: new Date().toISOString()
+      welcome_completed: true
     })
 
     return !!result
@@ -89,8 +88,10 @@ export const markWelcomeSeen = async (userId) => {
  */
 export const updateWelcomeStep = async (userId, stepNumber) => {
   try {
+    // Since we don't have welcome_step_completed column, we'll use welcome_completed
+    // to track completion status
     const result = await updateUserPreferences(userId, {
-      welcome_step_completed: Math.max(stepNumber, 0)
+      welcome_completed: stepNumber > 0
     })
 
     return !!result
@@ -138,7 +139,7 @@ export const setLocalWelcomeState = (userId, state) => {
 export const hasUserSeenWelcome = async (userId) => {
   try {
     const preferences = await getUserPreferences(userId)
-    return preferences?.has_seen_welcome || false
+    return preferences?.welcome_completed || false
   } catch (error) {
     console.error('Error checking welcome status:', error)
     return false

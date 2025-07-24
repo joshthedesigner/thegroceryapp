@@ -14,65 +14,42 @@ const DashboardMetrics = ({
 }) => {
   // Calculate metrics based on time filter using standardized date range
   const getFilteredData = () => {
-    if (!getDateRange) {
-      // Fallback to old logic if getDateRange is not provided
-      const now = new Date()
-      let startDate = new Date(0) // Beginning of time
-      
-      switch (timeFilter) {
-        case 'week':
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          break
-        case 'year':
-          startDate = new Date(now.getFullYear(), 0, 1)
-          break
-        default:
-          // Default to week if unknown
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-      }
-      
-      const filteredIngredients = ingredients.filter(ing => 
-        new Date(ing.purchase_date) >= startDate
-      )
-      
-      const filteredMeals = meals.filter(meal => 
-        new Date(meal.date_cooked) >= startDate
-      )
-      
-      return { filteredIngredients, filteredMeals }
-    }
-
-    // Use standardized date range
-    const { start, end } = getDateRange(timeFilter, periodOffset)
+    const { start: startDate, end: endDate } = getDateRange()
     
     const filteredIngredients = ingredients.filter(ing => {
+      if (!ing.purchase_date) return false
       const purchaseDate = new Date(ing.purchase_date)
-      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
+      return purchaseDate >= startDate && purchaseDate <= endDate
     })
     
     const filteredMeals = meals.filter(meal => {
+      if (!meal.date_cooked) return false
       const mealDate = new Date(meal.date_cooked)
-      return mealDate >= start.toDate() && mealDate <= end.toDate()
+      return mealDate >= startDate && mealDate <= endDate
     })
     
     return { filteredIngredients, filteredMeals }
   }
 
-  const { filteredIngredients, filteredMeals } = getFilteredData()
+  const { filteredIngredients: ingredientsData, filteredMeals } = getFilteredData()
 
-  // Calculate ingredient metrics
-  const totalIngredients = filteredIngredients.length
-  const distinctIngredients = new Set(filteredIngredients.map(ing => ing.name)).size
-  const totalValue = filteredIngredients.reduce((sum, ing) => sum + ing.price, 0)
-  const totalUsed = filteredIngredients.reduce((sum, ing) => sum + ing.amount_used, 0)
-  const totalUnused = filteredIngredients.reduce((sum, ing) => sum + ing.amount_remaining, 0)
-  const unusedValue = filteredIngredients.reduce((sum, ing) => {
-    const usageRatio = ing.amount_remaining / ing.amount_purchased
-    return sum + (ing.price * usageRatio)
-  }, 0)
+  // Calculate metrics
+  const totalSpent = ingredientsData.reduce((sum, ing) => sum + ing.price, 0)
+  const totalPurchased = ingredientsData.reduce((sum, ing) => sum + ing.amount_purchased, 0)
+  const totalUsed = ingredientsData.reduce((sum, ing) => sum + (ing.amount_used || 0), 0)
+  const totalRemaining = totalPurchased - totalUsed
+
+  // Calculate waste percentage
+  const wastePercentage = totalPurchased > 0 ? ((totalRemaining / totalPurchased) * 100) : 0
+
+  // Get recent purchases (last 7 days)
+  const recentPurchases = ingredientsData.filter(ing => {
+    if (!ing.purchase_date) return false
+    const purchaseDate = new Date(ing.purchase_date)
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    return purchaseDate >= weekAgo
+  })
 
   // Calculate meal metrics
   const totalMeals = filteredMeals.length
@@ -80,8 +57,16 @@ const DashboardMetrics = ({
   const averageMealCost = totalMeals > 0 ? totalMealCost / totalMeals : 0
 
   // Calculate usage efficiency
-  const totalPurchased = filteredIngredients.reduce((sum, ing) => sum + ing.amount_purchased, 0)
   const usagePercentage = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0
+
+  // Calculate ingredient metrics
+  const totalIngredients = ingredientsData.length
+  const distinctIngredients = new Set(ingredientsData.map(ing => ing.name)).size
+  const totalValue = ingredientsData.reduce((sum, ing) => sum + ing.price, 0)
+  const unusedValue = ingredientsData.reduce((sum, ing) => {
+    const usageRatio = (ing.amount_purchased - (ing.amount_used || 0)) / ing.amount_purchased
+    return sum + (ing.price * usageRatio)
+  }, 0)
 
   const metrics = [
     {

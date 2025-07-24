@@ -97,14 +97,14 @@ const IngredientsTable = ({
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (text) => <strong>{text}</strong>
+      render: (name) => <strong>{name}</strong>
     },
     {
       title: 'Amount Purchased',
       dataIndex: 'amount_purchased',
       key: 'amount_purchased',
       sorter: (a, b) => a.amount_purchased - b.amount_purchased,
-      render: (amount, record) => `${amount} ${record.unit}`
+      render: (amount, record) => `${amount} ${record.unit || 'units'}`
     },
     {
       title: 'Price',
@@ -118,33 +118,27 @@ const IngredientsTable = ({
       key: 'usage',
       render: (_, record) => {
         const percentage = getUsagePercentage(record)
-        // No status icons, just percent and progress bar
         return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 160 }}>
-            <span style={{ minWidth: 38, fontWeight: 500 }}>{percentage}%</span>
-            <Progress 
-              percent={percentage} 
-              showInfo={false}
-              size="small"
-              style={{ width: 80 }}
-            />
-          </div>
+          <Progress 
+            percent={percentage} 
+            size="small" 
+            status={getUsageStatus(record)}
+            format={(percent) => `${percent}%`}
+          />
         )
       }
     },
     {
       title: 'Remaining',
-      dataIndex: 'amount_remaining',
-      key: 'amount_remaining',
-      sorter: (a, b) => a.amount_remaining - b.amount_remaining,
-      render: (amount, record) => `${amount.toFixed(2)} ${record.unit}`
+      key: 'remaining',
+      render: (_, record) => {
+        return `${record.amount_remaining.toFixed(2)} ${record.unit || 'units'}`
+      }
     },
     {
       title: 'Status',
       key: 'status',
       filters: [
-        { text: 'Not Used', value: 'notused' },
-        { text: 'Finished', value: 'finished' },
         { text: 'Mostly Used', value: 'success' },
         { text: 'Partially Used', value: 'warning' },
         { text: 'Barely Used', value: 'exception' }
@@ -152,9 +146,15 @@ const IngredientsTable = ({
       onFilter: (value, record) => getUsageStatus(record) === value,
       render: (_, record) => {
         const status = getUsageStatus(record)
+        const statusText = {
+          success: 'Mostly Used',
+          warning: 'Partially Used',
+          exception: 'Barely Used'
+        }[status]
+        
         return (
-          <Tag color={getStatusColor(status)}>
-            {getStatusText(status)}
+          <Tag color={status === 'success' ? 'green' : status === 'warning' ? 'orange' : 'red'}>
+            {statusText}
           </Tag>
         )
       }
@@ -163,26 +163,30 @@ const IngredientsTable = ({
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="text"
-            icon={<EditOutlined />}
+        <Space>
+          <Button 
+            type="link" 
+            size="small" 
             onClick={() => onEdit(record)}
-            size="small"
-          />
+            icon={<EditOutlined />}
+          >
+            Edit
+          </Button>
           <Popconfirm
             title="Delete this ingredient?"
             description="This action cannot be undone."
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => onDelete(record.id)}
             okText="Yes"
             cancelText="No"
           >
-            <Button
-              type="text"
+            <Button 
+              type="link" 
+              size="small" 
               danger
               icon={<DeleteOutlined />}
-              size="small"
-            />
+            >
+              Delete
+            </Button>
           </Popconfirm>
         </Space>
       )

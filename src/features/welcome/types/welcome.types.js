@@ -6,9 +6,9 @@
 export const UserPreferences = {
   id: 'string',
   user_id: 'string',
-  has_seen_welcome: 'boolean',
-  welcome_completed_at: 'string | null',
-  welcome_step_completed: 'number',
+  welcome_completed: 'boolean',
+  time_filter: 'string',
+  period_offset: 'number',
   created_at: 'string',
   updated_at: 'string'
 }
@@ -17,11 +17,10 @@ export const UserPreferences = {
  * Welcome step interface
  */
 export const WelcomeStep = {
-  id: 'number',
+  stepNumber: 'number',
   title: 'string',
   description: 'string',
-  icon: 'string',
-  action: 'string | null',
+  isActive: 'boolean',
   isCompleted: 'boolean'
 }
 

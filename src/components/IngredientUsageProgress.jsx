@@ -71,7 +71,7 @@ const IngredientUsageProgress = ({
                   {getStatusIcon(percentage)}
                   <Text strong>{ingredient.name}</Text>
                   <Text type="secondary">
-                    ({ingredient.amount_used}{ingredient.unit} / {ingredient.amount_purchased}{ingredient.unit})
+                    ({ingredient.amount_used} / {ingredient.amount_purchased} {ingredient.unit || 'units'})
                   </Text>
                 </Space>
                 <Space>
@@ -87,8 +87,8 @@ const IngredientUsageProgress = ({
               <Tooltip
                 title={
                   <div>
-                    <div><strong>Usage:</strong> {ingredient.amount_used}{ingredient.unit} / {ingredient.amount_purchased}{ingredient.unit}</div>
-                    <div><strong>Remaining:</strong> {ingredient.amount_remaining}{ingredient.unit}</div>
+                    <div><strong>Usage:</strong> {ingredient.amount_used} / {ingredient.amount_purchased} {ingredient.unit || 'units'}</div>
+                    <div><strong>Remaining:</strong> {ingredient.amount_remaining} {ingredient.unit || 'units'}</div>
                     <div><strong>Total Cost:</strong> ${ingredient.price.toFixed(2)}</div>
                     <div><strong>Remaining Value:</strong> ${remainingValue.toFixed(2)}</div>
                     <div><strong>Usage Rate:</strong> {percentage.toFixed(1)}%</div>

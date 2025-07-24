@@ -59,9 +59,12 @@ const DashboardTable = ({
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
       }
       
-      const filteredIngredients = ingredients.filter(ing => 
-        new Date(ing.purchase_date) >= startDate
-      )
+      const filteredIngredients = ingredients.filter(ing => {
+        // Since purchase_date doesn't exist, use created_at instead
+        if (!ing.created_at) return false
+        const createdDate = new Date(ing.created_at)
+        return createdDate >= startDate && createdDate <= endDate
+      })
       
       const filteredMeals = meals.filter(meal => 
         new Date(meal.date_cooked) >= startDate
@@ -74,8 +77,8 @@ const DashboardTable = ({
     const { start, end } = getDateRange(timeFilter, periodOffset)
     
     const filteredIngredients = ingredients.filter(ing => {
-      const purchaseDate = new Date(ing.purchase_date)
-      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
+      const createdDate = new Date(ing.created_at)
+      return createdDate >= start.toDate() && createdDate <= end.toDate()
     })
     
     const filteredMeals = meals.filter(meal => {
@@ -373,16 +376,12 @@ const DashboardTable = ({
               // Ingredient details
               <div>
                 <Title level={4}>{selectedRecord.name}</Title>
-                <p><strong>Total Value:</strong> ${selectedRecord.price.toFixed(2)}</p>
-                <p><strong>Amount Purchased:</strong> {selectedRecord.amount_purchased}{selectedRecord.unit}</p>
-                <p><strong>Amount Used:</strong> {selectedRecord.amount_used}{selectedRecord.unit}</p>
-                <p><strong>Amount Remaining:</strong> {selectedRecord.amount_remaining}{selectedRecord.unit}</p>
-                <p><strong>Usage Percentage:</strong> {
-                  selectedRecord.amount_purchased > 0 
-                    ? ((selectedRecord.amount_used / selectedRecord.amount_purchased) * 100).toFixed(1)
-                    : 0
-                }%</p>
-                <p><strong>Purchase Date:</strong> {dayjs(selectedRecord.purchase_date).format('MMM DD, YYYY')}</p>
+                <p><strong>Name:</strong> {selectedRecord.name}</p>
+                <p><strong>Amount Purchased:</strong> {selectedRecord.amount_purchased}{selectedRecord.unit || ' units'}</p>
+                <p><strong>Amount Used:</strong> {selectedRecord.amount_used}{selectedRecord.unit || ' units'}</p>
+                <p><strong>Amount Remaining:</strong> {selectedRecord.amount_remaining}{selectedRecord.unit || ' units'}</p>
+                <p><strong>Price:</strong> ${selectedRecord.price.toFixed(2)}</p>
+                <p><strong>Created:</strong> {dayjs(selectedRecord.created_at).format('MMM DD, YYYY')}</p>
               </div>
             ) : (
               // Meal details
@@ -397,7 +396,7 @@ const DashboardTable = ({
                     <ul>
                       {selectedRecord.meal_ingredients.map((ingredient, index) => (
                         <li key={index}>
-                          {ingredient.ingredient_name} - {ingredient.quantity_used} {ingredient.unit}
+                          {ingredient.ingredient_name} - {ingredient.quantity_used} units
                         </li>
                       ))}
                     </ul>

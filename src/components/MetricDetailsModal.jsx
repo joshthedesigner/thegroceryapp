@@ -41,9 +41,13 @@ const MetricDetailsModal = ({
           startDate = new Date(0)
       }
       
-      const filteredIngredients = ingredients.filter(ing => 
-        new Date(ing.purchase_date) >= startDate
-      )
+      // Filter ingredients by date range
+      const filteredIngredients = ingredients.filter(ing => {
+        // Since purchase_date doesn't exist, use created_at instead
+        if (!ing.created_at) return false
+        const createdDate = new Date(ing.created_at)
+        return createdDate >= startDate && createdDate <= endDate
+      })
       
       const filteredMeals = meals.filter(meal => 
         new Date(meal.date_cooked) >= startDate
@@ -90,7 +94,7 @@ const MetricDetailsModal = ({
               title: 'Quantity',
               key: 'quantity',
               render: (_, record) => (
-                <Text>{record.amount_purchased} {record.unit}</Text>
+                <Text>{record.amount_purchased} {record.unit || 'units'}</Text>
               )
             },
             {
@@ -134,7 +138,7 @@ const MetricDetailsModal = ({
                 const total = filteredIngredients
                   .filter(ing => ing.name === record.name)
                   .reduce((sum, ing) => sum + ing.amount_purchased, 0)
-                return <Text>{total} {record.unit}</Text>
+                return <Text>{total} {record.unit || 'units'}</Text>
               }
             },
             {
@@ -184,7 +188,7 @@ const MetricDetailsModal = ({
               title: 'Quantity',
               key: 'quantity',
               render: (_, record) => (
-                <Text>{record.amount_purchased} {record.unit}</Text>
+                <Text>{record.amount_purchased} {record.unit || 'units'}</Text>
               )
             },
             {
@@ -214,14 +218,14 @@ const MetricDetailsModal = ({
               title: 'Amount Used',
               key: 'amount_used',
               render: (_, record) => (
-                <Text>{record.amount_used} {record.unit}</Text>
+                <Text>{record.amount_used} {record.unit || 'units'}</Text>
               )
             },
             {
               title: 'Total Purchased',
               key: 'total_purchased',
               render: (_, record) => (
-                <Text>{record.amount_purchased} {record.unit}</Text>
+                <Text>{record.amount_purchased} {record.unit || 'units'}</Text>
               )
             },
             {
@@ -255,7 +259,7 @@ const MetricDetailsModal = ({
               title: 'Remaining',
               key: 'remaining',
               render: (_, record) => (
-                <Text>{record.amount_remaining} {record.unit}</Text>
+                <Text>{record.amount_remaining} {record.unit || 'units'}</Text>
               )
             },
             {
@@ -303,14 +307,14 @@ const MetricDetailsModal = ({
               title: 'Used',
               key: 'used',
               render: (_, record) => (
-                <Text>{record.amount_used} {record.unit}</Text>
+                <Text>{record.amount_used} {record.unit || 'units'}</Text>
               )
             },
             {
               title: 'Purchased',
               key: 'purchased',
               render: (_, record) => (
-                <Text>{record.amount_purchased} {record.unit}</Text>
+                <Text>{record.amount_purchased} {record.unit || 'units'}</Text>
               )
             },
             {

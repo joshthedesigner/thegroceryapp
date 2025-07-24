@@ -212,3 +212,20 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_calculate_meal_cost
     AFTER INSERT OR UPDATE OR DELETE ON meal_ingredients
     FOR EACH ROW EXECUTE FUNCTION calculate_meal_cost(); 
+
+-- Create cleanup function for orphaned meal_ingredients
+CREATE OR REPLACE FUNCTION cleanup_orphaned_meal_ingredients()
+RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    SET search_path = '';
+    
+    DELETE FROM meal_ingredients 
+    WHERE ingredient_id NOT IN (SELECT id FROM ingredients);
+    
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql; 
