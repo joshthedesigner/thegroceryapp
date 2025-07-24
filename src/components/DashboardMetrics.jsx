@@ -14,7 +14,7 @@ const DashboardMetrics = ({
 }) => {
   // Calculate metrics based on time filter using standardized date range
   const getFilteredData = () => {
-    const { start: startDate, end: endDate } = getDateRange()
+    const { start: startDate, end: endDate } = getDateRange(timeFilter, periodOffset)
     
     const filteredIngredients = ingredients.filter(ing => {
       if (!ing.purchase_date) return false
