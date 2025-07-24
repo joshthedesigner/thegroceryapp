@@ -7,6 +7,8 @@ import IngredientsTable from '../components/IngredientsTable'
 import dayjs from 'dayjs'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import { getWeekRange, formatDateRange } from '../utils/calculationUtils'
+
 dayjs.extend(isSameOrAfter)
 dayjs.extend(isSameOrBefore)
 
@@ -31,16 +33,6 @@ class ErrorBoundary extends React.Component {
     }
     return this.props.children
   }
-}
-
-const getWeekRange = (date) => {
-  const start = dayjs(date).startOf('week')
-  const end = dayjs(date).endOf('week')
-  return { start, end }
-}
-
-const formatWeekRange = (start, end) => {
-  return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
 }
 
 const Ingredients = ({ user }) => {
@@ -193,7 +185,7 @@ const Ingredients = ({ user }) => {
                   <LeftOutlined style={{ fontSize: 18, color: '#222' }} />
                 </button>
                 <span style={{ fontWeight: 500, fontSize: 16, minWidth: 120, textAlign: 'center' }}>
-                  {formatWeekRange(weekStart, weekEnd)}
+                  {formatDateRange(weekStart, weekEnd)}
                 </span>
                 <button
                   onClick={handleNextWeek}

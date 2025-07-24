@@ -5,18 +5,9 @@ import { useMeals } from '../hooks/useMeals'
 import MealForm from '../components/MealForm'
 import MealsTable from '../components/MealsTable'
 import dayjs from 'dayjs'
+import { getWeekRange, formatDateRange } from '../utils/calculationUtils'
 
 const { Title } = Typography
-
-const getWeekRange = (date) => {
-  const start = dayjs(date).startOf('week')
-  const end = dayjs(date).endOf('week')
-  return { start, end }
-}
-
-const formatWeekRange = (start, end) => {
-  return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
-}
 
 const Meals = ({ user }) => {
   const [formVisible, setFormVisible] = useState(false)
@@ -135,7 +126,7 @@ const Meals = ({ user }) => {
                 <LeftOutlined style={{ fontSize: 18, color: '#222' }} />
               </button>
               <span style={{ fontWeight: 500, fontSize: 16, minWidth: 120, textAlign: 'center' }}>
-                {formatWeekRange(weekStart, weekEnd)}
+                {formatDateRange(weekStart, weekEnd)}
               </span>
               <button
                 onClick={handleNextWeek}

@@ -303,4 +303,61 @@ export const getStatusText = (status) => {
     case 'exception': return 'Barely Used'
     default: return 'Unknown'
   }
+}
+
+/**
+ * Get date range for a specific time period
+ * @param {string} timeFilter - Time filter ('week', 'month', 'year')
+ * @param {number} offset - Period offset (0 = current, 1 = previous, etc.)
+ * @returns {Object} Object containing start and end dates as dayjs objects
+ */
+export const getDateRange = (timeFilter, offset = 0) => {
+  const now = dayjs()
+  
+  let start, end
+  
+  switch (timeFilter) {
+    case 'week':
+      // For week: show last 7 days, with offset for previous weeks
+      end = now.subtract(7 * offset, 'day')
+      start = end.subtract(7, 'day')
+      break
+    case 'month':
+      // For month: show last 30 days, with offset for previous months
+      end = now.subtract(30 * offset, 'day')
+      start = end.subtract(30, 'day')
+      break
+    case 'year':
+      // For year: show last 12 months, with offset for previous years
+      end = now.subtract(12 * offset, 'month')
+      start = end.subtract(12, 'month')
+      break
+    default:
+      // Default to week if unknown
+      end = now.subtract(7 * offset, 'day')
+      start = end.subtract(7, 'day')
+  }
+
+  return { start, end }
+}
+
+/**
+ * Get week range for a specific date
+ * @param {Date|string} date - Date to get week range for
+ * @returns {Object} Object containing start and end dates as dayjs objects
+ */
+export const getWeekRange = (date) => {
+  const start = dayjs(date).startOf('week')
+  const end = dayjs(date).endOf('week')
+  return { start, end }
+}
+
+/**
+ * Format a date range as a string
+ * @param {Object} start - Start date (dayjs object)
+ * @param {Object} end - End date (dayjs object)
+ * @returns {string} Formatted date range string
+ */
+export const formatDateRange = (start, end) => {
+  return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
 } 

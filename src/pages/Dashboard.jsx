@@ -11,6 +11,7 @@ import MetricDetailsModal from '../components/MetricDetailsModal'
 import dayjs from 'dayjs'
 import PeriodSelector from '../components/PeriodSelector'
 import LoadingSpinner from '../components/LoadingSpinner'
+import { getDateRange } from '../utils/calculationUtils'
 
 const { Title } = Typography
 
@@ -42,37 +43,6 @@ const Dashboard = ({ user }) => {
 
   const loading = ingredientsLoading || mealsLoading
   const error = ingredientsError || mealsError
-
-  // Standardized date range calculation
-  const getDateRange = (timeFilter, offset = 0) => {
-    const now = dayjs()
-    
-    let start, end
-    
-    switch (timeFilter) {
-      case 'week':
-        // For week: show last 7 days, with offset for previous weeks
-        end = now.subtract(7 * offset, 'day')
-        start = end.subtract(7, 'day')
-        break
-      case 'month':
-        // For month: show last 30 days, with offset for previous months
-        end = now.subtract(30 * offset, 'day')
-        start = end.subtract(30, 'day')
-        break
-      case 'year':
-        // For year: show last 12 months, with offset for previous years
-        end = now.subtract(12 * offset, 'month')
-        start = end.subtract(12, 'month')
-        break
-      default:
-        // Default to week if unknown
-        end = now.subtract(7 * offset, 'day')
-        start = end.subtract(7, 'day')
-    }
-
-    return { start, end }
-  }
 
   const handleTimeFilterChange = (newFilter) => {
     setTimeFilter(newFilter)
