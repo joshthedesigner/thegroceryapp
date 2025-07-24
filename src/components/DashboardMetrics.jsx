@@ -70,13 +70,6 @@ const DashboardMetrics = ({
       type: 'totalIngredients'
     },
     {
-      title: 'Distinct Ingredients',
-      value: distinctIngredients,
-      suffix: 'types',
-      description: 'Unique ingredient types',
-      type: 'distinctIngredients'
-    },
-    {
       title: 'Ingredients Used',
       value: totalUsed,
       suffix: 'units',
