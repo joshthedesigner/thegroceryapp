@@ -318,7 +318,4 @@ export const calculateTimeBasedData = async (userId, startDate, endDate) => {
   }, {})
   
   return { data: dailyData, error: null }
-}
-
-// Export the supabase client for direct use
-export { supabase } 
+} 
