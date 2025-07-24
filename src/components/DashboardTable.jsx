@@ -60,10 +60,9 @@ const DashboardTable = ({
       }
       
       const filteredIngredients = ingredients.filter(ing => {
-        // Since purchase_date doesn't exist, use created_at instead
-        if (!ing.created_at) return false
-        const createdDate = new Date(ing.created_at)
-        return createdDate >= startDate && createdDate <= endDate
+        if (!ing.purchase_date) return false
+        const purchaseDate = new Date(ing.purchase_date)
+        return purchaseDate >= startDate && purchaseDate <= endDate
       })
       
       const filteredMeals = meals.filter(meal => 
@@ -77,8 +76,9 @@ const DashboardTable = ({
     const { start, end } = getDateRange(timeFilter, periodOffset)
     
     const filteredIngredients = ingredients.filter(ing => {
-      const createdDate = new Date(ing.created_at)
-      return createdDate >= start.toDate() && createdDate <= end.toDate()
+      if (!ing.purchase_date) return false
+      const purchaseDate = new Date(ing.purchase_date)
+      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
     })
     
     const filteredMeals = meals.filter(meal => {
