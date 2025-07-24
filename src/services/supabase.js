@@ -5,15 +5,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-k
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Authentication helpers
+// Authentication helpers (unchanged)
 export const signInWithGoogle = async () => {
   try {
     console.log('Starting Google OAuth sign in...')
-    console.log('Current origin:', window.location.origin)
-    console.log('Current URL:', window.location.href)
-    console.log('Environment:', import.meta.env.MODE)
-    
-    // Always use current origin for redirect - this works with any Site URL
     const redirectUrl = `${window.location.origin}/auth/callback`
     console.log('Redirect URL:', redirectUrl)
     
@@ -30,16 +25,10 @@ export const signInWithGoogle = async () => {
     
     if (error) {
       console.error('OAuth error:', error)
-      console.error('Error details:', {
-        message: error.message,
-        status: error.status,
-        name: error.name
-      })
       return { data: null, error }
     }
     
     console.log('OAuth initiated successfully:', data)
-    console.log('OAuth URL:', data?.url)
     return { data, error }
   } catch (error) {
     console.error('Authentication error:', error)
@@ -67,7 +56,7 @@ export const getSession = async () => {
   return { session, error }
 }
 
-// Database helpers - Ingredients CRUD
+// Database helpers - Ingredients CRUD (updated for clean structure)
 export const getIngredients = async (userId) => {
   const { data, error } = await supabase
     .from('ingredients')
@@ -116,17 +105,18 @@ export const deleteIngredient = async (id) => {
   return { error }
 }
 
-// Database helpers - Meals CRUD
+// Database helpers - Meals CRUD (updated for clean structure)
 export const getMeals = async (userId) => {
   const { data, error } = await supabase
     .from('meals')
     .select(`
       *,
       meal_ingredients (
+        id,
         quantity_used,
         ingredients (
+          id,
           name,
-          unit,
           price,
           amount_purchased
         )
@@ -144,10 +134,11 @@ export const getMeal = async (id) => {
     .select(`
       *,
       meal_ingredients (
+        id,
         quantity_used,
         ingredients (
+          id,
           name,
-          unit,
           price,
           amount_purchased
         )
@@ -160,12 +151,24 @@ export const getMeal = async (id) => {
 }
 
 export const createMeal = async (mealData) => {
+  console.log('🔍 createMeal called with:', mealData)
+  
+  // Remove total_cost from mealData if it exists (let database calculate it)
+  const { total_cost, ...mealDataWithoutCost } = mealData
+  
+  // Insert the meal and return the created data
   const { data, error } = await supabase
     .from('meals')
-    .insert([mealData])
+    .insert([mealDataWithoutCost])
     .select()
   
-  return { data, error }
+  if (error) {
+    console.log('❌ Meal insert failed:', error)
+    return { data: null, error }
+  }
+  
+  console.log('✅ Meal insert successful, data:', data)
+  return { data, error: null }
 }
 
 export const updateMeal = async (id, mealData) => {
@@ -214,4 +217,150 @@ export const deleteMealIngredient = async (id) => {
     .eq('id', id)
   
   return { error }
+}
+
+// Calculation functions (new)
+export const calculateMealCost = (meal) => {
+  if (!meal.meal_ingredients || meal.meal_ingredients.length === 0) {
+    return 0
+  }
+  
+  return meal.meal_ingredients.reduce((total, mi) => {
+    if (mi.ingredients && mi.quantity_used && mi.ingredients.amount_purchased && mi.ingredients.price) {
+      const proportion = mi.quantity_used / mi.ingredients.amount_purchased
+      const cost = mi.ingredients.price * proportion
+      return total + cost
+    }
+    return total
+  }, 0)
+}
+
+export const calculateIngredientUsage = (ingredient, mealIngredients) => {
+  const totalUsed = mealIngredients
+    .filter(mi => mi.ingredient_id === ingredient.id)
+    .reduce((sum, mi) => sum + mi.quantity_used, 0)
+  
+  const remaining = ingredient.amount_purchased - totalUsed
+  const usagePercentage = ingredient.amount_purchased > 0 
+    ? (totalUsed / ingredient.amount_purchased) * 100 
+    : 0
+  
+  return {
+    totalUsed,
+    remaining,
+    usagePercentage
+  }
+}
+
+export const calculateDashboardMetrics = async (userId) => {
+  // Get all ingredients for total purchased
+  const { data: ingredients, error: ingredientsError } = await getIngredients(userId)
+  if (ingredientsError) return { error: ingredientsError }
+  
+  // Get all meals with ingredients for total consumed
+  const { data: meals, error: mealsError } = await getMeals(userId)
+  if (mealsError) return { error: mealsError }
+  
+  // Calculate metrics
+  const totalPurchased = ingredients.reduce((sum, i) => sum + (i.price * i.amount_purchased), 0)
+  const totalConsumed = meals.reduce((sum, meal) => sum + calculateMealCost(meal), 0)
+  const unusedValue = totalPurchased - totalConsumed
+  const averageMealCost = meals.length > 0 ? totalConsumed / meals.length : 0
+  
+  return {
+    data: {
+      totalPurchased,
+      totalConsumed,
+      unusedValue,
+      averageMealCost
+    },
+    error: null
+  }
+}
+
+export const calculateTimeBasedData = async (userId, startDate, endDate) => {
+  const { data: meals, error } = await supabase
+    .from('meals')
+    .select(`
+      date_cooked,
+      meal_ingredients (
+        quantity_used,
+        ingredients (
+          price,
+          amount_purchased
+        )
+      )
+    `)
+    .eq('user_id', userId)
+    .gte('date_cooked', startDate)
+    .lte('date_cooked', endDate)
+    .order('date_cooked', { ascending: true })
+  
+  if (error) return { error }
+  
+  // Group by date and calculate daily consumption
+  const dailyData = meals.reduce((acc, meal) => {
+    const date = meal.date_cooked
+    const dailyCost = meal.meal_ingredients.reduce((sum, mi) => {
+      if (mi.ingredients && mi.quantity_used && mi.ingredients.amount_purchased && mi.ingredients.price) {
+        const proportion = mi.quantity_used / mi.ingredients.amount_purchased
+        return sum + (mi.ingredients.price * proportion)
+      }
+      return sum
+    }, 0)
+    
+    if (acc[date]) {
+      acc[date] += dailyCost
+    } else {
+      acc[date] = dailyCost
+    }
+    
+    return acc
+  }, {})
+  
+  return { data: dailyData, error: null }
+}
+
+// User Preferences helpers (for welcome screen)
+export const getUserPreferences = async (userId) => {
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+  
+  return { data, error }
+}
+
+export const createUserPreferences = async (userPreferencesData) => {
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .insert([userPreferencesData])
+    .select()
+  
+  return { data, error }
+}
+
+export const updateUserPreferences = async (userId, userPreferencesData) => {
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .update(userPreferencesData)
+    .eq('user_id', userId)
+    .select()
+  
+  return { data, error }
+}
+
+export const markWelcomeCompleted = async (userId) => {
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .upsert([{
+      user_id: userId,
+      welcome_completed: true,
+      time_filter: 'week',
+      period_offset: 0
+    }])
+    .select()
+  
+  return { data, error }
 } 

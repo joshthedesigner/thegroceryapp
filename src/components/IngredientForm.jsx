@@ -126,8 +126,7 @@ const IngredientForm = ({
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
-        purchase_date: initialValues.purchase_date ? 
-          dayjs(initialValues.purchase_date) : dayjs()
+        purchase_date: initialValues.purchase_date ? dayjs(initialValues.purchase_date) : dayjs()
       })
       setSearchValue(initialValues.name || '')
     }
@@ -140,7 +139,7 @@ const IngredientForm = ({
       onCancel={onCancel}
       footer={null}
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}
@@ -198,6 +197,19 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
+          label="Amount Purchased"
+          name="amount_purchased"
+          rules={[{ required: true, message: 'Please enter amount' }]}
+        >
+          <InputNumber
+            placeholder="e.g., 500"
+            min={0}
+            step={0.01}
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+
+        <Form.Item
           label="Unit"
           name="unit"
           rules={[{ required: true, message: 'Please select unit' }]}
@@ -212,15 +224,13 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
-          label="Amount Purchased"
-          name="amount_purchased"
-          rules={[{ required: true, message: 'Please enter amount' }]}
+          label="Purchase Date"
+          name="purchase_date"
+          rules={[{ required: true, message: 'Please select purchase date' }]}
         >
-          <InputNumber
-            placeholder="e.g., 500"
-            min={0}
-            step={0.01}
+          <DatePicker
             style={{ width: '100%' }}
+            format="YYYY-MM-DD"
           />
         </Form.Item>
 
@@ -235,17 +245,6 @@ const IngredientForm = ({
             step={0.01}
             prefix="$"
             style={{ width: '100%' }}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Purchase Date"
-          name="purchase_date"
-          rules={[{ required: true, message: 'Please select purchase date' }]}
-        >
-          <DatePicker
-            style={{ width: '100%' }}
-            format="YYYY-MM-DD"
           />
         </Form.Item>
 

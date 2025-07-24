@@ -60,9 +60,12 @@ export const useMeals = (userId) => {
       if (error) {
         setError(error.message)
         return { error: error.message }
-      } else {
+      } else if (data && data.length > 0) {
         setMeals(prev => [data[0], ...prev])
         return { data: data[0] }
+      } else {
+        setError('Failed to create meal - no data returned')
+        return { error: 'Failed to create meal - no data returned' }
       }
     } catch (err) {
       setError(err.message)

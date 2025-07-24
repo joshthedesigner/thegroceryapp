@@ -81,8 +81,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
             ingredient_id: mi.ingredient_id,
             ingredient_name: mi.ingredient_name,
             quantity_used: mi.quantity_used,
-            unit: mi.unit,
-            available_amount: mi.available_amount
+            amount_remaining: mi.amount_remaining || 0
           })))
         }
       } else {
@@ -108,10 +107,12 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
 
   // Step 2: Ingredient Selection
   const handleIngredientCheck = (id, checked) => {
+    console.log('🔍 handleIngredientCheck:', { id, checked })
     setIngredientSelection(prev => prev.map(row => row.id === id ? { ...row, checked, quantityUsed: checked ? row.quantityUsed : 0 } : row))
     setDirty(true)
   }
   const handleQuantityChange = (id, value) => {
+    console.log('🔍 handleQuantityChange:', { id, value })
     setIngredientSelection(prev => prev.map(row => row.id === id ? { ...row, quantityUsed: value } : row))
     setDirty(true)
   }
@@ -122,7 +123,9 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
       setLoading(true)
       setError('')
       // Validate at least one ingredient selected
+      console.log('🔍 ingredientSelection:', ingredientSelection)
       const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
+      console.log('🔍 selected ingredients:', selected)
       if (selected.length === 0) {
         setError('Please select at least one ingredient and enter quantity used.')
         setLoading(false)
@@ -175,7 +178,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         onCancel={handleModalCancel}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         {/* Step Indicator removed */}
         {/* Step 1: Meal Info */}
@@ -293,7 +296,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
                   {
                     title: 'Remaining',
                     key: 'remaining',
-                    render: (_, ing) => `${ing.amount_remaining} ${ing.unit}`
+                    render: (_, ing) => `${ing.amount_remaining} ${ing.unit || 'units'}`
                   },
                   {
                     title: 'Quantity Used',
@@ -303,11 +306,12 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
                       return (
                         <InputNumber
                           min={0}
-                          max={ing.amount_remaining}
+                          max={ing.amount_remaining || 999999}
                           value={row?.quantityUsed || 0}
                           onChange={val => handleQuantityChange(ing.id, val)}
                           disabled={!row?.checked}
                           style={{ width: 100 }}
+                          placeholder="0"
                         />
                       )
                     }
