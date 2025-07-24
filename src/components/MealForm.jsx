@@ -37,7 +37,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
   const [debouncedSearch, setDebouncedSearch] = useState('')
   
   const { ingredients, loading: ingredientsLoading } = useIngredients(user?.id)
-  const { addMeal, updateMeal, addIngredientToMeal } = useMeals(user?.id)
+  const { addMeal, updateMeal, addIngredientToMeal, updateMealIngredient, deleteMealIngredient } = useMeals(user?.id)
 
   const isEditing = !!editingMeal
 
@@ -75,23 +75,44 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
           total_cost: editingMeal.total_cost
         })
         
-        // Load existing meal ingredients
-        if (editingMeal.meal_ingredients) {
-          setSelectedIngredients(editingMeal.meal_ingredients.map(mi => ({
-            ingredient_id: mi.ingredient_id,
-            ingredient_name: mi.ingredient_name,
-            quantity_used: mi.quantity_used,
-            amount_remaining: mi.amount_remaining || 0
-          })))
-        }
+        // Set meal info for edit mode
+        setMealInfo({ 
+          meal_name: editingMeal.meal_name, 
+          date_cooked: dayjs(editingMeal.date_cooked) 
+        })
+        
+        // Initialize ingredient selection with existing meal ingredients
+        const existingIngredients = editingMeal.meal_ingredients || []
+        const initialSelection = ingredients.map(ing => {
+          const existingIngredient = existingIngredients.find(mi => mi.ingredient_id === ing.id)
+          return {
+            id: ing.id,
+            checked: !!existingIngredient,
+            quantityUsed: existingIngredient ? existingIngredient.quantity_used : 0,
+            mealIngredientId: existingIngredient ? existingIngredient.id : null
+          }
+        })
+        setIngredientSelection(initialSelection)
+        
+        // Set selected ingredients for display
+        setSelectedIngredients(existingIngredients.map(mi => ({
+          ingredient_id: mi.ingredient_id,
+          ingredient_name: mi.ingredient_name,
+          quantity_used: mi.quantity_used,
+          amount_remaining: mi.amount_remaining || 0
+        })))
+        
+        // Start at step 2 for editing
+        setStep(2)
       } else {
         // Reset form for new meal
         form.resetFields()
         setSelectedIngredients([])
+        setIngredientSelection(ingredients.map(ing => ({ id: ing.id, checked: false, quantityUsed: 0 })))
       }
       setError('')
     }
-  }, [visible, editingMeal, form, isEditing])
+  }, [visible, editingMeal, form, isEditing, ingredients])
 
   // Step 1: Meal Info
   const handleMealInfoNext = async () => {
@@ -122,6 +143,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
     try {
       setLoading(true)
       setError('')
+      
       // Validate at least one ingredient selected
       console.log('🔍 ingredientSelection:', ingredientSelection)
       const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
@@ -131,6 +153,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         setLoading(false)
         return
       }
+      
       // Validate meal info
       if (!mealInfo.meal_name || !mealInfo.date_cooked) {
         setError('Please enter meal name and date.')
@@ -138,19 +161,54 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         setStep(1)
         return
       }
-      // Create meal
-      const mealData = {
-        meal_name: mealInfo.meal_name,
-        date_cooked: mealInfo.date_cooked.format('YYYY-MM-DD'),
-        total_cost: 0 // Will be calculated after adding ingredients
+
+      if (isEditing) {
+        // Update existing meal
+        const mealData = {
+          meal_name: mealInfo.meal_name,
+          date_cooked: mealInfo.date_cooked.format('YYYY-MM-DD'),
+          total_cost: 0 // Will be calculated after updating ingredients
+        }
+        
+        const { data, error: mealError } = await updateMeal(editingMeal.id, mealData)
+        if (mealError) throw mealError
+        
+        // Update meal ingredients
+        for (const row of selected) {
+          if (row.mealIngredientId) {
+            // Update existing meal ingredient
+            await updateMealIngredient(row.mealIngredientId, row.quantityUsed)
+          } else {
+            // Add new meal ingredient
+            await addIngredientToMeal(editingMeal.id, row.id, row.quantityUsed)
+          }
+        }
+        
+        // Remove ingredients that are no longer selected
+        const currentIngredientIds = selected.map(s => s.id)
+        const existingIngredients = editingMeal.meal_ingredients || []
+        for (const existing of existingIngredients) {
+          if (!currentIngredientIds.includes(existing.ingredient_id)) {
+            await deleteMealIngredient(existing.id)
+          }
+        }
+      } else {
+        // Create new meal
+        const mealData = {
+          meal_name: mealInfo.meal_name,
+          date_cooked: mealInfo.date_cooked.format('YYYY-MM-DD'),
+          total_cost: 0 // Will be calculated after adding ingredients
+        }
+        const { data, error: mealError } = await addMeal(mealData)
+        if (mealError) throw mealError
+        const mealId = data.id
+        
+        // Add ingredients
+        for (const row of selected) {
+          await addIngredientToMeal(mealId, row.id, row.quantityUsed)
+        }
       }
-      const { data, error: mealError } = await addMeal(mealData)
-      if (mealError) throw mealError
-      const mealId = data.id
-      // Add ingredients
-      for (const row of selected) {
-        await addIngredientToMeal(mealId, row.id, row.quantityUsed)
-      }
+      
       setDirty(false)
       onSuccess()
     } catch (err) {
@@ -332,7 +390,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Button onClick={handleCancelButton}>Cancel</Button>
                 <Button type="primary" loading={loading} onClick={handleSaveMeal}>
-                  Add Meal
+                  {isEditing ? 'Update Meal' : 'Add Meal'}
                 </Button>
               </div>
             </div>

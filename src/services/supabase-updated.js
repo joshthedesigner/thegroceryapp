@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { calculateMealCost } from '../utils/calculationUtils'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key'
@@ -208,21 +209,6 @@ export const deleteMealIngredient = async (id) => {
 }
 
 // Calculation functions (new)
-export const calculateMealCost = (meal) => {
-  if (!meal.meal_ingredients || meal.meal_ingredients.length === 0) {
-    return 0
-  }
-  
-  return meal.meal_ingredients.reduce((total, mi) => {
-    if (mi.ingredients && mi.quantity_used && mi.ingredients.amount_purchased && mi.ingredients.price) {
-      const proportion = mi.quantity_used / mi.ingredients.amount_purchased
-      const cost = mi.ingredients.price * proportion
-      return total + cost
-    }
-    return total
-  }, 0)
-}
-
 export const calculateIngredientUsage = (ingredient, mealIngredients) => {
   const totalUsed = mealIngredients
     .filter(mi => mi.ingredient_id === ingredient.id)

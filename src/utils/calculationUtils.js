@@ -207,4 +207,24 @@ export const getCumulativeDataWithinPeriod = (ingredients, meals, timeFilter, pe
     ingredientCount: filteredIngredients.length,
     mealCount: filteredMeals.length
   }
+}
+
+/**
+ * Calculate total cost of ingredients in a meal
+ * @param {Object} meal - Meal object with meal_ingredients array
+ * @returns {number} Total cost of the meal
+ */
+export const calculateMealCost = (meal) => {
+  if (!meal.meal_ingredients || meal.meal_ingredients.length === 0) {
+    return 0
+  }
+
+  return meal.meal_ingredients.reduce((total, mealIngredient) => {
+    const ingredient = mealIngredient.ingredients
+    if (!ingredient) return total
+    
+    // Calculate proportional cost based on quantity used
+    const proportion = mealIngredient.quantity_used / ingredient.amount_purchased
+    return total + (ingredient.price * proportion)
+  }, 0)
 } 

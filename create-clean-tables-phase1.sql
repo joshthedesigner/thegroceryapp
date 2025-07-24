@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS ingredients (
   name TEXT NOT NULL,
   price DECIMAL(10,2) NOT NULL,
   amount_purchased DECIMAL(10,2) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, name) -- Prevents duplicate ingredients per user
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  -- Removed UNIQUE(user_id, name) constraint to allow duplicate ingredients
 );
 
 -- Step 2: Create meals table
