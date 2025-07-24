@@ -106,6 +106,8 @@ const IngredientsTable = ({
       title: 'Status',
       key: 'status',
       filters: [
+        { text: 'Not Used', value: 'notused' },
+        { text: 'Finished', value: 'finished' },
         { text: 'Mostly Used', value: 'success' },
         { text: 'Partially Used', value: 'warning' },
         { text: 'Barely Used', value: 'exception' }
@@ -113,15 +115,9 @@ const IngredientsTable = ({
       onFilter: (value, record) => getIngredientUsageStatus(record) === value,
       render: (_, record) => {
         const status = getIngredientUsageStatus(record)
-        const statusText = {
-          success: 'Mostly Used',
-          warning: 'Partially Used',
-          exception: 'Barely Used'
-        }[status]
-        
         return (
-          <Tag color={status === 'success' ? 'green' : status === 'warning' ? 'orange' : 'red'}>
-            {statusText}
+          <Tag color={getStatusColor(status)}>
+            {getStatusText(status)}
           </Tag>
         )
       }
