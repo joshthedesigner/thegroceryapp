@@ -156,14 +156,14 @@ export const getCumulativeDataUpToDate = (ingredients, meals, targetDate) => {
     return mealDate <= endDate.toDate()
   })
   
-  // Use the SAME calculation functions as metrics
+  // Use the SAME calculation functions as metrics for consistency
   const totalValue = calculateTotalValue(filteredIngredients)
-  const totalMealCost = calculateTotalMealCost(filteredMeals)
+  const usedValue = calculateUsedValue(filteredMeals)
   const unusedValue = calculateUnusedValue(filteredIngredients, filteredMeals)
   
   return {
     totalValue,
-    usedValue: totalMealCost,
+    usedValue,
     unusedValue,
     ingredientCount: filteredIngredients.length,
     mealCount: filteredMeals.length
@@ -204,14 +204,14 @@ export const getCumulativeDataWithinPeriod = (ingredients, meals, timeFilter, pe
     return mealDate >= periodStart && mealDate <= periodEnd && mealDate <= targetEndDate
   })
   
-  // Use the SAME calculation functions as metrics
+  // Use the SAME calculation functions as metrics for consistency
   const totalValue = calculateTotalValue(filteredIngredients)
-  const totalMealCost = calculateTotalMealCost(filteredMeals)
+  const usedValue = calculateUsedValue(filteredMeals)
   const unusedValue = calculateUnusedValue(filteredIngredients, filteredMeals)
   
   return {
     totalValue,
-    usedValue: totalMealCost,
+    usedValue,
     unusedValue,
     ingredientCount: filteredIngredients.length,
     mealCount: filteredMeals.length
