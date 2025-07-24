@@ -16,6 +16,7 @@ import {
 } from 'recharts'
 import dayjs from 'dayjs'
 import LoadingSpinner from './LoadingSpinner'
+import { getFilteredDataForPeriod, calculateTotalValue } from '../utils/calculationUtils'
 
 const { Title, Text } = Typography
 
@@ -26,7 +27,7 @@ const legendColors = {
   unusedValue: '#f5222d',
 }
 const legendLabels = {
-  totalValue: 'Total Value Added',
+  totalValue: 'Total Value',
   usedValue: 'Consumed Value',
   unusedValue: 'Wasted Value',
 }
@@ -140,18 +141,17 @@ const TrendsGraph = ({
     // Generate date points
     const dataPoints = []
     let current = startDate.clone()
-    let cumulativeTotal = 0
 
     while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
       const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
       
-      // Calculate ingredients added up to this current date (cumulative)
-      const ingredientsUpToDate = ingredients.filter(ing => {
+      // Calculate ingredients for this specific date/period only (period-specific)
+      const ingredientsForDate = ingredients.filter(ing => {
         const purchaseDate = dayjs(ing.purchase_date)
-        return purchaseDate.isBefore(current) || purchaseDate.isSame(current, 'day') // Include ALL ingredients up to and including this date
+        return purchaseDate.isSame(current, interval) // Only ingredients for this specific date/period
       })
       
-      cumulativeTotal = ingredientsUpToDate.reduce((sum, ing) => sum + ing.price, 0)
+      const periodTotal = calculateTotalValue(ingredientsForDate)
       
       // Filter meals for this specific date point (unchanged)
       const periodMeals = meals.filter(meal => {
@@ -181,12 +181,12 @@ const TrendsGraph = ({
       
       console.log('🔍 Line graph - periodMeals count:', periodMeals.length, 'usedValue:', usedValue)
       
-      const unusedValue = cumulativeTotal - usedValue
+      const unusedValue = periodTotal - usedValue
 
       const dataPoint = {
         date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
         dateKey,
-        totalValue: Math.round(cumulativeTotal * 100) / 100, // Cumulative total up to this date
+        totalValue: Math.round(periodTotal * 100) / 100, // Period-specific total
         usedValue: Math.round(usedValue * 100) / 100,
         unusedValue: Math.round(unusedValue * 100) / 100
       }
@@ -208,7 +208,7 @@ const TrendsGraph = ({
 
   const getLegendFormatter = (value) => {
     const legendMap = {
-      totalValue: 'Total Value Added',
+      totalValue: 'Total Value',
       usedValue: 'Consumed Value',
       unusedValue: 'Wasted Value'
     }

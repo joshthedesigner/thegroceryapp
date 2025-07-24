@@ -1,5 +1,15 @@
 import React from 'react'
 import { Row, Col, Card, Statistic, Typography, Space } from 'antd'
+import { 
+  getFilteredDataForPeriod, 
+  calculateTotalValue, 
+  calculateUnusedValue,
+  calculateTotalPurchased,
+  calculateTotalUsed,
+  calculateUsagePercentage,
+  calculateTotalMealCost,
+  calculateAverageMealCost
+} from '../utils/calculationUtils'
 // Removed all icon imports
 
 const { Text } = Typography
@@ -12,31 +22,15 @@ const DashboardMetrics = ({
   getDateRange,
   onMetricClick 
 }) => {
-  // Calculate metrics based on time filter using standardized date range
-  const getFilteredData = () => {
-    const { start: startDate, end: endDate } = getDateRange(timeFilter, periodOffset)
-    
-    const filteredIngredients = ingredients.filter(ing => {
-      if (!ing.purchase_date) return false
-      const purchaseDate = new Date(ing.purchase_date)
-      return purchaseDate >= startDate && purchaseDate <= endDate
-    })
-    
-    const filteredMeals = meals.filter(meal => {
-      if (!meal.date_cooked) return false
-      const mealDate = new Date(meal.date_cooked)
-      return mealDate >= startDate && mealDate <= endDate
-    })
-    
-    return { filteredIngredients, filteredMeals }
-  }
+  // Get filtered data using shared utility
+  const { filteredIngredients: ingredientsData, filteredMeals } = getFilteredDataForPeriod(
+    ingredients, meals, timeFilter, periodOffset, getDateRange
+  )
 
-  const { filteredIngredients: ingredientsData, filteredMeals } = getFilteredData()
-
-  // Calculate metrics
-  const totalSpent = ingredientsData.reduce((sum, ing) => sum + ing.price, 0)
-  const totalPurchased = ingredientsData.reduce((sum, ing) => sum + ing.amount_purchased, 0)
-  const totalUsed = ingredientsData.reduce((sum, ing) => sum + (ing.amount_used || 0), 0)
+  // Calculate metrics using shared utilities
+  const totalSpent = calculateTotalValue(ingredientsData)
+  const totalPurchased = calculateTotalPurchased(ingredientsData)
+  const totalUsed = calculateTotalUsed(ingredientsData)
   const totalRemaining = totalPurchased - totalUsed
 
   // Calculate waste percentage
@@ -51,22 +45,19 @@ const DashboardMetrics = ({
     return purchaseDate >= weekAgo
   })
 
-  // Calculate meal metrics
+  // Calculate meal metrics using shared utilities
   const totalMeals = filteredMeals.length
-  const totalMealCost = filteredMeals.reduce((sum, meal) => sum + (meal.total_cost || 0), 0)
-  const averageMealCost = totalMeals > 0 ? totalMealCost / totalMeals : 0
+  const totalMealCost = calculateTotalMealCost(filteredMeals)
+  const averageMealCost = calculateAverageMealCost(filteredMeals)
 
-  // Calculate usage efficiency
-  const usagePercentage = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0
+  // Calculate usage efficiency using shared utility
+  const usagePercentage = calculateUsagePercentage(ingredientsData)
 
-  // Calculate ingredient metrics
+  // Calculate ingredient metrics using shared utilities
   const totalIngredients = ingredientsData.length
   const distinctIngredients = new Set(ingredientsData.map(ing => ing.name)).size
-  const totalValue = ingredientsData.reduce((sum, ing) => sum + ing.price, 0)
-  const unusedValue = ingredientsData.reduce((sum, ing) => {
-    const usageRatio = (ing.amount_purchased - (ing.amount_used || 0)) / ing.amount_purchased
-    return sum + (ing.price * usageRatio)
-  }, 0)
+  const totalValue = calculateTotalValue(ingredientsData)
+  const unusedValue = calculateUnusedValue(ingredientsData)
 
   const metrics = [
     {
