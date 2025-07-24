@@ -8,7 +8,7 @@ import {
   createMealIngredient,
   updateMealIngredient,
   deleteMealIngredient
-} from '../services/supabase-updated'
+} from '../services/supabase'
 import { calculateMealCost } from '../utils/calculationUtils'
 
 export const useMeals = (userId) => {
