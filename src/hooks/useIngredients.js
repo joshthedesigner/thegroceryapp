@@ -5,6 +5,7 @@ import {
   updateIngredient, 
   deleteIngredient 
 } from '../services/supabase'
+import { getIngredientUsagePercentage } from '../utils/calculationUtils'
 
 export const useIngredients = (userId) => {
   const [ingredients, setIngredients] = useState([])
@@ -99,12 +100,7 @@ export const useIngredients = (userId) => {
   }
 
   // Calculate usage percentage
-  const getUsagePercentage = (ingredient) => {
-    if (!ingredient.amount_purchased || ingredient.amount_purchased === 0) return 0
-    // Use amount_used if available, otherwise calculate from meal data
-    const usedAmount = ingredient.amount_used || 0
-    return Math.round((usedAmount / ingredient.amount_purchased) * 100)
-  }
+  const getUsagePercentage = getIngredientUsagePercentage
 
   // Get usage status
   const getUsageStatus = (ingredient) => {

@@ -247,3 +247,14 @@ export const calculateMealCost = (meal) => {
     return total + (ingredient.price * proportion)
   }, 0)
 } 
+
+/**
+ * Calculate usage percentage for a single ingredient
+ * @param {Object} ingredient - Ingredient object with amount_purchased and amount_used
+ * @returns {number} Usage percentage (0-100)
+ */
+export const getIngredientUsagePercentage = (ingredient) => {
+  if (!ingredient.amount_purchased || ingredient.amount_purchased === 0) return 0
+  const usedAmount = ingredient.amount_used || 0
+  return Math.round((usedAmount / ingredient.amount_purchased) * 100)
+} 

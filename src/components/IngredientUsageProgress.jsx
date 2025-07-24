@@ -5,6 +5,7 @@ import {
   ExclamationCircleOutlined, 
   CloseCircleOutlined 
 } from '@ant-design/icons'
+import { getIngredientUsagePercentage } from '../utils/calculationUtils'
 
 const { Text, Title } = Typography
 
@@ -13,10 +14,7 @@ const IngredientUsageProgress = ({
   timeFilter = 'all',
   maxDisplay = 10 
 }) => {
-  const getUsagePercentage = (ingredient) => {
-    if (ingredient.amount_purchased === 0) return 0
-    return (ingredient.amount_used / ingredient.amount_purchased) * 100
-  }
+  const getUsagePercentage = getIngredientUsagePercentage
 
   const getUsageStatus = (percentage) => {
     if (percentage >= 80) return 'success'

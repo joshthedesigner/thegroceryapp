@@ -20,6 +20,18 @@ import {
   CalendarOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { 
+  getFilteredDataForPeriod, 
+  calculateTotalValue, 
+  calculateUnusedValue,
+  calculateUsedValue,
+  calculateTotalPurchased,
+  calculateTotalUsed,
+  calculateUsagePercentage,
+  calculateTotalMealCost,
+  calculateAverageMealCost,
+  getIngredientUsagePercentage
+} from '../utils/calculationUtils'
 
 const { Search } = Input
 const { Text, Title } = Typography
@@ -114,10 +126,7 @@ const DashboardTable = ({
   }
 
   // Helper functions for usage calculations
-  const getUsagePercentage = (ingredient) => {
-    if (!ingredient.amount_purchased || ingredient.amount_purchased === 0) return 0
-    return Math.round((ingredient.amount_used / ingredient.amount_purchased) * 100)
-  }
+  const getUsagePercentage = getIngredientUsagePercentage
 
   // Helper for status (copy from IngredientsTable)
   const getUsageStatus = (ingredient) => {
