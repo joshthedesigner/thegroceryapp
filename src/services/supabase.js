@@ -320,46 +320,5 @@ export const calculateTimeBasedData = async (userId, startDate, endDate) => {
   return { data: dailyData, error: null }
 }
 
-// User Preferences helpers (for welcome screen)
-export const getUserPreferences = async (userId) => {
-  const { data, error } = await supabase
-    .from('user_preferences')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
-  
-  return { data, error }
-}
-
-export const createUserPreferences = async (userPreferencesData) => {
-  const { data, error } = await supabase
-    .from('user_preferences')
-    .insert([userPreferencesData])
-    .select()
-  
-  return { data, error }
-}
-
-export const updateUserPreferences = async (userId, userPreferencesData) => {
-  const { data, error } = await supabase
-    .from('user_preferences')
-    .update(userPreferencesData)
-    .eq('user_id', userId)
-    .select()
-  
-  return { data, error }
-}
-
-export const markWelcomeCompleted = async (userId) => {
-  const { data, error } = await supabase
-    .from('user_preferences')
-    .upsert([{
-      user_id: userId,
-      welcome_completed: true,
-      time_filter: 'week',
-      period_offset: 0
-    }])
-    .select()
-  
-  return { data, error }
-} 
+// Export the supabase client for direct use
+export { supabase } 
