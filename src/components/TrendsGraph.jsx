@@ -35,7 +35,7 @@ const legendColors = {
 const legendLabels = {
   totalValue: 'Total Value',
   usedValue: 'Consumed Value',
-  unusedValue: 'Wasted Value',
+  unusedValue: 'Unused Value',
 }
 
 function TrendsLegend() {
@@ -169,7 +169,7 @@ const TrendsGraph = ({
     const legendMap = {
       totalValue: 'Total Value',
       usedValue: 'Consumed Value',
-      unusedValue: 'Wasted Value'
+      unusedValue: 'Unused Value'
     }
     return legendMap[value] || value
   }
