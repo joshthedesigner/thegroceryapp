@@ -12,7 +12,6 @@ import {
   Progress,
   Empty
 } from 'antd'
-import '../styles/Table.css'
 import { 
   SearchOutlined, 
   EyeOutlined,
@@ -281,15 +280,7 @@ const DashboardTable = ({
             rowKey="id"
             pagination={{
               pageSize: 10,
-              showSizeChanger: true,
-              className: 'table-pagination-no-margin'
-            }}
-            className="dashboard-table"
-            style={{
-              '.table-pagination-no-margin': {
-                marginBottom: 0,
-                padding: 0
-              }
+              showSizeChanger: true
             }}
             locale={{
               emptyText: (

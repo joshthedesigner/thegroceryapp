@@ -249,21 +249,21 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item>
-          <Space>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              icon={initialValues ? <SaveOutlined /> : <PlusOutlined />}
-            >
-              {initialValues ? 'Update Ingredient' : 'Add Ingredient'}
-            </Button>
-            {onCancel && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Space>
               <Button onClick={onCancel}>
                 Cancel
               </Button>
-            )}
-          </Space>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                icon={initialValues ? <SaveOutlined /> : <PlusOutlined />}
+              >
+                {initialValues ? 'Update Ingredient' : 'Add Ingredient'}
+              </Button>
+            </Space>
+          </div>
         </Form.Item>
       </Form>
     </Modal>
