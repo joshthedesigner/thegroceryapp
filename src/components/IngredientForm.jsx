@@ -137,7 +137,20 @@ const IngredientForm = ({
       title={initialValues ? "Edit Ingredient" : "Add Ingredient"}
       open={visible}
       onCancel={onCancel}
-      footer={null}
+      footer={[
+        <Button key="cancel" onClick={onCancel}>
+          Cancel
+        </Button>,
+        <Button 
+          key="submit" 
+          type="primary" 
+          loading={loading}
+          icon={initialValues ? <SaveOutlined /> : <PlusOutlined />}
+          onClick={() => form.submit()}
+        >
+          {initialValues ? 'Update Ingredient' : 'Add Ingredient'}
+        </Button>
+      ]}
       width={600}
       destroyOnHidden
     >
@@ -246,26 +259,6 @@ const IngredientForm = ({
             prefix="$"
             style={{ width: '100%' }}
           />
-        </Form.Item>
-
-        <Form.Item style={{ marginBottom: 0, position: 'relative', bottom: -24 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Space>
-              {onCancel && (
-                <Button onClick={onCancel}>
-                  Cancel
-                </Button>
-              )}
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                icon={initialValues ? <SaveOutlined /> : <PlusOutlined />}
-              >
-                {initialValues ? 'Update Ingredient' : 'Add Ingredient'}
-              </Button>
-            </Space>
-          </div>
         </Form.Item>
       </Form>
     </Modal>
