@@ -370,4 +370,18 @@ export const formatDateRange = (start, end) => {
 export const formatDate = (date) => {
   if (!date) return ''
   return dayjs(date).format('MMM DD, YYYY')
+}
+
+/**
+ * Filter data array by search text
+ * @param {Array} data - Array of objects to filter
+ * @param {string} searchText - Text to search for
+ * @param {string} field - Field name to search in
+ * @returns {Array} Filtered data
+ */
+export const filterDataBySearch = (data, searchText, field = 'name') => {
+  if (!searchText || !data) return data || []
+  return data.filter(item => 
+    item[field]?.toLowerCase().includes(searchText.toLowerCase())
+  )
 } 

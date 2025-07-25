@@ -1,9 +1,6 @@
 import React from 'react'
-import { Card, Radio, Button, Space, Typography } from 'antd'
-import { LeftOutlined, RightOutlined, ReloadOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
-
-const { Text } = Typography
+import ToggleFilter from './shared/ToggleFilter'
 
 const TimeFilter = ({ 
   timeFilter = 'all', 
@@ -30,63 +27,23 @@ const TimeFilter = ({
     }
   }
 
-  const handleNavigate = (direction) => {
-    if (onNavigate) {
-      onNavigate(direction)
-    }
-  }
-
-  const handleReset = () => {
-    if (onNavigate) {
-      onNavigate('reset')
-    }
-  }
+  const options = [
+    { value: 'week', label: 'Week' },
+    { value: 'month', label: 'Month' },
+    { value: 'year', label: 'Year' }
+  ]
 
   return (
-    <Card size="small" style={{ marginBottom: 16, paddingTop: 12, paddingBottom: 12 }}>
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text strong>Time Period</Text>
-        </div>
-        
-        <Radio.Group 
-          value={timeFilter} 
-          onChange={(e) => onTimeFilterChange(e.target.value)}
-          buttonStyle="solid"
-          size="small"
-        >
-          <Radio.Button value="week">Week</Radio.Button>
-          <Radio.Button value="month">Month</Radio.Button>
-          <Radio.Button value="year">Year</Radio.Button>
-          {/* Removed 'All Time' filter */}
-        </Radio.Group>
-        
-        {/* Only show navigation for week/month/year */}
-        {timeFilter !== 'all' && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button 
-              icon={<LeftOutlined />} 
-              size="small"
-              onClick={() => handleNavigate('prev')}
-            >
-              Previous
-            </Button>
-            
-            <Text strong style={{ fontSize: '14px' }}>
-              {getPeriodDisplay()}
-            </Text>
-            
-            <Button 
-              icon={<RightOutlined />} 
-              size="small"
-              onClick={() => handleNavigate('next')}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </Space>
-    </Card>
+    <ToggleFilter
+      value={timeFilter}
+      onChange={onTimeFilterChange}
+      options={options}
+      showCard={true}
+      showNavigation={true}
+      periodDisplay={getPeriodDisplay()}
+      onNavigate={onNavigate}
+      label="Time Period"
+    />
   )
 }
 

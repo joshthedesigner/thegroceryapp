@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import { 
   Card, 
   Table, 
-  Radio, 
   Input, 
   Space, 
   Typography, 
@@ -34,8 +33,10 @@ import {
   getIngredientUsageStatus,
   getStatusColor,
   getStatusText,
-  formatDate
+  formatDate,
+  filterDataBySearch
 } from '../utils/calculationUtils'
+import ToggleFilter from '../components/shared/ToggleFilter'
 
 const { Search } = Input
 const { Text, Title } = Typography
@@ -48,7 +49,7 @@ const DashboardTable = ({
   getDateRange,
   loading = false 
 }) => {
-  const [viewMode, setViewMode] = useState('ingredients') // 'ingredients' or 'meals'
+  const [viewMode, setViewMode] = useState('ingredients')
   const [searchText, setSearchText] = useState('')
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
@@ -58,27 +59,19 @@ const DashboardTable = ({
     ingredients, meals, timeFilter, periodOffset, getDateRange
   )
 
-  // Filter data based on search text
-  const getFilteredIngredients = () => {
-    if (!searchText) return filteredIngredients
-    
-    return filteredIngredients.filter(ing =>
-      ing.name.toLowerCase().includes(searchText.toLowerCase())
-    )
-  }
-
-  const getFilteredMeals = () => {
-    if (!searchText) return filteredMeals
-    
-    return filteredMeals.filter(meal =>
-      meal.meal_name.toLowerCase().includes(searchText.toLowerCase())
-    )
-  }
+  // Use shared search filter
+  const searchedIngredients = filterDataBySearch(filteredIngredients, searchText, 'name')
+  const searchedMeals = filterDataBySearch(filteredMeals, searchText, 'meal_name')
 
   const handleViewDetails = (record) => {
     setSelectedRecord(record)
     setDetailsVisible(true)
   }
+
+  const viewOptions = [
+    { value: 'ingredients', label: 'Ingredients' },
+    { value: 'meals', label: 'Meals' }
+  ]
 
   // Helper functions for usage calculations
   const getUsagePercentage = getIngredientUsagePercentage
@@ -219,14 +212,10 @@ const DashboardTable = ({
     }
   ]
 
-  const currentData = viewMode === 'ingredients' ? getFilteredIngredients() : getFilteredMeals()
-  const currentColumns = viewMode === 'ingredients' ? ingredientColumns : mealColumns
-
   return (
     <>
       <Card>
         <Space direction="vertical" style={{ width: '100%' }}>
-          {/* Restore previous working header row layout */}
           <div
             style={{
               display: 'flex',
@@ -246,34 +235,26 @@ const DashboardTable = ({
                 placeholder={`Search ${viewMode}...`}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250, minWidth: 150, padding: '6px 12px' }}
+                style={{ width: 250, minWidth: 150 }}
                 allowClear
               />
-              <Radio.Group
+              <ToggleFilter
                 value={viewMode}
-                onChange={(e) => setViewMode(e.target.value)}
-                buttonStyle="solid"
-                size="small"
-                style={{ minWidth: 180, padding: '6px 12px' }}
-              >
-                <Radio.Button value="ingredients">Ingredients</Radio.Button>
-                <Radio.Button value="meals">Meals</Radio.Button>
-              </Radio.Group>
+                onChange={setViewMode}
+                options={viewOptions}
+                showCard={false}
+              />
             </div>
           </div>
 
-          {/* Table */}
           <Table
-            dataSource={currentData}
-            columns={currentColumns}
+            dataSource={viewMode === 'ingredients' ? searchedIngredients : searchedMeals}
+            columns={viewMode === 'ingredients' ? ingredientColumns : mealColumns}
             loading={loading}
             rowKey="id"
             pagination={{
               pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => 
-                `${range[0]}-${range[1]} of ${total} ${viewMode}`
+              showSizeChanger: true
             }}
             locale={{
               emptyText: (
