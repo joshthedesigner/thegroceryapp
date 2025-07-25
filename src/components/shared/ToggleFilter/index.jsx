@@ -62,7 +62,7 @@ const ToggleFilter = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              minHeight: '32px',
+              minHeight: '28px',
               minWidth: '120px',
               transition: 'background-color 0.2s ease, border-radius 0.2s ease',
               userSelect: 'none',
