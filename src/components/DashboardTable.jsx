@@ -243,6 +243,7 @@ const DashboardTable = ({
                 onChange={setViewMode}
                 options={viewOptions}
                 showCard={false}
+                style={{ minWidth: 180, padding: '6px 12px' }}
               />
             </div>
           </div>

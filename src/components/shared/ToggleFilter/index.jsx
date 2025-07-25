@@ -15,6 +15,7 @@ const { Text } = Typography
  * @param {string} props.periodDisplay - Text to display for current period
  * @param {function} props.onNavigate - Navigation handler function
  * @param {string} props.label - Optional header text
+ * @param {Object} props.style - Custom styles for the Radio.Group container
  */
 const ToggleFilter = ({ 
   value,
@@ -24,7 +25,8 @@ const ToggleFilter = ({
   showNavigation = false,
   periodDisplay = null,
   onNavigate = null,
-  label = null
+  label = null,
+  style = {}
 }) => {
   const handleNavigate = (direction) => {
     if (onNavigate) {
@@ -33,7 +35,7 @@ const ToggleFilter = ({
   }
 
   const Content = () => (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space direction="vertical" style={{ width: '100%', ...style }}>
       {label && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text strong>{label}</Text>
