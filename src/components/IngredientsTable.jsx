@@ -15,6 +15,7 @@ import {
   Empty,
   Typography
 } from 'antd'
+import '../styles/Table.css'
 import { 
   EditOutlined, 
   DeleteOutlined, 
@@ -183,7 +184,15 @@ const IngredientsTable = ({
         showSizeChanger: true,
         showQuickJumper: true,
         showTotal: (total, range) => 
-          `${range[0]}-${range[1]} of ${total} ingredients`
+          `${range[0]}-${range[1]} of ${total} ingredients`,
+        className: 'table-pagination-no-margin'
+      }}
+      className="ingredients-table"
+      style={{
+        '.table-pagination-no-margin': {
+          marginBottom: 0,
+          padding: 0
+        }
       }}
       scroll={{ x: 800 }}
       locale={{
