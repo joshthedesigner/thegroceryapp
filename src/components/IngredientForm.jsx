@@ -170,11 +170,10 @@ const IngredientForm = ({
                 right: 0,
                 backgroundColor: 'white',
                 border: '1px solid #d9d9d9',
-                borderRadius: '6px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                borderRadius: '0 0 4px 4px',
                 zIndex: 1000,
                 maxHeight: '200px',
-                overflow: 'auto'
+                overflowY: 'auto'
               }}>
                 {suggestions.map((suggestion, index) => (
                   <div
@@ -182,11 +181,10 @@ const IngredientForm = ({
                     style={{
                       padding: '8px 12px',
                       cursor: 'pointer',
-                      borderBottom: index < suggestions.length - 1 ? '1px solid #f0f0f0' : 'none'
+                      hover: { backgroundColor: '#f5f5f5' }
                     }}
-                    onMouseDown={() => handleSuggestionSelect(suggestion)}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                    onClick={() => handleSuggestionSelect(suggestion)}
+                    onMouseDown={(e) => e.preventDefault()}
                   >
                     {suggestion}
                   </div>
@@ -197,15 +195,13 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
-          label="Amount Purchased"
-          name="amount_purchased"
-          rules={[{ required: true, message: 'Please enter amount' }]}
+          label="Purchase Date"
+          name="purchase_date"
+          rules={[{ required: true, message: 'Please select purchase date' }]}
         >
-          <InputNumber
-            placeholder="e.g., 500"
-            min={0}
-            step={0.01}
+          <DatePicker
             style={{ width: '100%' }}
+            format="YYYY-MM-DD"
           />
         </Form.Item>
 
@@ -214,23 +210,27 @@ const IngredientForm = ({
           name="unit"
           rules={[{ required: true, message: 'Please select unit' }]}
         >
-          <Select placeholder="Select unit">
-            {unitOptions.map(option => (
-              <Option key={option.value} value={option.value}>
-                {option.label}
-              </Option>
-            ))}
+          <Select>
+            <Option value="g">Grams (g)</Option>
+            <Option value="kg">Kilograms (kg)</Option>
+            <Option value="oz">Ounces (oz)</Option>
+            <Option value="lb">Pounds (lb)</Option>
+            <Option value="ml">Milliliters (ml)</Option>
+            <Option value="l">Liters (l)</Option>
+            <Option value="units">Units</Option>
+            <Option value="pieces">Pieces</Option>
           </Select>
         </Form.Item>
 
         <Form.Item
-          label="Purchase Date"
-          name="purchase_date"
-          rules={[{ required: true, message: 'Please select purchase date' }]}
+          label="Amount Purchased"
+          name="amount_purchased"
+          rules={[{ required: true, message: 'Please enter amount purchased' }]}
         >
-          <DatePicker
+          <InputNumber
+            placeholder="e.g., 500"
+            min={0}
             style={{ width: '100%' }}
-            format="YYYY-MM-DD"
           />
         </Form.Item>
 
