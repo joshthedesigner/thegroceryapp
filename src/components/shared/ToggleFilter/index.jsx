@@ -15,7 +15,8 @@ const { Text } = Typography
  * @param {string} props.periodDisplay - Text to display for current period
  * @param {function} props.onNavigate - Navigation handler function
  * @param {string} props.label - Optional header text
- * @param {Object} props.style - Custom styles for the Radio.Group container
+ * @param {Object} props.style - Custom styles for the Radio.Group
+ * @param {Object} props.containerStyle - Custom styles for the container
  */
 const ToggleFilter = ({ 
   value,
@@ -26,7 +27,8 @@ const ToggleFilter = ({
   periodDisplay = null,
   onNavigate = null,
   label = null,
-  style = {}
+  style = {},
+  containerStyle = {}
 }) => {
   const handleNavigate = (direction) => {
     if (onNavigate) {
@@ -35,7 +37,7 @@ const ToggleFilter = ({
   }
 
   const Content = () => (
-    <Space direction="vertical" style={{ width: '100%', ...style }}>
+    <Space direction="vertical" style={{ width: '100%', ...containerStyle }}>
       {label && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text strong>{label}</Text>
@@ -47,6 +49,7 @@ const ToggleFilter = ({
         onChange={(e) => onChange(e.target.value)}
         buttonStyle="solid"
         size="small"
+        style={style}
       >
         {options.map(option => (
           <Radio.Button key={option.value} value={option.value}>

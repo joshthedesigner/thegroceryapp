@@ -244,6 +244,7 @@ const DashboardTable = ({
                 options={viewOptions}
                 showCard={false}
                 style={{ minWidth: 180, padding: '6px 12px' }}
+                containerStyle={{ display: 'flex', alignItems: 'center' }}
               />
             </div>
           </div>
