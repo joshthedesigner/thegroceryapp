@@ -242,10 +242,14 @@ const DashboardTable = ({
                 value={viewMode}
                 onChange={setViewMode}
                 options={viewOptions}
-                showCard={true}
+                showCard={false}
                 showNavigation={false}
-                style={{ minWidth: 180 }}
-                label="View Mode"
+                style={{ 
+                  minWidth: 180,
+                  backgroundColor: '#f5f5f5',
+                  padding: '4px',
+                  borderRadius: '8px'
+                }}
               />
             </div>
           </div>

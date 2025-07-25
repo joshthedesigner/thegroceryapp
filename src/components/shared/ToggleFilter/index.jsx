@@ -41,7 +41,15 @@ const ToggleFilter = ({
       onChange={(e) => onChange(e.target.value)}
       buttonStyle="solid"
       size="small"
-      style={style}
+      style={{
+        ...style,
+        '.ant-radio-button-wrapper': {
+          height: '32px',
+          lineHeight: '32px',
+          padding: '0 16px',
+          borderRadius: showCard ? '2px' : '6px'
+        }
+      }}
     >
       {options.map(option => (
         <Radio.Button key={option.value} value={option.value}>
