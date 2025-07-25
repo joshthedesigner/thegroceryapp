@@ -20,6 +20,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useIngredients } from '../hooks/useIngredients'
 import { useMeals } from '../hooks/useMeals'
 import dayjs from 'dayjs'
+import { formatDate } from '../utils/calculationUtils'
 
 const { Option } = Select
 const { Text } = Typography

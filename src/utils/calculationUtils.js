@@ -360,4 +360,14 @@ export const getWeekRange = (date) => {
  */
 export const formatDateRange = (start, end) => {
   return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
+}
+
+/**
+ * Format a date consistently across the app
+ * @param {Date|string|dayjs.Dayjs} date - Date to format
+ * @returns {string} Formatted date string in 'MMM DD, YYYY' format
+ */
+export const formatDate = (date) => {
+  if (!date) return ''
+  return dayjs(date).format('MMM DD, YYYY')
 } 

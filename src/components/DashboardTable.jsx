@@ -33,7 +33,8 @@ import {
   getIngredientUsagePercentage,
   getIngredientUsageStatus,
   getStatusColor,
-  getStatusText
+  getStatusText,
+  formatDate
 } from '../utils/calculationUtils'
 
 const { Search } = Input
@@ -230,7 +231,7 @@ const DashboardTable = ({
       dataIndex: 'date_cooked',
       key: 'date_cooked',
       render: (date) => (
-        <Text style={{ color: '#222', fontWeight: 400 }}>{dayjs(date).format('MMM DD, YYYY')}</Text>
+        <Text style={{ color: '#222', fontWeight: 400 }}>{formatDate(date)}</Text>
       ),
       sorter: (a, b) => dayjs(a.date_cooked).unix() - dayjs(b.date_cooked).unix(),
       defaultSortOrder: 'descend'
@@ -364,7 +365,7 @@ const DashboardTable = ({
                 <p><strong>Amount Used:</strong> {selectedRecord.amount_used}{selectedRecord.unit || ' units'}</p>
                 <p><strong>Amount Remaining:</strong> {selectedRecord.amount_remaining}{selectedRecord.unit || ' units'}</p>
                 <p><strong>Price:</strong> ${selectedRecord.price.toFixed(2)}</p>
-                <p><strong>Created:</strong> {dayjs(selectedRecord.created_at).format('MMM DD, YYYY')}</p>
+                <p><strong>Created:</strong> {formatDate(selectedRecord.created_at)}</p>
               </div>
             ) : (
               // Meal details

@@ -8,6 +8,7 @@ import {
   TrophyOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { formatDate } from '../utils/calculationUtils'
 
 const { Title, Text } = Typography
 
@@ -112,7 +113,7 @@ const MetricDetailsModal = ({
               title: 'Date Added',
               dataIndex: 'purchase_date',
               key: 'purchase_date',
-              render: (date) => dayjs(date).format('MMM DD, YYYY')
+              render: (date) => formatDate(date)
             }
           ]
         }
@@ -195,7 +196,7 @@ const MetricDetailsModal = ({
               title: 'Date Added',
               dataIndex: 'purchase_date',
               key: 'purchase_date',
-              render: (date) => dayjs(date).format('MMM DD, YYYY')
+              render: (date) => formatDate(date)
             }
           ]
         }
@@ -353,7 +354,7 @@ const MetricDetailsModal = ({
               title: 'Date Cooked',
               dataIndex: 'date_cooked',
               key: 'date_cooked',
-              render: (date) => dayjs(date).format('MMM DD, YYYY')
+              render: (date) => formatDate(date)
             },
             {
               title: 'Total Cost',

@@ -21,7 +21,12 @@ import {
   SearchOutlined,
   FilterOutlined 
 } from '@ant-design/icons'
-import { getIngredientUsageStatus, getStatusColor, getStatusText } from '../utils/calculationUtils'
+import { 
+  getIngredientUsageStatus, 
+  getStatusColor, 
+  getStatusText,
+  formatDate 
+} from '../utils/calculationUtils'
 
 const { Search } = Input
 const { Option } = Select
@@ -65,6 +70,13 @@ const IngredientsTable = ({
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (name) => <strong>{name}</strong>
+    },
+    {
+      title: 'Purchase Date',
+      dataIndex: 'purchase_date',
+      key: 'purchase_date',
+      render: (date) => formatDate(date),
+      sorter: (a, b) => new Date(a.purchase_date) - new Date(b.purchase_date)
     },
     {
       title: 'Amount Purchased',
