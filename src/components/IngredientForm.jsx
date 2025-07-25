@@ -251,9 +251,11 @@ const IngredientForm = ({
         <Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
-              <Button onClick={onCancel}>
-                Cancel
-              </Button>
+              {onCancel && (
+                <Button onClick={onCancel}>
+                  Cancel
+                </Button>
+              )}
               <Button
                 type="primary"
                 htmlType="submit"
