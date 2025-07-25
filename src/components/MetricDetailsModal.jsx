@@ -8,7 +8,7 @@ import {
   TrophyOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { formatDate } from '../utils/calculationUtils'
+import { formatDate, getFilteredDataForPeriod } from '../utils/calculationUtils'
 
 const { Title, Text } = Typography
 
@@ -22,58 +22,10 @@ const MetricDetailsModal = ({
   periodOffset = 0,
   getDateRange
 }) => {
-  const getMetricData = () => {
-    if (!getDateRange) {
-      // Fallback to old logic if getDateRange is not provided
-      const now = dayjs()
-      let startDate = new Date(0)
-      
-      switch (timeFilter) {
-        case 'week':
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          break
-        case 'year':
-          startDate = new Date(now.getFullYear(), 0, 1)
-          break
-        default:
-          startDate = new Date(0)
-      }
-      
-      // Filter ingredients by date range
-      const filteredIngredients = ingredients.filter(ing => {
-        // Since purchase_date doesn't exist, use created_at instead
-        if (!ing.created_at) return false
-        const createdDate = new Date(ing.created_at)
-        return createdDate >= startDate && createdDate <= endDate
-      })
-      
-      const filteredMeals = meals.filter(meal => 
-        new Date(meal.date_cooked) >= startDate
-      )
-      
-      return { filteredIngredients, filteredMeals }
-    }
-
-    // Use standardized date range
-    const { start, end } = getDateRange(timeFilter, periodOffset)
-    
-    const filteredIngredients = ingredients.filter(ing => {
-      const purchaseDate = new Date(ing.purchase_date)
-      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
-    })
-    
-    const filteredMeals = meals.filter(meal => {
-      const mealDate = new Date(meal.date_cooked)
-      return mealDate >= start.toDate() && mealDate <= end.toDate()
-    })
-    
-    return { filteredIngredients, filteredMeals }
-  }
-
-  const { filteredIngredients, filteredMeals } = getMetricData()
+  // Get filtered data using shared utility
+  const { filteredIngredients, filteredMeals } = getFilteredDataForPeriod(
+    ingredients, meals, timeFilter, periodOffset, getDateRange
+  )
 
   const getMetricInfo = () => {
     switch (metricType) {

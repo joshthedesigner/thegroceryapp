@@ -53,59 +53,10 @@ const DashboardTable = ({
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
 
-  // Filter data based on time filter using standardized date range
-  const getFilteredData = () => {
-    if (!getDateRange) {
-      // Fallback to old logic if getDateRange is not provided
-      const now = new Date()
-      let startDate = new Date(0)
-      
-      switch (timeFilter) {
-        case 'week':
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          break
-        case 'year':
-          startDate = new Date(now.getFullYear(), 0, 1)
-          break
-        default:
-          // Default to week if unknown
-          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-      }
-      
-      const filteredIngredients = ingredients.filter(ing => {
-        if (!ing.purchase_date) return false
-        const purchaseDate = new Date(ing.purchase_date)
-        return purchaseDate >= startDate && purchaseDate <= endDate
-      })
-      
-      const filteredMeals = meals.filter(meal => 
-        new Date(meal.date_cooked) >= startDate
-      )
-      
-      return { filteredIngredients, filteredMeals }
-    }
-
-    // Use standardized date range
-    const { start, end } = getDateRange(timeFilter, periodOffset)
-    
-    const filteredIngredients = ingredients.filter(ing => {
-      if (!ing.purchase_date) return false
-      const purchaseDate = new Date(ing.purchase_date)
-      return purchaseDate >= start.toDate() && purchaseDate <= end.toDate()
-    })
-    
-    const filteredMeals = meals.filter(meal => {
-      const mealDate = new Date(meal.date_cooked)
-      return mealDate >= start.toDate() && mealDate <= end.toDate()
-    })
-    
-    return { filteredIngredients, filteredMeals }
-  }
-
-  const { filteredIngredients, filteredMeals } = getFilteredData()
+  // Get filtered data using shared utility
+  const { filteredIngredients, filteredMeals } = getFilteredDataForPeriod(
+    ingredients, meals, timeFilter, periodOffset, getDateRange
+  )
 
   // Filter data based on search text
   const getFilteredIngredients = () => {

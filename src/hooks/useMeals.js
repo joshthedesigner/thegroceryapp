@@ -216,14 +216,6 @@ export const useMeals = (userId) => {
     )
   }
 
-  // Filter meals by date range
-  const filterMealsByDateRange = (startDate, endDate) => {
-    return meals.filter(meal => {
-      const mealDate = new Date(meal.date_cooked)
-      return mealDate >= startDate && mealDate <= endDate
-    })
-  }
-
   useEffect(() => {
     fetchMeals()
   }, [userId])
@@ -242,7 +234,6 @@ export const useMeals = (userId) => {
     refreshMeals: fetchMeals,
     calculateMealCost,
     getMealIngredients,
-    searchMeals,
-    filterMealsByDateRange
+    searchMeals
   }
 } 
