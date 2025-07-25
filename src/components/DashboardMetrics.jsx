@@ -37,14 +37,15 @@ const DashboardMetrics = ({
   // Calculate waste percentage
   const wastePercentage = totalPurchased > 0 ? ((totalRemaining / totalPurchased) * 100) : 0
 
-  // Get recent purchases (last 7 days)
-  const recentPurchases = ingredientsData.filter(ing => {
-    if (!ing.purchase_date) return false
-    const purchaseDate = new Date(ing.purchase_date)
-    const weekAgo = new Date()
-    weekAgo.setDate(weekAgo.getDate() - 7)
-    return purchaseDate >= weekAgo
-  })
+  // Get recent purchases using shared utility (last 7 days)
+  const { filteredIngredients: recentPurchases } = getFilteredDataForPeriod(
+    ingredientsData, [], 'week', 0, (timeFilter, offset) => {
+      const now = dayjs()
+      const end = now
+      const start = now.subtract(7, 'day')
+      return { start, end }
+    }
+  )
 
   // Calculate meal metrics using shared utilities
   const totalMeals = filteredMeals.length
