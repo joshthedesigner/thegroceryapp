@@ -16,7 +16,6 @@ const { Text } = Typography
  * @param {function} props.onNavigate - Navigation handler function
  * @param {string} props.label - Optional header text
  * @param {Object} props.style - Custom styles for the Radio.Group
- * @param {Object} props.containerStyle - Custom styles for the container
  */
 const ToggleFilter = ({ 
   value,
@@ -27,8 +26,7 @@ const ToggleFilter = ({
   periodDisplay = null,
   onNavigate = null,
   label = null,
-  style = {},
-  containerStyle = {}
+  style = {}
 }) => {
   const handleNavigate = (direction) => {
     if (onNavigate) {
@@ -36,27 +34,38 @@ const ToggleFilter = ({
     }
   }
 
+  // Simple Radio.Group for non-card view
+  const RadioGroup = (
+    <Radio.Group 
+      value={value} 
+      onChange={(e) => onChange(e.target.value)}
+      buttonStyle="solid"
+      size="small"
+      style={style}
+    >
+      {options.map(option => (
+        <Radio.Button key={option.value} value={option.value}>
+          {option.label}
+        </Radio.Button>
+      ))}
+    </Radio.Group>
+  )
+
+  // Return simple toggle if no card or navigation needed
+  if (!showCard && !showNavigation && !label) {
+    return RadioGroup
+  }
+
+  // Full featured view with card and/or navigation
   const Content = () => (
-    <Space direction="vertical" style={{ width: '100%', ...containerStyle }}>
+    <Space direction="vertical" style={{ width: '100%' }}>
       {label && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text strong>{label}</Text>
         </div>
       )}
       
-      <Radio.Group 
-        value={value} 
-        onChange={(e) => onChange(e.target.value)}
-        buttonStyle="solid"
-        size="small"
-        style={style}
-      >
-        {options.map(option => (
-          <Radio.Button key={option.value} value={option.value}>
-            {option.label}
-          </Radio.Button>
-        ))}
-      </Radio.Group>
+      {RadioGroup}
       
       {showNavigation && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
