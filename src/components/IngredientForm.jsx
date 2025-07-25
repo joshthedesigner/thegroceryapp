@@ -248,7 +248,7 @@ const IngredientForm = ({
           />
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0 }}>
+        <Form.Item style={{ marginBottom: 0, position: 'relative', bottom: -24 }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Space>
               {onCancel && (
