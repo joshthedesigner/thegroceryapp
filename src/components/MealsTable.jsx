@@ -19,6 +19,7 @@ import {
   DownOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { formatDate } from '../utils/calculationUtils'
 
 const { Text, Title } = Typography
 
@@ -114,10 +115,7 @@ const MealsTable = ({
       dataIndex: 'date_cooked',
       key: 'date_cooked',
       render: (date) => (
-        <Space>
-          <CalendarOutlined />
-          <Text>{dayjs(date).format('MMM DD, YYYY')}</Text>
-        </Space>
+        <Text>{formatDate(date)}</Text>
       ),
       sorter: (a, b) => dayjs(a.date_cooked).unix() - dayjs(b.date_cooked).unix(),
       defaultSortOrder: 'descend'
