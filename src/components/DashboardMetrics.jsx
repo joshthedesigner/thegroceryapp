@@ -11,6 +11,7 @@ import {
   calculateTotalMealCost,
   calculateAverageMealCost
 } from '../utils/calculationUtils'
+import dayjs from 'dayjs'
 // Removed all icon imports
 
 const { Text } = Typography
