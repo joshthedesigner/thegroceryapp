@@ -243,9 +243,9 @@ const TrendsGraph = ({
             <Line 
               type="monotone" 
               dataKey="usedValue" 
-              stroke="#ff6b35" 
+              stroke="#00d084" 
               strokeWidth={3}
-              dot={{ fill: '#ff6b35', strokeWidth: 2, r: 4 }}
+              dot={{ fill: '#00d084', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6 }}
             />
             <Line 
