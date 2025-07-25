@@ -80,7 +80,6 @@ const DashboardMetrics = ({
     {
       title: 'Usage Efficiency',
       value: usagePercentage,
-      suffix: '%',
       description: 'Percentage of ingredients used',
       formatter: (value) => `${value.toFixed(1)}%`,
       type: 'usageEfficiency'
