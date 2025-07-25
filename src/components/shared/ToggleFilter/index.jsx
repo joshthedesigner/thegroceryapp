@@ -58,7 +58,7 @@ const ToggleFilter = ({
               borderRadius: isSelected ? '8px' : '0',
               cursor: 'pointer',
               fontSize: '15px',
-              fontWeight: isSelected ? 600 : 500,
+              fontWeight: 500,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
