@@ -219,9 +219,23 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
+          label="Amount"
+          name="amount_purchased"
+          rules={[{ required: true, message: 'Please enter amount' }]}
+          style={{ display: 'inline-block', width: 'calc(33.33% - 8px)', marginRight: '16px' }}
+        >
+          <InputNumber
+            placeholder="e.g., 500"
+            min={0}
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+
+        <Form.Item
           label="Unit"
           name="unit"
           rules={[{ required: true, message: 'Please select unit' }]}
+          style={{ display: 'inline-block', width: 'calc(33.33% - 8px)' }}
         >
           <Select>
             <Option value="g">Grams (g)</Option>
@@ -236,18 +250,6 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
-          label="Amount Purchased"
-          name="amount_purchased"
-          rules={[{ required: true, message: 'Please enter amount purchased' }]}
-        >
-          <InputNumber
-            placeholder="e.g., 500"
-            min={0}
-            style={{ width: '100%' }}
-          />
-        </Form.Item>
-
-        <Form.Item
           label="Price"
           name="price"
           rules={[{ required: true, message: 'Please enter price' }]}
@@ -257,7 +259,7 @@ const IngredientForm = ({
             min={0}
             step={0.01}
             prefix="$"
-            style={{ width: '100%' }}
+            style={{ width: '33.33%' }}
           />
         </Form.Item>
       </Form>
