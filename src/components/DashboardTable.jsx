@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Card, 
   Table, 
@@ -34,7 +34,8 @@ import {
   getStatusColor,
   getStatusText,
   formatDate,
-  filterDataBySearch
+  filterDataBySearch,
+  calculateIngredientRemainingValue
 } from '../utils/calculationUtils'
 import ToggleFilter from '../components/shared/ToggleFilter'
 
@@ -53,6 +54,7 @@ const DashboardTable = ({
   const [searchText, setSearchText] = useState('')
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
+  const scrollPositionRef = useRef(0)
 
   // Get filtered data using shared utility
   const { filteredIngredients, filteredMeals } = getFilteredDataForPeriod(
@@ -62,6 +64,23 @@ const DashboardTable = ({
   // Use shared search filter
   const searchedIngredients = filterDataBySearch(filteredIngredients, searchText, 'name')
   const searchedMeals = filterDataBySearch(filteredMeals, searchText, 'meal_name')
+
+  // Save scroll position before any content change
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollPositionRef.current = window.scrollY
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Restore scroll position after content changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.scrollTo(0, scrollPositionRef.current)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [searchText, viewMode])
 
   const handleViewDetails = (record) => {
     setSelectedRecord(record)
@@ -126,16 +145,15 @@ const DashboardTable = ({
       title: 'Remaining Value',
       key: 'remaining_value',
       render: (_, record) => {
-        const usageRatio = record.amount_remaining / record.amount_purchased
-        const remainingValue = record.price * usageRatio
+        const remainingValue = calculateIngredientRemainingValue(record)
         return (
           <Text style={{ color: '#222', fontWeight: 400 }}>${remainingValue.toFixed(2)}</Text>
         )
       },
       sorter: (a, b) => {
-        const aRatio = a.amount_remaining / a.amount_purchased
-        const bRatio = b.amount_remaining / b.amount_purchased
-        return (a.price * aRatio) - (b.price * bRatio)
+        const aValue = calculateIngredientRemainingValue(a)
+        const bValue = calculateIngredientRemainingValue(b)
+        return aValue - bValue
       }
     },
     {
@@ -223,7 +241,7 @@ const DashboardTable = ({
               alignItems: 'center',
               flexWrap: 'wrap',
               gap: 16,
-              marginBottom: 20,
+              marginBottom: 16,
               width: '100%',
             }}
           >
@@ -236,6 +254,7 @@ const DashboardTable = ({
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 style={{ width: 250, minWidth: 150 }}
+                size="large"
                 allowClear
               />
               <ToggleFilter

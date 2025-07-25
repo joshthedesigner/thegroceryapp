@@ -70,6 +70,19 @@ export const calculateUnusedValue = (ingredients, meals) => {
 }
 
 /**
+ * Calculate remaining value for a single ingredient
+ * @param {Object} ingredient - Ingredient object with amount_purchased, amount_used, and price
+ * @returns {number} Remaining value in dollars
+ */
+export const calculateIngredientRemainingValue = (ingredient) => {
+  const amountUsed = ingredient.amount_used || 0
+  const amountPurchased = ingredient.amount_purchased || 0
+  if (amountPurchased === 0) return 0
+  const unusedRatio = (amountPurchased - amountUsed) / amountPurchased
+  return ingredient.price * unusedRatio
+}
+
+/**
  * Calculate total amount purchased
  * @param {Array} ingredients - Array of ingredient objects
  * @returns {number} Total amount purchased

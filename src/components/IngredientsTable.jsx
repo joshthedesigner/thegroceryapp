@@ -25,7 +25,8 @@ import {
   getIngredientUsageStatus, 
   getStatusColor, 
   getStatusText,
-  formatDate 
+  formatDate,
+  calculateIngredientRemainingValue
 } from '../utils/calculationUtils'
 
 const { Search } = Input
@@ -75,15 +76,9 @@ const IngredientsTable = ({
       title: 'Purchase Date',
       dataIndex: 'purchase_date',
       key: 'purchase_date',
+      width: 150,
       render: (date) => formatDate(date),
       sorter: (a, b) => new Date(a.purchase_date) - new Date(b.purchase_date)
-    },
-    {
-      title: 'Amount Purchased',
-      dataIndex: 'amount_purchased',
-      key: 'amount_purchased',
-      sorter: (a, b) => a.amount_purchased - b.amount_purchased,
-      render: (amount, record) => `${amount} ${record.unit || 'units'}`
     },
     {
       title: 'Price',
@@ -93,7 +88,7 @@ const IngredientsTable = ({
       render: (price) => `$${price.toFixed(2)}`
     },
     {
-      title: 'Usage',
+      title: 'Percent Used',
       key: 'usage',
       render: (_, record) => {
         const percentage = getUsagePercentage(record)
@@ -108,10 +103,16 @@ const IngredientsTable = ({
       }
     },
     {
-      title: 'Remaining',
-      key: 'remaining',
+      title: 'Remaining Value',
+      key: 'remaining_value',
       render: (_, record) => {
-        return `${record.amount_remaining.toFixed(2)} ${record.unit || 'units'}`
+        const remainingValue = calculateIngredientRemainingValue(record)
+        return `$${remainingValue.toFixed(2)}`
+      },
+      sorter: (a, b) => {
+        const aValue = calculateIngredientRemainingValue(a)
+        const bValue = calculateIngredientRemainingValue(b)
+        return aValue - bValue
       }
     },
     {
@@ -135,15 +136,18 @@ const IngredientsTable = ({
       }
     },
     {
-      title: 'Actions',
+      title: '',
       key: 'actions',
+      width: 200,
+      align: 'right',
       render: (_, record) => (
         <Space>
           <Button 
-            type="link" 
+            type="text" 
             size="small" 
             onClick={() => onEdit(record)}
             icon={<EditOutlined />}
+            style={{ color: '#262626' }}
           >
             Edit
           </Button>
@@ -155,10 +159,10 @@ const IngredientsTable = ({
             cancelText="No"
           >
             <Button 
-              type="link" 
+              type="text" 
               size="small" 
-              danger
               icon={<DeleteOutlined />}
+              style={{ color: '#262626' }}
             >
               Delete
             </Button>

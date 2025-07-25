@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, Radio, Button, Space, Typography } from 'antd'
+import { Card, Button, Space, Typography } from 'antd'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons'
 
 const { Text } = Typography
@@ -15,7 +15,7 @@ const { Text } = Typography
  * @param {string} props.periodDisplay - Text to display for current period
  * @param {function} props.onNavigate - Navigation handler function
  * @param {string} props.label - Optional header text
- * @param {Object} props.style - Custom styles for the Radio.Group
+ * @param {Object} props.style - Custom styles for the toggle container
  */
 const ToggleFilter = ({ 
   value,
@@ -34,34 +34,51 @@ const ToggleFilter = ({
     }
   }
 
-  // Simple Radio.Group for non-card view
-  const RadioGroup = (
-    <Radio.Group 
-      value={value} 
-      onChange={(e) => onChange(e.target.value)}
-      buttonStyle="solid"
-      size="small"
-      style={{
-        ...style,
-        '.ant-radio-button-wrapper': {
-          height: '32px',
-          lineHeight: '32px',
-          padding: '0 16px',
-          borderRadius: showCard ? '2px' : '6px'
-        }
-      }}
-    >
-      {options.map(option => (
-        <Radio.Button key={option.value} value={option.value}>
-          {option.label}
-        </Radio.Button>
-      ))}
-    </Radio.Group>
+  // Custom toggle implementation
+  const CustomToggle = (
+    <div style={{
+      background: 'rgb(228, 230, 235)',
+      borderRadius: '16px',
+      padding: '6px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0',
+      ...style
+    }}>
+      {options.map((option, index) => {
+        const isSelected = value === option.value;
+        return (
+          <div
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            style={{
+              backgroundColor: isSelected ? '#ffffff' : 'transparent',
+              color: isSelected ? '#000000' : '#000000',
+              padding: '8px 16px',
+              borderRadius: isSelected ? '8px' : '0',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: isSelected ? 600 : 500,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '32px',
+              transition: 'all 0.2s ease',
+              userSelect: 'none',
+              boxShadow: isSelected ? '0 1px 2px rgba(0, 0, 0, 0.06)' : 'none',
+              margin: isSelected ? '0' : '0 8px 0 0'
+            }}
+          >
+            {option.label}
+          </div>
+        );
+      })}
+    </div>
   )
 
   // Return simple toggle if no card or navigation needed
   if (!showCard && !showNavigation && !label) {
-    return RadioGroup
+    return CustomToggle
   }
 
   // Full featured view with card and/or navigation
@@ -73,7 +90,7 @@ const ToggleFilter = ({
         </div>
       )}
       
-      {RadioGroup}
+      {CustomToggle}
       
       {showNavigation && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

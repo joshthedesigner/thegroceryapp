@@ -200,7 +200,7 @@ const TrendsGraph = ({
   return (
     <Card>
       <Space direction="vertical" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <Title level={4} style={{ margin: 0 }}>
             Trends Over Time
           </Title>
@@ -236,7 +236,7 @@ const TrendsGraph = ({
               type="monotone" 
               dataKey="totalValue" 
               stroke="#1890ff" 
-              strokeWidth={5}
+              strokeWidth={3}
               dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6 }}
             />
@@ -245,14 +245,14 @@ const TrendsGraph = ({
               dataKey="usedValue" 
               stroke="#ff6b35" 
               strokeWidth={3}
-              dot={{ fill: '#ff6b35', strokeWidth: 3, r: 5 }}
-              activeDot={{ r: 8 }}
+              dot={{ fill: '#ff6b35', strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6 }}
             />
             <Line 
               type="monotone" 
               dataKey="unusedValue" 
               stroke="#f5222d" 
-              strokeWidth={2}
+              strokeWidth={3}
               dot={{ fill: '#f5222d', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6 }}
             />

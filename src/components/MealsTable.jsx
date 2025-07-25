@@ -13,9 +13,6 @@ import {
 import { 
   EditOutlined, 
   DeleteOutlined, 
-  EyeOutlined,
-  DollarOutlined,
-  CalendarOutlined,
   DownOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -27,8 +24,7 @@ const MealsTable = ({
   meals, 
   loading, 
   onEdit, 
-  onDelete, 
-  onViewDetails 
+  onDelete
 }) => {
   // Add debugging
   console.log('MealsTable received meals:', meals);
@@ -171,40 +167,38 @@ const MealsTable = ({
       sorter: (a, b) => (a.total_cost || 0) - (b.total_cost || 0)
     },
     {
-      title: 'Actions',
+      title: '',
       key: 'actions',
+      width: 200,
+      align: 'right',
       render: (_, record) => (
         <Space>
-          <Tooltip title="View Details">
+          <Button
+            type="text"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => onEdit(record)}
+            style={{ color: '#262626' }}
+          >
+            Edit
+          </Button>
+          <Popconfirm
+            title="Delete this meal?"
+            description="This action cannot be undone. All ingredient usage data will be lost."
+            onConfirm={() => onDelete(record.id)}
+            okText="Yes, delete"
+            cancelText="Cancel"
+            placement="topRight"
+          >
             <Button
               type="text"
-              icon={<EyeOutlined />}
-              onClick={() => onViewDetails(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Edit Meal">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => onEdit(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete Meal">
-            <Popconfirm
-              title="Delete this meal?"
-              description="This action cannot be undone. All ingredient usage data will be lost."
-              onConfirm={() => onDelete(record.id)}
-              okText="Yes, delete"
-              cancelText="Cancel"
-              placement="topRight"
+              size="small"
+              icon={<DeleteOutlined />}
+              style={{ color: '#262626' }}
             >
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-              />
-            </Popconfirm>
-          </Tooltip>
+              Delete
+            </Button>
+          </Popconfirm>
         </Space>
       )
     }
