@@ -33,13 +33,7 @@ const Dashboard = ({ user }) => {
     error: mealsError 
   } = useMeals(user?.id)
 
-  // Debug meal data
-  console.log('🔍 Dashboard - meals data:', meals)
-  console.log('🔍 Dashboard - meals count:', meals?.length)
-  if (meals && meals.length > 0) {
-    console.log('🔍 Dashboard - first meal:', meals[0])
-    console.log('🔍 Dashboard - first meal ingredients:', meals[0].meal_ingredients)
-  }
+
 
   const loading = ingredientsLoading || mealsLoading
   const error = ingredientsError || mealsError

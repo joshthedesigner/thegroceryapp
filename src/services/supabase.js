@@ -152,8 +152,6 @@ export const getMeal = async (id) => {
 }
 
 export const createMeal = async (mealData) => {
-  console.log('🔍 createMeal called with:', mealData)
-  
   // Remove total_cost from mealData if it exists (let database calculate it)
   const { total_cost, ...mealDataWithoutCost } = mealData
   
@@ -165,6 +163,12 @@ export const createMeal = async (mealData) => {
   
   if (error) {
     console.log('❌ Meal insert failed:', error)
+    console.log('Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    })
     return { data: null, error }
   }
   

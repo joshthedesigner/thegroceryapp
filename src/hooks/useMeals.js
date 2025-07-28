@@ -23,24 +23,14 @@ export const useMeals = (userId) => {
     try {
       setLoading(true)
       setError(null)
-      console.log('🔍 Fetching meals for user:', userId)
       const { data, error } = await getMeals(userId)
       
-      console.log('🔍 getMeals response:', { data, error })
-      
       if (error) {
-        console.error('❌ getMeals error:', error)
         setError(error.message)
       } else {
-        console.log('✅ getMeals success, meals count:', data?.length)
-        if (data && data.length > 0) {
-          console.log('📊 First meal data:', data[0])
-          console.log('📊 First meal ingredients:', data[0].meal_ingredients)
-        }
         setMeals(data || [])
       }
     } catch (err) {
-      console.error('❌ getMeals exception:', err)
       setError(err.message)
     } finally {
       setLoading(false)

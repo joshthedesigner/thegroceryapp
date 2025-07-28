@@ -129,12 +129,10 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
 
   // Step 2: Ingredient Selection
   const handleIngredientCheck = (id, checked) => {
-    console.log('🔍 handleIngredientCheck:', { id, checked })
     setIngredientSelection(prev => prev.map(row => row.id === id ? { ...row, checked, quantityUsed: checked ? row.quantityUsed : 0 } : row))
     setDirty(true)
   }
   const handleQuantityChange = (id, value) => {
-    console.log('🔍 handleQuantityChange:', { id, value })
     setIngredientSelection(prev => prev.map(row => row.id === id ? { ...row, quantityUsed: value } : row))
     setDirty(true)
   }
@@ -146,9 +144,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
       setError('')
       
       // Validate at least one ingredient selected
-      console.log('🔍 ingredientSelection:', ingredientSelection)
       const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
-      console.log('🔍 selected ingredients:', selected)
       if (selected.length === 0) {
         setError('Please select at least one ingredient and enter quantity used.')
         setLoading(false)
@@ -213,7 +209,14 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
       setDirty(false)
       onSuccess()
     } catch (err) {
-      setError(err.message || 'Failed to save meal. Please try again.')
+      // Handle specific constraint violation errors
+      if (err.message && err.message.includes('duplicate key') || err.message && err.message.includes('meals_user_id_meal_name_date_cooked_key')) {
+        setError('A meal with this name already exists for this date. Please choose a different name or date.')
+      } else if (err.message && err.message.includes('UNIQUE')) {
+        setError('A meal with this name already exists for this date. Please choose a different name or date.')
+      } else {
+        setError(err.message || 'Failed to save meal. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -355,7 +358,12 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
                   {
                     title: 'Remaining',
                     key: 'remaining',
-                    render: (_, ing) => `${ing.amount_remaining} ${ing.unit || 'units'}`
+                    render: (_, ing) => {
+                      const remaining = ing.amount_remaining || ing.amount_purchased || 0
+                      const used = ing.amount_used || 0
+                      const total = ing.amount_purchased || 0
+                      return `${remaining} ${ing.unit || 'units'} (${used}/${total} used)`
+                    }
                   },
                   {
                     title: 'Quantity Used',

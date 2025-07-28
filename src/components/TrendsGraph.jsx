@@ -65,36 +65,6 @@ const TrendsGraph = ({
     return `meals-${meals.length}-${meals.map(m => m.id).join('-')}`
   }, [meals])
 
-  // Process ingredients data for the chart
-  const processIngredientsData = () => {
-    if (!ingredients || ingredients.length === 0) return []
-
-    // Group ingredients by date (using created_at instead of purchase_date)
-    const groupedData = ingredients.reduce((acc, ing) => {
-      if (!ing.created_at) return acc
-      
-      const date = dayjs(ing.created_at).utc().format('YYYY-MM-DD')
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          totalSpent: 0,
-          totalAmount: 0,
-          count: 0
-        }
-      }
-      
-      acc[date].totalSpent += ing.price
-      acc[date].totalAmount += ing.amount_purchased
-      acc[date].count += 1
-      
-      return acc
-    }, {})
-
-    // Convert to array and sort by date
-    return Object.values(groupedData)
-      .sort((a, b) => dayjs(a.date).utc().diff(dayjs(b.date).utc()))
-  }
-
   // Process data for chart
   const chartData = useMemo(() => {
     if (!ingredients.length && !meals.length) return []

@@ -1,12 +1,16 @@
 // Shared calculation utilities for dashboard components
 // Ensures consistent calculations across metrics and graphs
 import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
-import timezone from 'dayjs/plugin/timezone'
-
-// Configure dayjs for UTC handling
-dayjs.extend(utc)
-dayjs.extend(timezone)
+import { 
+  isInPeriod, 
+  isBeforeOrEqual, 
+  startOfDay, 
+  endOfDay, 
+  formatDate as formatDateFromUtils, 
+  formatDateRange as formatDateRangeFromUtils, 
+  getDateRange as getDateRangeFromUtils,
+  getWeekRange as getWeekRangeFromUtils
+} from './dateUtils'
 
 /**
  * Get filtered data for a specific time period
@@ -21,15 +25,21 @@ export const getFilteredDataForPeriod = (ingredients, meals, timeFilter, periodO
   const { start: startDate, end: endDate } = getDateRange(timeFilter, periodOffset)
   
   const filteredIngredients = ingredients.filter(ing => {
-    if (!ing.purchase_date) return false
-    const purchaseDate = new Date(ing.purchase_date)
-    return purchaseDate >= startDate && purchaseDate <= endDate
+    if (!ing.purchase_date) {
+      return false
+    }
+    
+    const inPeriod = isInPeriod(ing.purchase_date, startDate, endDate)
+    return inPeriod
   })
   
   const filteredMeals = meals.filter(meal => {
-    if (!meal.date_cooked) return false
-    const mealDate = new Date(meal.date_cooked)
-    return mealDate >= startDate && mealDate <= endDate
+    if (!meal.date_cooked) {
+      return false
+    }
+    
+    const inPeriod = isInPeriod(meal.date_cooked, startDate, endDate)
+    return inPeriod
   })
   
   return { filteredIngredients, filteredMeals }
@@ -144,21 +154,17 @@ export const calculateAverageMealCost = (meals) => {
  */
 export const getFilteredDataForDate = (ingredients, meals, targetDate) => {
   // Use UTC boundaries to avoid timezone issues
-  const startDate = dayjs(targetDate).utc().startOf('day')
-  const endDate = dayjs(targetDate).utc().endOf('day')
+  const startDate = startOfDay(targetDate)
+  const endDate = endOfDay(targetDate)
   
   const filteredIngredients = ingredients.filter(ing => {
     if (!ing.purchase_date) return false
-    // Parse date as UTC to avoid timezone conversion issues
-    const purchaseDate = dayjs(ing.purchase_date).utc()
-    return purchaseDate.isSameOrAfter(startDate, 'day') && purchaseDate.isSameOrBefore(endDate, 'day')
+    return isInPeriod(ing.purchase_date, startDate, endDate)
   })
   
   const filteredMeals = meals.filter(meal => {
     if (!meal.date_cooked) return false
-    // Parse date as UTC to avoid timezone conversion issues
-    const mealDate = dayjs(meal.date_cooked).utc()
-    return mealDate.isSameOrAfter(startDate, 'day') && mealDate.isSameOrBefore(endDate, 'day')
+    return isInPeriod(meal.date_cooked, startDate, endDate)
   })
   
   return { filteredIngredients, filteredMeals }
@@ -173,20 +179,16 @@ export const getFilteredDataForDate = (ingredients, meals, targetDate) => {
  */
 export const getCumulativeDataUpToDate = (ingredients, meals, targetDate) => {
   // Use UTC boundaries to avoid timezone issues
-  const endDate = dayjs(targetDate).utc().endOf('day')
+  const endDate = endOfDay(targetDate)
   
   const filteredIngredients = ingredients.filter(ing => {
     if (!ing.purchase_date) return false
-    // Parse date as UTC to avoid timezone conversion issues
-    const purchaseDate = dayjs(ing.purchase_date).utc()
-    return purchaseDate.isSameOrBefore(endDate, 'day')
+    return isBeforeOrEqual(ing.purchase_date, endDate)
   })
   
   const filteredMeals = meals.filter(meal => {
     if (!meal.date_cooked) return false
-    // Parse date as UTC to avoid timezone conversion issues
-    const mealDate = dayjs(meal.date_cooked).utc()
-    return mealDate.isSameOrBefore(endDate, 'day')
+    return isBeforeOrEqual(meal.date_cooked, endDate)
   })
   
   // Use the SAME calculation functions as metrics for consistency
@@ -220,27 +222,21 @@ export const getCumulativeDataWithinPeriod = (ingredients, meals, timeFilter, pe
   // Filter ingredients within the time period AND up to the target date
   const filteredIngredients = ingredients.filter(ing => {
     if (!ing.purchase_date) return false
-    // Parse date as UTC to avoid timezone conversion issues
-    const purchaseDate = dayjs(ing.purchase_date).utc()
-    const targetEndDate = dayjs(targetDate).utc().endOf('day')
+    const targetEndDate = endOfDay(targetDate)
     
     // Must be within the time period AND up to the target date
-    return purchaseDate.isSameOrAfter(periodStart, 'day') && 
-           purchaseDate.isSameOrBefore(periodEnd, 'day') && 
-           purchaseDate.isSameOrBefore(targetEndDate, 'day')
+    return isInPeriod(ing.purchase_date, periodStart, periodEnd) && 
+           isBeforeOrEqual(ing.purchase_date, targetEndDate)
   })
   
   // Filter meals within the time period AND up to the target date
   const filteredMeals = meals.filter(meal => {
     if (!meal.date_cooked) return false
-    // Parse date as UTC to avoid timezone conversion issues
-    const mealDate = dayjs(meal.date_cooked).utc()
-    const targetEndDate = dayjs(targetDate).utc().endOf('day')
+    const targetEndDate = endOfDay(targetDate)
     
     // Must be within the time period AND up to the target date
-    return mealDate.isSameOrAfter(periodStart, 'day') && 
-           mealDate.isSameOrBefore(periodEnd, 'day') && 
-           mealDate.isSameOrBefore(targetEndDate, 'day')
+    return isInPeriod(meal.date_cooked, periodStart, periodEnd) && 
+           isBeforeOrEqual(meal.date_cooked, targetEndDate)
   })
   
   // Use the SAME calculation functions as metrics for consistency
@@ -341,34 +337,7 @@ export const getStatusText = (status) => {
  * @returns {Object} Object containing start and end dates as dayjs objects
  */
 export const getDateRange = (timeFilter, offset = 0) => {
-  // Use UTC to avoid timezone boundary issues
-  const now = dayjs().utc()
-  
-  let start, end
-  
-  switch (timeFilter) {
-    case 'week':
-      // For week: show last 7 days, with offset for previous weeks
-      end = now.subtract(7 * offset, 'day')
-      start = end.subtract(7, 'day')
-      break
-    case 'month':
-      // For month: show last 30 days, with offset for previous months
-      end = now.subtract(30 * offset, 'day')
-      start = end.subtract(30, 'day')
-      break
-    case 'year':
-      // For year: show last 12 months, with offset for previous years
-      end = now.subtract(12 * offset, 'month')
-      start = end.subtract(12, 'month')
-      break
-    default:
-      // Default to week if unknown
-      end = now.subtract(7 * offset, 'day')
-      start = end.subtract(7, 'day')
-  }
-
-  return { start, end }
+  return getDateRangeFromUtils(timeFilter, offset)
 }
 
 /**
@@ -377,10 +346,7 @@ export const getDateRange = (timeFilter, offset = 0) => {
  * @returns {Object} Object containing start and end dates as dayjs objects
  */
 export const getWeekRange = (date) => {
-  // Use UTC to avoid timezone boundary issues
-  const start = dayjs(date).utc().startOf('week')
-  const end = dayjs(date).utc().endOf('week')
-  return { start, end }
+  return getWeekRangeFromUtils(date)
 }
 
 /**
@@ -390,7 +356,7 @@ export const getWeekRange = (date) => {
  * @returns {string} Formatted date range string
  */
 export const formatDateRange = (start, end) => {
-  return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
+  return formatDateRangeFromUtils(start, end)
 }
 
 /**
@@ -399,9 +365,7 @@ export const formatDateRange = (start, end) => {
  * @returns {string} Formatted date string in 'MMM DD, YYYY' format
  */
 export const formatDate = (date) => {
-  if (!date) return ''
-  // Use UTC to ensure consistent formatting
-  return dayjs(date).utc().format('MMM DD, YYYY')
+  return formatDateFromUtils(date)
 }
 
 /**
