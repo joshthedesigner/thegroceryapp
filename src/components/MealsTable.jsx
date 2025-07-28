@@ -113,7 +113,7 @@ const MealsTable = ({
       render: (date) => (
         <Text>{formatDate(date)}</Text>
       ),
-      sorter: (a, b) => dayjs(a.date_cooked).unix() - dayjs(b.date_cooked).unix(),
+      sorter: (a, b) => dayjs(a.date_cooked).utc().unix() - dayjs(b.date_cooked).utc().unix(),
       defaultSortOrder: 'descend'
     },
     {

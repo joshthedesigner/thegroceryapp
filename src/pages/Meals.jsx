@@ -15,7 +15,7 @@ const Meals = ({ user }) => {
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedMeal, setSelectedMeal] = useState(null)
   // Week navigation state
-  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().startOf('week'))
+  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().utc().startOf('week'))
 
   const { 
     meals, 
@@ -27,7 +27,7 @@ const Meals = ({ user }) => {
   // Filter meals by selected week
   const { start: weekStart, end: weekEnd } = getWeekRange(selectedWeekStart)
   const filteredMeals = (meals || []).filter(meal => {
-    const mealDate = dayjs(meal.date_cooked)
+    const mealDate = dayjs(meal.date_cooked).utc()
     return mealDate.isSameOrAfter(weekStart, 'day') && mealDate.isSameOrBefore(weekEnd, 'day')
   })
   
@@ -37,15 +37,15 @@ const Meals = ({ user }) => {
   console.log('Meals page - filtered meals:', filteredMeals?.length)
 
   const handlePrevWeek = () => {
-    setSelectedWeekStart(prev => dayjs(prev).subtract(1, 'week').startOf('week'))
+    setSelectedWeekStart(prev => dayjs(prev).utc().subtract(1, 'week').startOf('week'))
   }
   const handleNextWeek = () => {
     // Only allow going forward if not on current week
-    if (!dayjs(selectedWeekStart).isSame(dayjs().startOf('week'), 'day')) {
-      setSelectedWeekStart(prev => dayjs(prev).add(1, 'week').startOf('week'))
+    if (!dayjs(selectedWeekStart).utc().isSame(dayjs().utc().startOf('week'), 'day')) {
+      setSelectedWeekStart(prev => dayjs(prev).utc().add(1, 'week').startOf('week'))
     }
   }
-  const isCurrentWeek = dayjs(selectedWeekStart).isSame(dayjs().startOf('week'), 'day')
+  const isCurrentWeek = dayjs(selectedWeekStart).utc().isSame(dayjs().utc().startOf('week'), 'day')
 
   const handleAddMeal = () => {
     setEditingMeal(null)

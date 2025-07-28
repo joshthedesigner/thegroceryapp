@@ -40,7 +40,7 @@ const Ingredients = ({ user }) => {
   const [editingIngredient, setEditingIngredient] = useState(null)
   const [formLoading, setFormLoading] = useState(false)
   // Week navigation state
-  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().startOf('week'))
+  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().utc().startOf('week'))
 
   const {
     ingredients,
@@ -63,7 +63,7 @@ const Ingredients = ({ user }) => {
       console.warn('Ingredient missing purchase_date:', ing)
       return false
     }
-    const purchaseDate = dayjs(ing.purchase_date)
+    const purchaseDate = dayjs(ing.purchase_date).utc()
     if (!purchaseDate.isValid()) {
       console.warn('Invalid purchase_date for ingredient:', ing)
       return false
@@ -72,14 +72,14 @@ const Ingredients = ({ user }) => {
   })
 
   const handlePrevWeek = () => {
-    setSelectedWeekStart(prev => dayjs(prev).subtract(1, 'week').startOf('week'))
+    setSelectedWeekStart(prev => dayjs(prev).utc().subtract(1, 'week').startOf('week'))
   }
   const handleNextWeek = () => {
-    if (!dayjs(selectedWeekStart).isSame(dayjs().startOf('week'), 'day')) {
-      setSelectedWeekStart(prev => dayjs(prev).add(1, 'week').startOf('week'))
+    if (!dayjs(selectedWeekStart).utc().isSame(dayjs().utc().startOf('week'), 'day')) {
+      setSelectedWeekStart(prev => dayjs(prev).utc().add(1, 'week').startOf('week'))
     }
   }
-  const isCurrentWeek = dayjs(selectedWeekStart).isSame(dayjs().startOf('week'), 'day')
+  const isCurrentWeek = dayjs(selectedWeekStart).utc().isSame(dayjs().utc().startOf('week'), 'day')
 
   const handleAddIngredient = async (ingredientData) => {
     setFormLoading(true)

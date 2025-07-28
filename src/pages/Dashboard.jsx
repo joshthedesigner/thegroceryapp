@@ -95,7 +95,7 @@ const Dashboard = ({ user }) => {
               />
               <Typography.Text strong style={{ fontSize: 14, minWidth: 180, textAlign: 'center' }}>
                 {(() => {
-                  const now = dayjs()
+                  const now = dayjs().utc()
                   if (timeFilter === 'week') {
                     const weekStart = now.subtract(7 * periodOffset, 'day').startOf('week')
                     const weekEnd = now.subtract(7 * periodOffset, 'day').endOf('week')

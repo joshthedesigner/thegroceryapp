@@ -167,7 +167,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         // Update existing meal
         const mealData = {
           meal_name: mealInfo.meal_name,
-          date_cooked: mealInfo.date_cooked.format('YYYY-MM-DD'),
+          date_cooked: mealInfo.date_cooked.utc().format('YYYY-MM-DD'),
           total_cost: 0 // Will be calculated after updating ingredients
         }
         
@@ -197,7 +197,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         // Create new meal
         const mealData = {
           meal_name: mealInfo.meal_name,
-          date_cooked: mealInfo.date_cooked.format('YYYY-MM-DD'),
+          date_cooked: mealInfo.date_cooked.utc().format('YYYY-MM-DD'),
           total_cost: 0 // Will be calculated after adding ingredients
         }
         const { data, error: mealError } = await addMeal(mealData)
@@ -245,7 +245,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
           <Form
             form={form}
             layout="vertical"
-            initialValues={{ date_cooked: dayjs() }}
+            initialValues={{ date_cooked: dayjs().utc() }}
           >
             <Form.Item
               name="meal_name"

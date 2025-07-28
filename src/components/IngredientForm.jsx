@@ -103,7 +103,7 @@ const IngredientForm = ({
         unit: values.unit,
         amount_purchased: values.amount_purchased,
         price: values.price,
-        purchase_date: values.purchase_date.format('YYYY-MM-DD')
+        purchase_date: values.purchase_date.utc().format('YYYY-MM-DD')
       }
 
       const result = await onSubmit(ingredientData)
@@ -126,7 +126,7 @@ const IngredientForm = ({
     if (initialValues) {
       form.setFieldsValue({
         ...initialValues,
-        purchase_date: initialValues.purchase_date ? dayjs(initialValues.purchase_date) : dayjs()
+        purchase_date: initialValues.purchase_date ? dayjs(initialValues.purchase_date).utc() : dayjs().utc()
       })
       setSearchValue(initialValues.name || '')
     }
@@ -160,7 +160,7 @@ const IngredientForm = ({
         onFinish={handleSubmit}
         initialValues={{
           unit: 'g',
-          purchase_date: dayjs()
+          purchase_date: dayjs().utc()
         }}
       >
         <Form.Item

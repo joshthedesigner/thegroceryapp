@@ -73,7 +73,7 @@ const TrendsGraph = ({
     const groupedData = ingredients.reduce((acc, ing) => {
       if (!ing.created_at) return acc
       
-      const date = dayjs(ing.created_at).format('YYYY-MM-DD')
+      const date = dayjs(ing.created_at).utc().format('YYYY-MM-DD')
       if (!acc[date]) {
         acc[date] = {
           date,
@@ -92,7 +92,7 @@ const TrendsGraph = ({
 
     // Convert to array and sort by date
     return Object.values(groupedData)
-      .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)))
+      .sort((a, b) => dayjs(a.date).utc().diff(dayjs(b.date).utc()))
   }
 
   // Process data for chart

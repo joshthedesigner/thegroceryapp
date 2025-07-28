@@ -195,7 +195,7 @@ const DashboardTable = ({
       render: (date) => (
         <Text style={{ color: '#222', fontWeight: 400 }}>{formatDate(date)}</Text>
       ),
-      sorter: (a, b) => dayjs(a.date_cooked).unix() - dayjs(b.date_cooked).unix(),
+      sorter: (a, b) => dayjs(a.date_cooked).utc().unix() - dayjs(b.date_cooked).utc().unix(),
       defaultSortOrder: 'descend'
     },
     {
@@ -329,7 +329,7 @@ const DashboardTable = ({
               // Meal details
               <div>
                 <Title level={4}>{selectedRecord.meal_name}</Title>
-                <p><strong>Date Cooked:</strong> {dayjs(selectedRecord.date_cooked).format('MMM DD, YYYY')}</p>
+                <p><strong>Date Cooked:</strong> {dayjs(selectedRecord.date_cooked).utc().format('MMM DD, YYYY')}</p>
                 <p><strong>Total Cost:</strong> ${selectedRecord.total_cost?.toFixed(2) || '0.00'}</p>
                 
                 {selectedRecord.meal_ingredients && selectedRecord.meal_ingredients.length > 0 ? (

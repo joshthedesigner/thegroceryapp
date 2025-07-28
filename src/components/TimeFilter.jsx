@@ -9,7 +9,7 @@ const TimeFilter = ({
   currentPeriod = 0 
 }) => {
   const getPeriodDisplay = () => {
-    const now = dayjs()
+    const now = dayjs().utc()
     
     switch (timeFilter) {
       case 'week':
