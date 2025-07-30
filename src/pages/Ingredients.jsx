@@ -139,16 +139,15 @@ const Ingredients = ({ user }) => {
     <ErrorBoundary>
       <div className="page-container">
         <div className="page-header">
-          <div
+                  <div
             style={{
               display: 'flex',
               flexWrap: 'wrap',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 16,
-              marginBottom: 16,
             }}
-          >
+        >
             <Title level={2} className="page-title" style={{ margin: 0 }}>
               Ingredients
             </Title>
@@ -162,7 +161,7 @@ const Ingredients = ({ user }) => {
                   border: '1px solid #e5e7eb', // gray-200
                   borderRadius: 8,
                   height: 48,
-                  padding: '0 18px',
+                  padding: '0 14px',
                   boxShadow: 'none',
                   gap: 8,
                 }}
@@ -184,7 +183,7 @@ const Ingredients = ({ user }) => {
                 >
                   <LeftOutlined style={{ fontSize: 18, color: '#222' }} />
                 </button>
-                <span style={{ fontWeight: 500, fontSize: 16, minWidth: 120, textAlign: 'center' }}>
+                <span style={{ fontWeight: 500, fontSize: 14, minWidth: 116, textAlign: 'center' }}>
                   {formatDateRange(weekStart, weekEnd)}
                 </span>
                 <button
@@ -209,9 +208,8 @@ const Ingredients = ({ user }) => {
               </div>
               <Button
                 type="primary"
-                icon={<PlusOutlined />}
                 onClick={() => setIsModalVisible(true)}
-                style={{ minWidth: 140, height: 46, padding: '0 24px', fontSize: 16, display: 'flex', alignItems: 'center' }}
+                style={{ minWidth: 140, height: 46, padding: '0 20px', fontSize: 14, display: 'flex', alignItems: 'center', fontWeight: '700' }}
               >
                 <span style={{ display: 'inline-block', width: '100%' }}>Add Ingredient</span>
               </Button>

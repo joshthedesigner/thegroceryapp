@@ -25,19 +25,41 @@ import { formatDate } from '../utils/calculationUtils'
 const { Option } = Select
 const { Text } = Typography
 
-const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) => {
+// Utility function to convert abbreviated units to full names
+const getFullUnitName = (unit) => {
+  const unitMap = {
+    'g': 'grams',
+    'kg': 'kilograms',
+    'lbs': 'pounds',
+    'lb': 'pounds',
+    'oz': 'ounces',
+    'ml': 'milliliters',
+    'l': 'liters',
+    'items': 'items',
+    'pieces': 'pieces',
+    'cups': 'cups',
+    'tbsp': 'tablespoons',
+    'tsp': 'teaspoons'
+  }
+  return unitMap[unit] || unit || 'units'
+}
+
+const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user, refreshIngredients, ingredients, ingredientsLoading }) => {
   const [form] = Form.useForm()
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [step, setStep] = useState(1)
-  const [mealInfo, setMealInfo] = useState({ meal_name: '', date_cooked: null })
+  const [mealInfo, setMealInfo] = useState({ meal_name: '', date_cooked: null, weekFilter: 'this_week' })
   const [ingredientSelection, setIngredientSelection] = useState([]) // [{id, checked, quantityUsed}]
   const [dirty, setDirty] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  // Restaurant meal tracking state
+  const [mealType, setMealType] = useState('home_cooked')
+  const [restaurantName, setRestaurantName] = useState('')
+  const [restaurantCost, setRestaurantCost] = useState(null)
   
-  const { ingredients, loading: ingredientsLoading } = useIngredients(user?.id)
   const { addMeal, updateMeal, addIngredientToMeal, updateMealIngredient, deleteMealIngredient } = useMeals(user?.id)
 
   const isEditing = !!editingMeal
@@ -56,15 +78,53 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
     )
   }, [ingredients, debouncedSearch])
 
+  // Filter ingredients by week based on mealInfo.weekFilter
+  const weekFilteredIngredients = useMemo(() => {
+    if (!ingredients || ingredients.length === 0) return []
+    
+    const now = dayjs()
+    const startOfThisWeek = now.startOf('week')
+    const startOfLastWeek = now.subtract(1, 'week').startOf('week')
+    const startOfLastTwoWeeks = now.subtract(2, 'week').startOf('week')
+    
+    return ingredients.filter(ingredient => {
+      const purchaseDate = dayjs(ingredient.purchase_date)
+      
+      if (mealInfo.weekFilter === 'this_week') {
+        return purchaseDate.isSameOrAfter(startOfThisWeek, 'day')
+      } else if (mealInfo.weekFilter === 'this_week_plus_last') {
+        return purchaseDate.isSameOrAfter(startOfLastWeek, 'day')
+      } else if (mealInfo.weekFilter === 'this_week_plus_last_2') {
+        return purchaseDate.isSameOrAfter(startOfLastTwoWeeks, 'day')
+      }
+      
+      return true // Default to showing all ingredients
+    })
+  }, [ingredients, mealInfo.weekFilter])
+
+  // Combined filtered ingredients (search + week filter)
+  const finalFilteredIngredients = useMemo(() => {
+    if (!debouncedSearch) return weekFilteredIngredients
+    return weekFilteredIngredients.filter(ing =>
+      ing.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    )
+  }, [weekFilteredIngredients, debouncedSearch])
+
   // Reset wizard state on open/close
   useEffect(() => {
     if (visible && !isEditing) {
       setStep(1)
-      setMealInfo({ meal_name: '', date_cooked: null })
-      setIngredientSelection(ingredients.map(ing => ({ id: ing.id, checked: false, quantityUsed: 0 })))
+      setMealInfo({ meal_name: '', date_cooked: null, weekFilter: 'this_week' })
       setDirty(false)
+      setError('') // Clear any previous errors
+      // Reset restaurant meal state
+      setMealType('home_cooked')
+      setRestaurantName('')
+      setRestaurantCost(null)
+      // Reset form fields
+      form.resetFields()
     }
-  }, [visible, isEditing, ingredients])
+  }, [visible, isEditing])
 
   useEffect(() => {
     if (visible) {
@@ -73,7 +133,10 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         form.setFieldsValue({
           meal_name: editingMeal.meal_name,
           date_cooked: dayjs(editingMeal.date_cooked),
-          total_cost: editingMeal.total_cost
+          total_cost: editingMeal.total_cost,
+          meal_type: editingMeal.meal_type || 'home_cooked',
+          restaurant_name: editingMeal.restaurant_name || '',
+          restaurant_cost: editingMeal.restaurant_cost || null
         })
         
         // Set meal info for edit mode
@@ -82,9 +145,14 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
           date_cooked: dayjs(editingMeal.date_cooked) 
         })
         
+        // Set restaurant meal state for editing
+        setMealType(editingMeal.meal_type || 'home_cooked')
+        setRestaurantName(editingMeal.restaurant_name || '')
+        setRestaurantCost(editingMeal.restaurant_cost || null)
+        
         // Initialize ingredient selection with existing meal ingredients
         const existingIngredients = editingMeal.meal_ingredients || []
-        const initialSelection = ingredients.map(ing => {
+        const initialSelection = weekFilteredIngredients.map(ing => {
           const existingIngredient = existingIngredients.find(mi => mi.ingredient_id === ing.id)
           return {
             id: ing.id,
@@ -107,23 +175,69 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         setStep(2)
       } else {
         // Reset form for new meal
-        form.resetFields()
         setSelectedIngredients([])
-        setIngredientSelection(ingredients.map(ing => ({ id: ing.id, checked: false, quantityUsed: 0 })))
+        setIngredientSelection(weekFilteredIngredients.map(ing => ({ id: ing.id, checked: false, quantityUsed: 0 })))
+        setError('') // Clear any previous errors
+        // Reset restaurant meal state
+        setMealType('home_cooked')
+        setRestaurantName('')
+        setRestaurantCost(null)
       }
       setError('')
     }
-  }, [visible, editingMeal, form, isEditing, ingredients])
+  }, [visible, editingMeal, form, isEditing])
+
+  // Handle ingredient selection updates when weekFilteredIngredients changes
+  useEffect(() => {
+    if (visible && !isEditing && weekFilteredIngredients.length > 0) {
+      // Only update ingredient selection if we're not editing and the modal is visible
+      // and if ingredientSelection is empty (initial setup)
+      if (ingredientSelection.length === 0) {
+        setIngredientSelection(weekFilteredIngredients.map(ing => ({ id: ing.id, checked: false, quantityUsed: 0 })))
+      }
+    }
+  }, [weekFilteredIngredients, visible, isEditing, ingredientSelection.length])
+
+  // Monitor step changes
+  useEffect(() => {
+    // console.log('[DEBUG] Step changed to:', step)
+  }, [step])
 
   // Step 1: Meal Info
   const handleMealInfoNext = async () => {
+    // console.log('[DEBUG] handleMealInfoNext called, current step:', step)
     try {
-      const values = await form.validateFields(['meal_name', 'date_cooked'])
-      setMealInfo({ meal_name: values.meal_name, date_cooked: values.date_cooked })
+      const fieldsToValidate = ['date_cooked', 'weekFilter', 'meal_type']
+      if (mealType === 'home_cooked') {
+        fieldsToValidate.push('meal_name')
+      } else {
+        fieldsToValidate.push('restaurant_name', 'restaurant_cost')
+      }
+      
+      const values = await form.validateFields(fieldsToValidate)
+      
+      // Additional validation for restaurant meals
+      if (values.meal_type === 'restaurant') {
+        if (!values.restaurant_name?.trim()) {
+          setError('Please enter a restaurant name.')
+          return
+        }
+        if (values.restaurant_cost === null || values.restaurant_cost === undefined || values.restaurant_cost < 0) {
+          setError('Please enter a valid meal cost.')
+          return
+        }
+      }
+      
+      // console.log('[DEBUG] Form validation passed, values:', values)
+      setMealInfo({ meal_name: values.meal_name, date_cooked: values.date_cooked, weekFilter: values.weekFilter })
+      // console.log('[DEBUG] About to set step to 2, current step:', step)
       setStep(2)
+      // console.log('[DEBUG] setStep(2) called')
       setDirty(true)
     } catch (err) {
-      // Validation error, do nothing
+      // Validation error - show error message
+      // console.log('[DEBUG] Form validation error:', err)
+      setError('Please fill in all required fields before proceeding.')
     }
   }
 
@@ -143,66 +257,92 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
       setLoading(true)
       setError('')
       
-      // Validate at least one ingredient selected
-      const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
-      if (selected.length === 0) {
-        setError('Please select at least one ingredient and enter quantity used.')
-        setLoading(false)
-        return
+      // Get form values for validation
+      const formValues = await form.validateFields()
+      
+      // Validate at least one ingredient selected for home cooked meals
+      if (mealType === 'home_cooked') {
+        const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
+        if (selected.length === 0) {
+          setError('Please select at least one ingredient and enter quantity used.')
+          setLoading(false)
+          return
+        }
       }
       
-      // Validate meal info
-      if (!mealInfo.meal_name || !mealInfo.date_cooked) {
-        setError('Please enter meal name and date.')
-        setLoading(false)
-        setStep(1)
-        return
+      // Validate meal info based on meal type
+      if (mealType === 'home_cooked') {
+        if (!formValues.meal_name || !formValues.date_cooked) {
+          setError('Please enter meal name and date.')
+          setLoading(false)
+          setStep(1)
+          return
+        }
+      } else {
+        if (!formValues.restaurant_name?.trim() || formValues.restaurant_cost === null || formValues.restaurant_cost === undefined || formValues.restaurant_cost < 0 || !formValues.date_cooked) {
+          setError('Please enter restaurant name, cost, and date.')
+          setLoading(false)
+          setStep(1)
+          return
+        }
       }
 
       if (isEditing) {
         // Update existing meal
         const mealData = {
-          meal_name: mealInfo.meal_name,
-          date_cooked: mealInfo.date_cooked.utc().format('YYYY-MM-DD'),
-          total_cost: 0 // Will be calculated after updating ingredients
+          meal_name: mealType === 'restaurant' ? formValues.restaurant_name : formValues.meal_name,
+          date_cooked: formValues.date_cooked.format('YYYY-MM-DD'),
+          meal_type: mealType,
+          restaurant_name: mealType === 'restaurant' ? formValues.restaurant_name : null,
+          restaurant_cost: mealType === 'restaurant' ? formValues.restaurant_cost : null,
+          total_cost: mealType === 'restaurant' ? formValues.restaurant_cost : 0 // Will be calculated after updating ingredients for home cooked meals
         }
         
         const { data, error: mealError } = await updateMeal(editingMeal.id, mealData)
         if (mealError) throw mealError
         
-        // Update meal ingredients
-        for (const row of selected) {
-          if (row.mealIngredientId) {
-            // Update existing meal ingredient
-            await updateMealIngredient(row.mealIngredientId, row.quantityUsed)
-          } else {
-            // Add new meal ingredient
-            await addIngredientToMeal(editingMeal.id, row.id, row.quantityUsed)
+        // Update meal ingredients only for home cooked meals
+        if (mealType === 'home_cooked') {
+          const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
+          for (const row of selected) {
+            if (row.mealIngredientId) {
+              // Update existing meal ingredient
+              await updateMealIngredient(row.mealIngredientId, row.quantityUsed)
+            } else {
+              // Add new meal ingredient
+              await addIngredientToMeal(editingMeal.id, row.id, row.quantityUsed)
+            }
           }
-        }
-        
-        // Remove ingredients that are no longer selected
-        const currentIngredientIds = selected.map(s => s.id)
-        const existingIngredients = editingMeal.meal_ingredients || []
-        for (const existing of existingIngredients) {
-          if (!currentIngredientIds.includes(existing.ingredient_id)) {
-            await deleteMealIngredient(existing.id)
+          
+          // Remove ingredients that are no longer selected
+          const currentIngredientIds = selected.map(s => s.id)
+          const existingIngredients = editingMeal.meal_ingredients || []
+          for (const existing of existingIngredients) {
+            if (!currentIngredientIds.includes(existing.ingredient_id)) {
+              await deleteMealIngredient(existing.id)
+            }
           }
         }
       } else {
         // Create new meal
         const mealData = {
-          meal_name: mealInfo.meal_name,
-          date_cooked: mealInfo.date_cooked.utc().format('YYYY-MM-DD'),
-          total_cost: 0 // Will be calculated after adding ingredients
+          meal_name: mealType === 'restaurant' ? formValues.restaurant_name : formValues.meal_name,
+          date_cooked: formValues.date_cooked.format('YYYY-MM-DD'),
+          meal_type: mealType,
+          restaurant_name: mealType === 'restaurant' ? formValues.restaurant_name : null,
+          restaurant_cost: mealType === 'restaurant' ? formValues.restaurant_cost : null,
+          total_cost: mealType === 'restaurant' ? formValues.restaurant_cost : 0 // Will be calculated after adding ingredients for home cooked meals
         }
         const { data, error: mealError } = await addMeal(mealData)
         if (mealError) throw mealError
         const mealId = data.id
         
-        // Add ingredients
-        for (const row of selected) {
-          await addIngredientToMeal(mealId, row.id, row.quantityUsed)
+        // Add ingredients only for home cooked meals
+        if (mealType === 'home_cooked') {
+          const selected = ingredientSelection.filter(row => row.checked && row.quantityUsed > 0)
+          for (const row of selected) {
+            await addIngredientToMeal(mealId, row.id, row.quantityUsed)
+          }
         }
       }
       
@@ -241,33 +381,119 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
         footer={null}
         width={800}
         destroyOnHidden
+        styles={{
+          header: {
+            paddingBottom: '8px'
+          }
+        }}
       >
-        {/* Step Indicator removed */}
         {/* Step 1: Meal Info */}
         {step === 1 && (
           <Form
             form={form}
             layout="vertical"
-            initialValues={{ date_cooked: dayjs().utc() }}
+            initialValues={{ date_cooked: dayjs(), weekFilter: 'this_week', meal_type: 'home_cooked' }}
           >
             <Form.Item
-              name="meal_name"
-              label="Meal Name"
-              rules={[{ required: true, message: 'Please enter a meal name' }]}
+              name="meal_type"
+              label="Meal Type *"
+              rules={[{ required: true, message: 'Please select a meal type' }]}
+              required={false}
             >
-              <Input placeholder="e.g., Chicken Stir Fry" onChange={() => setDirty(true)} />
+              <Select 
+                value={mealType}
+                onChange={(value) => {
+                  setMealType(value)
+                  setDirty(true)
+                }}
+                style={{ width: 280 }}
+              >
+                <Option value="home_cooked">Home Cooked</Option>
+                <Option value="restaurant">Restaurant</Option>
+              </Select>
             </Form.Item>
+            
             <Form.Item
               name="date_cooked"
-              label="Date Cooked"
+              label="Date *"
               rules={[{ required: true, message: 'Please select a date' }]}
+              required={false}
             >
               <DatePicker 
-                style={{ width: '100%' }} 
+                style={{ width: 200 }} 
                 placeholder="Select date"
                 onChange={() => setDirty(true)}
               />
             </Form.Item>
+            
+            {mealType === 'home_cooked' ? (
+              <>
+                <Form.Item
+                  name="meal_name"
+                  label="Meal Name *"
+                  rules={[{ required: true, message: 'Please enter a meal name' }]}
+                  required={false}
+                >
+                  <Input 
+                    placeholder="e.g., Chicken Stir Fry" 
+                    onChange={() => setDirty(true)}
+                    style={{ width: 350 }}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="weekFilter"
+                  label="Which week's ingredients do you want to use? *"
+                  rules={[{ required: true, message: 'Please select a week filter' }]}
+                  required={false}
+                >
+                  <Select 
+                    onChange={(value) => {
+                      setDirty(true)
+                    }}
+                    style={{ width: 280 }}
+                  >
+                    <Option value="this_week">This week</Option>
+                    <Option value="this_week_plus_last">This week + last week</Option>
+                    <Option value="this_week_plus_last_2">This week + last 2 weeks</Option>
+                  </Select>
+                </Form.Item>
+              </>
+            ) : (
+              <>
+                <Form.Item
+                  name="restaurant_name"
+                  label="Restaurant Name *"
+                  rules={[{ required: true, message: 'Please enter a restaurant name' }]}
+                  required={false}
+                >
+                  <Input 
+                    placeholder="e.g., McDonald's" 
+                    onChange={() => setDirty(true)}
+                    style={{ width: 350 }}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="restaurant_cost"
+                  label="Meal Cost *"
+                  rules={[
+                    { required: true, message: 'Please enter a meal cost' },
+                    { type: 'number', min: 0, message: 'Cost must be 0 or greater' }
+                  ]}
+                  required={false}
+                >
+                  <InputNumber
+                    placeholder="0.00"
+                    onChange={() => setDirty(true)}
+                    min={0}
+                    step={0.01}
+                    precision={2}
+                    style={{ width: 200 }}
+                    formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                  />
+                </Form.Item>
+              </>
+            )}
             {error && (
               <Alert
                 message={error}
@@ -278,14 +504,20 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, gap: 8 }}>
               <Button onClick={handleCancelButton}>Cancel</Button>
-              <Button type="primary" onClick={handleMealInfoNext}>
-                Next &rarr;
+              <Button type="primary" onClick={() => {
+                if (mealType === 'restaurant') {
+                  handleSaveMeal()
+                } else {
+                  handleMealInfoNext()
+                }
+              }}>
+                {mealType === 'restaurant' ? 'Save' : 'Next &rarr;'}
               </Button>
             </div>
           </Form>
         )}
-        {/* Step 2: Select Ingredients */}
-        {step === 2 && (
+        {/* Step 2: Select Ingredients (Home Cooked Meals Only) */}
+        {step === 2 && mealType === 'home_cooked' && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <Input
@@ -299,7 +531,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
             </div>
             <div style={{ maxHeight: 400, overflowY: 'auto', marginBottom: 16, borderRadius: 8, border: '1px solid #f0f0f0', background: '#fff' }}>
               <Table
-                dataSource={filteredIngredients}
+                dataSource={finalFilteredIngredients}
                 rowKey="id"
                 pagination={false}
                 loading={ingredientsLoading}
@@ -342,7 +574,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
                     title: '',
                     dataIndex: 'select',
                     key: 'select',
-                    width: 48,
+                    width: 64,
                     render: (_, ing) => (
                       <Checkbox
                         checked={ingredientSelection.find(row => row.id === ing.id)?.checked || false}
@@ -356,13 +588,14 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
                     key: 'name',
                   },
                   {
-                    title: 'Remaining',
-                    key: 'remaining',
+                    title: 'Usage',
+                    key: 'usage',
                     render: (_, ing) => {
                       const remaining = ing.amount_remaining || ing.amount_purchased || 0
                       const used = ing.amount_used || 0
                       const total = ing.amount_purchased || 0
-                      return `${remaining} ${ing.unit || 'units'} (${used}/${total} used)`
+                      const unit = ing.unit || 'units'
+                      return `${used}/${total} ${getFullUnitName(unit)} used`
                     }
                   },
                   {
@@ -377,8 +610,18 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
                           value={row?.quantityUsed || 0}
                           onChange={val => handleQuantityChange(ing.id, val)}
                           disabled={!row?.checked}
-                          style={{ width: 100 }}
+                          style={{ width: 136 }}
                           placeholder="0"
+                          suffix={
+                            <span style={{
+                              color: '#666',
+                              fontSize: 'calc(1em - 4px)',
+                              fontWeight: 'normal',
+                              paddingLeft: '4px'
+                            }}>
+                              {getFullUnitName(ing.unit)}
+                            </span>
+                          }
                         />
                       )
                     }
@@ -398,7 +641,7 @@ const MealForm = ({ visible, onCancel, onSuccess, editingMeal = null, user }) =>
               <Button onClick={() => setStep(1)}>&larr; Back</Button>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Button onClick={handleCancelButton}>Cancel</Button>
-                <Button type="primary" loading={loading} onClick={handleSaveMeal}>
+                <Button type="primary" loading={loading} onClick={handleSaveMeal} style={{ fontWeight: '700' }}>
                   {isEditing ? 'Update Meal' : 'Add Meal'}
                 </Button>
               </div>

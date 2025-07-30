@@ -81,7 +81,7 @@ export const formatDate = (date, format = 'MMM DD, YYYY') => {
  * @returns {string} Formatted date range string
  */
 export const formatDateRange = (start, end) => {
-  return `${start.format('MMM D')} – ${end.format('MMM D, YYYY')}`
+  return `${start.format('MMM D')} – ${end.format('MMM D')}`
 }
 
 /**

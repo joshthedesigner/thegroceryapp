@@ -2,22 +2,14 @@ import React from 'react'
 import { Row, Col, Card, Statistic, Typography, Space } from 'antd'
 import { 
   getFilteredDataForPeriod, 
-  calculateTotalValue, 
-  calculateUnusedValue,
-  calculateUsedValue,
-  calculateTotalPurchased,
-  calculateTotalUsed,
-  calculateUsagePercentage,
-  calculateTotalMealCost,
-  calculateAverageMealCost
+  calculateMealSpendingByType
 } from '../utils/calculationUtils'
 import dayjs from 'dayjs'
 // Removed all icon imports
 
-const { Text } = Typography
+const { Text, Title } = Typography
 
 const DashboardMetrics = ({ 
-  ingredients = [], 
   meals = [], 
   timeFilter = 'all',
   periodOffset = 0,
@@ -25,142 +17,105 @@ const DashboardMetrics = ({
   onMetricClick 
 }) => {
   // Get filtered data using shared utility
-  const { filteredIngredients: ingredientsData, filteredMeals } = getFilteredDataForPeriod(
-    ingredients, meals, timeFilter, periodOffset, getDateRange
+  const { filteredMeals } = getFilteredDataForPeriod(
+    [], meals, timeFilter, periodOffset, getDateRange
   )
 
-  // Calculate metrics using shared utilities
-  const totalSpent = calculateTotalValue(ingredientsData)
-  const totalPurchased = calculateTotalPurchased(ingredientsData)
-  const totalUsed = calculateTotalUsed(ingredientsData)
-  const totalRemaining = totalPurchased - totalUsed
+  // Calculate restaurant meal metrics using reusable utility
+  const restaurantMeals = filteredMeals.filter(meal => meal.meal_type === 'restaurant')
+  const homeCookedMeals = filteredMeals.filter(meal => meal.meal_type === 'home_cooked')
+  const { restaurantSpent: totalRestaurantSpent, homeCookedSpent: totalHomeCookedSpent } = calculateMealSpendingByType(filteredMeals)
 
-  // Calculate waste percentage
-  const wastePercentage = totalPurchased > 0 ? ((totalRemaining / totalPurchased) * 100) : 0
-
-  // Get recent purchases using shared utility (last 7 days)
-  const { filteredIngredients: recentPurchases } = getFilteredDataForPeriod(
-    ingredientsData, [], 'week', 0, (timeFilter, offset) => {
-      const now = dayjs()
-      const end = now
-      const start = now.subtract(7, 'day')
-      return { start, end }
-    }
-  )
-
-  // Calculate meal metrics using shared utilities
-  const totalMeals = filteredMeals.length
-  const totalMealCost = calculateTotalMealCost(filteredMeals)
-  const averageMealCost = calculateAverageMealCost(filteredMeals)
-
-  // Calculate usage efficiency using shared utility
-  const usagePercentage = calculateUsagePercentage(ingredientsData)
-
-  // Calculate ingredient metrics using shared utilities
-  const totalIngredients = ingredientsData.length
-  const totalValue = calculateTotalValue(ingredientsData)
-  const usedValue = calculateUsedValue(filteredMeals)
-  const unusedValue = calculateUnusedValue(ingredientsData, filteredMeals)
-
-  const metrics = [
+  const mealMetrics = [
     {
-      title: 'Total Ingredients',
-      value: totalIngredients,
-      suffix: 'items',
-      description: 'Ingredients purchased',
-      type: 'totalIngredients'
-    },
-    {
-      title: 'Ingredients Used',
-      value: totalUsed,
-      suffix: 'units',
-      description: 'Total amount consumed',
-      type: 'ingredientsUsed'
-    },
-    {
-      title: 'Usage Efficiency',
-      value: usagePercentage,
-      description: 'Percentage of ingredients used',
-      formatter: (value) => `${value.toFixed(1)}%`,
-      type: 'usageEfficiency'
-    },
-    {
-      title: 'Total Value',
-      value: totalValue,
-      suffix: '',
-      description: 'Total value of ingredients',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'totalValue'
-    },
-    {
-      title: 'Used Value',
-      value: usedValue,
-      suffix: '',
-      description: 'Value of ingredients consumed in meals',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'usedValue'
-    },
-    {
-      title: 'Unused Value',
-      value: unusedValue,
-      suffix: '',
-      description: 'Value of unused ingredients',
-      formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'unusedValue'
-    },
-    {
-      title: 'Meals Logged',
-      value: totalMeals,
+      title: 'Total Meals',
+      value: filteredMeals.length,
       suffix: 'meals',
-      description: 'Total meals prepared',
-      type: 'mealsLogged'
+      description: 'home cooked + restaurant meals',
+      type: 'totalMeals'
     },
     {
-      title: 'Average Meal Cost',
-      value: averageMealCost,
+      title: 'Total Meal Cost',
+      value: totalHomeCookedSpent + totalRestaurantSpent,
       suffix: '',
-      description: 'Average cost per meal',
+      description: 'Total cost of all meals',
       formatter: (value) => `$${value.toFixed(2)}`,
-      type: 'averageMealCost'
+      type: 'totalMealCost'
+    },
+    {
+      title: 'Home Cooked Meals Total',
+      value: homeCookedMeals.length,
+      suffix: 'meals',
+      description: 'Total home cooked meals logged',
+      type: 'homeCookedMealsTotal'
+    },
+    {
+      title: 'Home Cooked Meals Cost',
+      value: totalHomeCookedSpent,
+      suffix: '',
+      description: 'Total cost of home cooked meals',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'homeCookedMealsCost'
+    },
+    {
+      title: 'Restaurant Meals Total',
+      value: restaurantMeals.length,
+      suffix: 'meals',
+      description: 'Total restaurant meals logged',
+      type: 'restaurantMealsTotal'
+    },
+    {
+      title: 'Restaurant Meals Cost',
+      value: totalRestaurantSpent,
+      suffix: '',
+      description: 'Total cost of restaurant meals',
+      formatter: (value) => `$${value.toFixed(2)}`,
+      type: 'restaurantMealsCost'
     }
   ]
 
   return (
     <div className="dashboard-metrics">
-      <Row gutter={[16, 16]}>
-        {metrics.map((metric, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
-            <Card 
-              style={{ 
-                height: '100%',
-                cursor: 'default',
-                background: '#fff',
-              }}
-            >
-              <Statistic
-                title={
-                  <Space direction="vertical" size={0} style={{ width: '100%' }}>
-                    <Text strong style={{ color: '#222' }}>
-                      {metric.title}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: '12px', color: '#888' }}>
-                      {metric.description}
-                    </Text>
-                  </Space>
-                }
-                value={metric.value}
-                suffix={metric.suffix}
-                valueStyle={{ 
-                  color: '#222',
-                  fontSize: '24px',
-                  fontWeight: 'bold'
+      {/* Meals Section */}
+      <div>
+        <Title level={4} style={{ marginBottom: 16, color: '#222', fontWeight: 600 }}>
+          Meals Overview
+        </Title>
+        <Row gutter={[16, 16]}>
+          {mealMetrics.map((metric, index) => (
+            <Col xs={24} sm={12} lg={6} key={index}>
+              <Card 
+                style={{ 
+                  height: '100%',
+                  cursor: 'default',
+                  background: '#fff',
                 }}
-                formatter={metric.formatter}
-              />
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              >
+                <Statistic
+                  title={
+                    <Space direction="vertical" size={0} style={{ width: '100%' }}>
+                      <Text strong style={{ color: '#222' }}>
+                        {metric.title}
+                      </Text>
+                      <Text type="secondary" style={{ fontSize: '12px', color: '#888' }}>
+                        {metric.description}
+                      </Text>
+                    </Space>
+                  }
+                  value={metric.value}
+                  suffix={metric.suffix}
+                  valueStyle={{ 
+                    color: '#222',
+                    fontSize: '24px',
+                    fontWeight: 'bold'
+                  }}
+                  formatter={metric.formatter}
+                />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </div>
     </div>
   )
 }

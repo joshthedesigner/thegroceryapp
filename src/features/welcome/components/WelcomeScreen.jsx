@@ -1,6 +1,6 @@
 // Welcome Screen Component
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, Avatar, Dropdown } from 'antd'
 import { useWelcomeContext } from '../context/WelcomeContext'
 import WelcomeStep from './WelcomeStep'
@@ -12,6 +12,8 @@ import LoadingSpinner from '../../../components/LoadingSpinner'
  * Standalone page that appears only on first login
  */
 const WelcomeScreen = ({ user }) => {
+  const [isMobile, setIsMobile] = useState(false)
+  
   const {
     isLoading,
     error,
@@ -20,6 +22,18 @@ const WelcomeScreen = ({ user }) => {
     markWelcomeSeen,
     resetWelcome
   } = useWelcomeContext()
+
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // This is now a dedicated page, so we don't need conditional rendering
   console.log('Welcome screen page loaded')
@@ -137,7 +151,7 @@ const WelcomeScreen = ({ user }) => {
       <div style={{
         background: '#fff',
         borderBottom: '1px solid #e5e7eb',
-        padding: '0 24px',
+        padding: isMobile ? '0 16px' : '0 24px',
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         height: '64px'
       }}>
@@ -153,8 +167,8 @@ const WelcomeScreen = ({ user }) => {
             <h1 style={{ 
               color: '#1890ff', 
               margin: 0, 
-              marginRight: 48,
-              fontSize: '20px',
+              marginRight: isMobile ? 16 : 48,
+              fontSize: isMobile ? '18px' : '20px',
               fontWeight: 'bold'
             }}>
               Grocery Tracker
@@ -175,7 +189,7 @@ const WelcomeScreen = ({ user }) => {
                 alignItems: 'center', 
                 gap: 8,
                 height: 'auto',
-                padding: '8px 12px',
+                padding: isMobile ? '8px 8px' : '8px 12px',
                 background: 'none',
                 boxShadow: 'none',
                 outline: 'none',
@@ -192,7 +206,11 @@ const WelcomeScreen = ({ user }) => {
                   ? user.user_metadata.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)
                   : user?.email?.[0]?.toUpperCase()}
               </Avatar>
-              <span>{user?.user_metadata?.full_name || user?.email}</span>
+              {!isMobile && (
+                <span>
+                  {user?.user_metadata?.full_name || user?.email}
+                </span>
+              )}
               <span style={{ fontSize: 12, marginLeft: 4, color: '#888' }}>▼</span>
             </Button>
           </Dropdown>
@@ -205,7 +223,7 @@ const WelcomeScreen = ({ user }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem',
+        padding: isMobile ? '1rem' : '2rem',
         maxWidth: '1000px',
         margin: '0 auto',
         minHeight: 'calc(100vh - 64px)',
@@ -217,6 +235,8 @@ const WelcomeScreen = ({ user }) => {
           stepNumber={currentStep}
           isActive={true}
           onComplete={handleComplete}
+          onSkip={handleSkipWelcome}
+          isMobile={isMobile}
         />
       </div>
     </div>

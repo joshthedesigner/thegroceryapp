@@ -152,13 +152,19 @@ export const getMeal = async (id) => {
 }
 
 export const createMeal = async (mealData) => {
-  // Remove total_cost from mealData if it exists (let database calculate it)
-  const { total_cost, ...mealDataWithoutCost } = mealData
+  // For restaurant meals, keep the total_cost as it's manually set
+  // For home cooked meals, remove total_cost to let database calculate it
+  let mealDataToInsert = mealData
+  
+  if (mealData.meal_type === 'home_cooked') {
+    const { total_cost, ...mealDataWithoutCost } = mealData
+    mealDataToInsert = mealDataWithoutCost
+  }
   
   // Insert the meal and return the created data
   const { data, error } = await supabase
     .from('meals')
-    .insert([mealDataWithoutCost])
+    .insert([mealDataToInsert])
     .select()
   
   if (error) {

@@ -1,46 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Card, Table, Space, Typography, Tag, Progress, Button, Empty, Input, Modal } from 'antd'
 import { 
-  Card, 
-  Table, 
-  Input, 
-  Space, 
-  Typography, 
-  Tag, 
-  Tooltip,
-  Button,
-  Modal,
-  Progress,
-  Empty
-} from 'antd'
-import { 
+  DollarOutlined, 
+  ShoppingCartOutlined, 
+  FireOutlined,
+  ClockCircleOutlined,
+  TrophyOutlined,
   SearchOutlined, 
-  EyeOutlined,
-  DollarOutlined,
-  CalendarOutlined
+  EditOutlined,
+  DeleteOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { 
   getFilteredDataForPeriod, 
-  calculateTotalValue, 
-  calculateUnusedValue,
-  calculateUsedValue,
-  calculateTotalPurchased,
-  calculateTotalUsed,
-  calculateUsagePercentage,
-  calculateTotalMealCost,
-  calculateAverageMealCost,
+  calculateIngredientRemainingValue,
   getIngredientUsagePercentage,
   getIngredientUsageStatus,
   getStatusColor,
   getStatusText,
-  formatDate,
-  filterDataBySearch,
-  calculateIngredientRemainingValue
+  formatDate
 } from '../utils/calculationUtils'
-import ToggleFilter from '../components/shared/ToggleFilter'
+import ToggleFilter from './shared/ToggleFilter'
+import IngredientTags from './IngredientTags'
 
-const { Search } = Input
-const { Text, Title } = Typography
+const { Title, Text } = Typography
 
 const DashboardTable = ({ 
   ingredients = [], 
@@ -51,19 +34,33 @@ const DashboardTable = ({
   loading = false 
 }) => {
   const [viewMode, setViewMode] = useState('ingredients')
-  const [searchText, setSearchText] = useState('')
   const [detailsVisible, setDetailsVisible] = useState(false)
   const [selectedRecord, setSelectedRecord] = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
   const scrollPositionRef = useRef(0)
+
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Check for extra small screens
+  const isExtraSmall = window.innerWidth <= 480
 
   // Get filtered data using shared utility
   const { filteredIngredients, filteredMeals } = getFilteredDataForPeriod(
     ingredients, meals, timeFilter, periodOffset, getDateRange
   )
 
-  // Use shared search filter
-  const searchedIngredients = filterDataBySearch(filteredIngredients, searchText, 'name')
-  const searchedMeals = filterDataBySearch(filteredMeals, searchText, 'meal_name')
+  // Use filtered data directly since search is removed
+  const tableData = viewMode === 'ingredients' ? filteredIngredients : filteredMeals
 
   // Save scroll position before any content change
   useEffect(() => {
@@ -80,7 +77,7 @@ const DashboardTable = ({
       window.scrollTo(0, scrollPositionRef.current)
     }, 0)
     return () => clearTimeout(timer)
-  }, [searchText, viewMode])
+  }, [viewMode])
 
   const handleViewDetails = (record) => {
     setSelectedRecord(record)
@@ -95,6 +92,107 @@ const DashboardTable = ({
   // Helper functions for usage calculations
   const getUsagePercentage = getIngredientUsagePercentage
   const getUsageStatus = getIngredientUsageStatus
+
+  // Mobile ingredients table columns
+  const mobileIngredientColumns = [
+    {
+      title: '',
+      key: 'mobile_content',
+      render: (_, record) => {
+        const percentage = getUsagePercentage(record)
+        const status = getUsageStatus(record)
+        const remainingValue = calculateIngredientRemainingValue(record)
+        
+        return (
+          <div style={{ padding: '0 0 16px 0' }}>
+            {/* Header Row */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '12px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              minWidth: 0,
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                <Text strong style={{ fontSize: '16px' }}>
+                  {record.name}
+                </Text>
+                <Tag color={getStatusColor(status)}>
+                  {getStatusText(status)}
+                </Tag>
+              </div>
+            </div>
+            
+            {/* Stacked Data */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px', paddingRight: '8px' }}>
+              <div>
+                <Text strong style={{ marginRight: '8px' }}>Value:</Text>
+                <Text>${record.price.toFixed(2)}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px' }}>Used:</Text>
+                <Text>{percentage}%</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px' }}>Remaining:</Text>
+                <Text>${remainingValue.toFixed(2)}</Text>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    }
+  ]
+
+  // Mobile meals table columns
+  const mobileMealColumns = [
+    {
+      title: '',
+      key: 'mobile_content',
+      render: (_, record) => {
+        return (
+          <div style={{ padding: '0 0 16px 0' }}>
+            {/* Header Row */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '12px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              minWidth: 0,
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                <Text strong style={{ fontSize: '16px' }}>
+                  {record.meal_name}
+                </Text>
+              </div>
+            </div>
+            
+            {/* Stacked Data */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '8px', paddingRight: '8px' }}>
+              <div>
+                <Text strong style={{ marginRight: '8px' }}>Date:</Text>
+                <Text>{formatDate(record.date_cooked)}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px' }}>Cost:</Text>
+                <Text>${record.total_cost ? record.total_cost.toFixed(2) : '0.00'}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px' }}>Ingredients:</Text>
+                <IngredientTags mealIngredients={record.meal_ingredients} options={{ showAll: true, wrap: true }} />
+              </div>
+            </div>
+          </div>
+        )
+      }
+    }
+  ]
 
   // Ingredients table columns
   const ingredientColumns = [
@@ -202,21 +300,7 @@ const DashboardTable = ({
       title: 'Ingredients Used',
       key: 'ingredients_used',
       render: (_, record) => {
-        if (!record.meal_ingredients || record.meal_ingredients.length === 0) {
-          return <Text style={{ color: '#222', fontWeight: 400 }}>No ingredients</Text>
-        }
-        return (
-          <span>
-            {record.meal_ingredients.slice(0, 2).map((ing, idx) => (
-              <Tag key={idx} color="blue" style={{ marginRight: 4, marginBottom: 2 }}>
-                {ing.ingredients?.name || ''}
-              </Tag>
-            ))}
-            {record.meal_ingredients.length > 2 && (
-              <Tag color="blue">+{record.meal_ingredients.length - 2} more</Tag>
-            )}
-          </span>
-        )
+        return <IngredientTags mealIngredients={record.meal_ingredients} options={{ maxDisplay: 2, tagColor: 'blue' }} />
       }
     },
     {
@@ -237,7 +321,7 @@ const DashboardTable = ({
           <div
             style={{
               display: 'flex',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-start',
               alignItems: 'center',
               flexWrap: 'wrap',
               gap: 16,
@@ -245,37 +329,21 @@ const DashboardTable = ({
               width: '100%',
             }}
           >
-            <Title level={4} style={{ margin: 0, minWidth: 180, textAlign: 'left' }}>
+            <Title level={4} style={{ 
+              margin: 0, 
+              textAlign: 'left',
+              fontSize: isMobile ? '16px' : '20px'
+            }}>
               {viewMode === 'ingredients' ? 'Ingredients' : 'Meals'} Overview
             </Title>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <Search
-                placeholder={`Search ${viewMode}...`}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250, minWidth: 150 }}
-                size="large"
-                allowClear
-              />
-              <ToggleFilter
-                value={viewMode}
-                onChange={setViewMode}
-                options={viewOptions}
-                showCard={false}
-                showNavigation={false}
-                style={{ 
-                  minWidth: 180,
-                  backgroundColor: '#f5f5f5',
-                  padding: '4px',
-                  borderRadius: '8px'
-                }}
-              />
-            </div>
           </div>
 
           <Table
-            dataSource={viewMode === 'ingredients' ? searchedIngredients : searchedMeals}
-            columns={viewMode === 'ingredients' ? ingredientColumns : mealColumns}
+            dataSource={tableData}
+            columns={viewMode === 'ingredients' 
+              ? (isMobile ? mobileIngredientColumns : ingredientColumns)
+              : (isMobile ? mobileMealColumns : mealColumns)
+            }
             loading={loading}
             rowKey="id"
             pagination={{
@@ -285,7 +353,7 @@ const DashboardTable = ({
             locale={{
               emptyText: (
                 <Empty
-                  description={viewMode === 'ingredients' ? 'You haven’t added any ingredients yet.' : 'You haven’t logged any meals yet.'}
+                  description={viewMode === 'ingredients' ? 'You haven\'t added any ingredients yet.' : 'You haven\'t logged any meals yet.'}
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 >
                   <Text type="secondary">
@@ -296,6 +364,11 @@ const DashboardTable = ({
                 </Empty>
               )
             }}
+            // Mobile-specific table props
+            {...(isMobile && {
+              showHeader: false,
+              style: { paddingTop: 0 }
+            })}
           />
         </Space>
       </Card>

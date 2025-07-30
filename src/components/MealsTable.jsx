@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Table, 
   Button, 
@@ -6,17 +6,17 @@ import {
   Tag, 
   Popconfirm, 
   Typography, 
-  Card,
-  Tooltip,
-  Empty
+  Empty,
+  Dropdown
 } from 'antd'
 import { 
   EditOutlined, 
   DeleteOutlined, 
-  DownOutlined
+  MoreOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { formatDate } from '../utils/calculationUtils'
+import IngredientTags from './IngredientTags'
 
 const { Text, Title } = Typography
 
@@ -33,81 +33,124 @@ const MealsTable = ({
     console.log('First meal ingredients:', meals[0].meal_ingredients);
   }
 
-  const [expandedRowKeys, setExpandedRowKeys] = useState([])
+  const [isMobile, setIsMobile] = useState(false)
 
-  const handleExpand = (expanded, record) => {
-    if (expanded) {
-      setExpandedRowKeys([...expandedRowKeys, record.id])
-    } else {
-      setExpandedRowKeys(expandedRowKeys.filter(key => key !== record.id))
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
     }
-  }
-
-  const expandedRowRender = (record) => {
-    if (!record.meal_ingredients || record.meal_ingredients.length === 0) {
-      return (
-        <Card size="small" style={{ margin: '0 50px' }}>
-          <Empty 
-            description="No ingredients recorded" 
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        </Card>
-      )
-    }
-
-    // Filter out meal_ingredients with null ingredients
-    const validMealIngredients = record.meal_ingredients.filter(ing => ing.ingredients && ing.ingredients.name);
     
-    if (validMealIngredients.length === 0) {
-      return (
-        <Card size="small" style={{ margin: '0 50px' }}>
-          <Empty 
-            description="Ingredients data is missing" 
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
-        </Card>
-      )
-    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
-    return (
-      <div style={{ margin: '0 50px', background: '#fff', borderRadius: 8 }}>
-        <Table
-          dataSource={validMealIngredients}
-          pagination={false}
-          size="small"
-          columns={[
-            {
-              title: 'Ingredient',
-              key: 'ingredient_name',
-              render: (_, rec) => <Text strong>{rec.ingredients.name}</Text>
-            },
-            {
-              title: 'Quantity Used',
-              dataIndex: 'quantity_used',
-              key: 'quantity_used',
-              render: (quantity, rec) => (
-                <Text>
-                  {quantity} {rec.ingredients.unit || 'units'}
-                </Text>
-              )
+  // Mobile table columns
+  const mobileColumns = [
+    {
+      title: '',
+      key: 'mobile_content',
+      render: (_, record) => {
+        const menuItems = [
+          {
+            key: 'delete',
+            label: 'Delete',
+            onClick: () => {
+              // Use Popconfirm logic
+              if (window.confirm('Delete this meal? This action cannot be undone. All ingredient usage data will be lost.')) {
+                onDelete(record.id)
+              }
             }
-          ]}
-        />
-      </div>
-    )
-  }
+          }
+        ]
 
-  const columns = [
+        return (
+          <div style={{ padding: '0 0 16px 0' }}>
+            {/* Header Row */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '4px',
+              paddingTop: '4px',
+              paddingLeft: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Text strong style={{ fontSize: '16px' }}>
+                  {record.meal_name}
+                </Text>
+                {record.meal_type === 'restaurant' && (
+                  <Tag color="orange" style={{ fontSize: '10px' }}>
+                    Restaurant
+                  </Tag>
+                )}
+              </div>
+              <Dropdown
+                menu={{ items: menuItems }}
+                placement="bottomRight"
+                trigger={['click']}
+              >
+                <Button
+                  type="text"
+                  icon={<MoreOutlined />}
+                  style={{ 
+                    padding: '8px 12px',
+                    height: 'auto',
+                    color: '#666',
+                    fontSize: '18px'
+                  }}
+                />
+              </Dropdown>
+            </div>
+            
+            {/* Stacked Data */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '12px' }}>
+              <div>
+                <Text strong style={{ marginRight: '8px', color: '#666' }}>Date:</Text>
+                <Text>{formatDate(record.date_cooked)}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px', color: '#666' }}>Total Cost:</Text>
+                <Text>${record.total_cost ? record.total_cost.toFixed(2) : '0.00'}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px', color: '#666' }}>Ingredients:</Text>
+                {record.meal_type === 'restaurant' ? (
+                  <Tag color="gray">No Ingredients</Tag>
+                ) : (
+                  <IngredientTags mealIngredients={record.meal_ingredients} options={{ showAll: true, wrap: true }} />
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      }
+    }
+  ]
+
+  // Desktop table columns
+  const desktopColumns = [
     {
       title: 'Meal Name',
       dataIndex: 'meal_name',
       key: 'meal_name',
-      render: (text) => <Text strong>{text}</Text>,
+      render: (text, record) => (
+        <div>
+          <Text strong>{text}</Text>
+          {record.meal_type === 'restaurant' && (
+            <Tag color="orange" style={{ marginLeft: 8, fontSize: '11px' }}>
+              Restaurant
+            </Tag>
+          )}
+        </div>
+      ),
       sorter: (a, b) => a.meal_name.localeCompare(b.meal_name),
       filterable: true
     },
     {
-      title: 'Date Cooked',
+      title: 'Date',
       dataIndex: 'date_cooked',
       key: 'date_cooked',
       render: (date) => (
@@ -120,39 +163,11 @@ const MealsTable = ({
       title: 'Ingredients',
       dataIndex: 'meal_ingredients',
       key: 'ingredients_count',
-      render: (ingredients) => {
-        console.log('Ingredients render function called with:', ingredients);
-        if (!ingredients || ingredients.length === 0) {
-          console.log('No ingredients found, showing "No ingredients" tag');
-          return <Tag color="default">No ingredients</Tag>
+      render: (ingredients, record) => {
+        if (record.meal_type === 'restaurant') {
+          return <Tag color="gray">No Ingredients</Tag>
         }
-        
-        // Check if any ingredients have valid ingredient data
-        const validIngredients = ingredients.filter(ing => ing.ingredients && ing.ingredients.name);
-        console.log('Valid ingredients found:', validIngredients.length);
-        
-        if (validIngredients.length === 0) {
-          console.log('No valid ingredients found, showing "Ingredients missing" tag');
-          return <Tag color="orange" style={{ backgroundColor: '#fa8c16', color: 'white', border: '2px solid red' }}>Ingredients missing</Tag>
-        }
-        
-        console.log('Valid ingredients found, rendering tags for:', validIngredients);
-        const firstTwo = validIngredients.slice(0, 2)
-        const remaining = validIngredients.slice(2)
-        return (
-          <Space wrap>
-            {firstTwo.map((ing, index) => (
-              <Tag key={index} color="blue">
-                {ing.ingredients.name}
-              </Tag>
-            ))}
-            {remaining.length > 0 && (
-              <Tooltip title={remaining.map(ing => ing.ingredients.name).join(', ')} placement="top">
-                <Tag color="blue" style={{ cursor: 'pointer' }}>+{remaining.length} more</Tag>
-              </Tooltip>
-            )}
-          </Space>
-        )
+        return <IngredientTags mealIngredients={ingredients} options={{ maxDisplay: 2, tagColor: 'blue' }} />
       }
     },
     {
@@ -173,15 +188,6 @@ const MealsTable = ({
       align: 'right',
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record)}
-            style={{ color: '#262626' }}
-          >
-            Edit
-          </Button>
           <Popconfirm
             title="Delete this meal?"
             description="This action cannot be undone. All ingredient usage data will be lost."
@@ -203,6 +209,9 @@ const MealsTable = ({
       )
     }
   ]
+
+  // Use mobile or desktop columns based on screen size
+  const columns = isMobile ? mobileColumns : desktopColumns
 
   return (
     <Table
@@ -229,6 +238,11 @@ const MealsTable = ({
           </Empty>
         )
       }}
+      // Mobile-specific table props
+      {...(isMobile && {
+        showHeader: false,
+        style: { paddingTop: 0 }
+      })}
     />
   )
 }

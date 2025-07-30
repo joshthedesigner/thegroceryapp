@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Typography, Button, Space, message, Modal } from 'antd'
 import { PlusOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { useMeals } from '../hooks/useMeals'
+import { useIngredients } from '../hooks/useIngredients'
 import MealForm from '../components/MealForm'
 import MealsTable from '../components/MealsTable'
 import dayjs from 'dayjs'
@@ -23,6 +24,8 @@ const Meals = ({ user }) => {
     deleteMeal, 
     refreshMeals 
   } = useMeals(user?.id)
+
+  const { ingredients, loading: ingredientsLoading, refreshIngredients } = useIngredients(user?.id)
 
   // Filter meals by selected week
   const { start: weekStart, end: weekEnd } = getWeekRange(selectedWeekStart)
@@ -48,8 +51,10 @@ const Meals = ({ user }) => {
   const isCurrentWeek = dayjs(selectedWeekStart).utc().isSame(dayjs().utc().startOf('week'), 'day')
 
   const handleAddMeal = () => {
+    console.log('[Meals] handleAddMeal called - opening modal')
     setEditingMeal(null)
     setFormVisible(true)
+    console.log('[Meals] Modal should now be visible')
   }
 
   const handleEditMeal = (meal) => {
@@ -79,6 +84,7 @@ const Meals = ({ user }) => {
     setEditingMeal(null)
     message.success(editingMeal ? 'Meal updated successfully' : 'Meal logged successfully')
     refreshMeals()
+    refreshIngredients()
   }
 
   const handleFormCancel = () => {
@@ -90,7 +96,7 @@ const Meals = ({ user }) => {
   return (
     <div className="page-container">
       <div className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <Title level={2} className="page-title" style={{ margin: 0 }}>
             Meals
           </Title>
@@ -103,7 +109,7 @@ const Meals = ({ user }) => {
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
                 height: 48,
-                padding: '0 18px',
+                padding: '0 14px',
                 boxShadow: 'none',
                 gap: 8,
               }}
@@ -125,7 +131,7 @@ const Meals = ({ user }) => {
               >
                 <LeftOutlined style={{ fontSize: 18, color: '#222' }} />
               </button>
-              <span style={{ fontWeight: 500, fontSize: 16, minWidth: 120, textAlign: 'center' }}>
+              <span style={{ fontWeight: 500, fontSize: 14, minWidth: 116, textAlign: 'center' }}>
                 {formatDateRange(weekStart, weekEnd)}
               </span>
               <button
@@ -150,9 +156,8 @@ const Meals = ({ user }) => {
             </div>
             <Button
               type="primary"
-              icon={<PlusOutlined />}
               onClick={handleAddMeal}
-              style={{ minWidth: 140, height: 46, padding: '0 24px', fontSize: 16, display: 'flex', alignItems: 'center' }}
+              style={{ minWidth: 140, height: 46, padding: '0 20px', fontSize: 14, display: 'flex', alignItems: 'center', fontWeight: '700' }}
             >
               <span style={{ display: 'inline-block', width: '100%' }}>Log Meal</span>
             </Button>
@@ -178,6 +183,9 @@ const Meals = ({ user }) => {
         onCancel={handleFormCancel}
         onSuccess={handleFormSuccess}
         user={user}
+        refreshIngredients={refreshIngredients}
+        ingredients={ingredients}
+        ingredientsLoading={ingredientsLoading}
       />
 
       {/* Meal Details Modal */}
@@ -189,7 +197,7 @@ const Meals = ({ user }) => {
           <Button key="edit" type="primary" onClick={() => {
             setDetailsVisible(false)
             handleEditMeal(selectedMeal)
-          }}>
+          }} style={{ fontWeight: '700' }}>
             Edit Meal
           </Button>,
           <Button key="close" onClick={() => setDetailsVisible(false)}>

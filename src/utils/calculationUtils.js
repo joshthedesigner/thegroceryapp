@@ -381,3 +381,151 @@ export const filterDataBySearch = (data, searchText, field = 'name') => {
     item[field]?.toLowerCase().includes(searchText.toLowerCase())
   )
 } 
+
+/**
+ * Calculate cumulative meal spending data over time period
+ * @param {Array} meals - Array of meal objects
+ * @param {string} timeFilter - Time filter ('week', 'month', 'year')
+ * @param {number} periodOffset - Period offset (0 = current, 1 = previous, etc.)
+ * @param {Function} getDateRange - Function to get date range for filtering
+ * @returns {Array} Array of data points with cumulative spending data
+ */
+export const getCumulativeMealSpendingData = (meals, timeFilter, periodOffset, getDateRange) => {
+  if (!meals.length) return []
+
+  const { start: startDate, end: endDate } = getDateRange(timeFilter, periodOffset)
+  
+  // Determine interval based on time filter
+  let interval
+  switch (timeFilter) {
+    case 'year':
+      interval = 'month'
+      break
+    case 'month':
+      interval = 'week'
+      break
+    default:
+      interval = 'day'
+  }
+
+  // Generate date points with cumulative calculations
+  const dataPoints = []
+  let current = startDate.clone()
+  let cumulativeHomeCooked = 0
+  let cumulativeRestaurant = 0
+  let cumulativeTotal = 0
+
+  while (current.isBefore(endDate) || current.isSame(endDate, interval)) {
+    const dateKey = current.format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
+    
+    // Filter meals for this specific date
+    const dailyMeals = meals.filter(meal => {
+      const mealDate = dayjs(meal.date_cooked).format(interval === 'month' ? 'YYYY-MM' : 'YYYY-MM-DD')
+      return mealDate === dateKey
+    })
+    
+    // Calculate daily spending by type
+    let dailyHomeCookedSpent = 0
+    let dailyRestaurantSpent = 0
+    
+    dailyMeals.forEach(meal => {
+      const cost = meal.total_cost || 0
+      if (meal.meal_type === 'restaurant') {
+        dailyRestaurantSpent += cost
+      } else {
+        dailyHomeCookedSpent += cost
+      }
+    })
+    
+    // Add to cumulative totals
+    cumulativeHomeCooked += dailyHomeCookedSpent
+    cumulativeRestaurant += dailyRestaurantSpent
+    cumulativeTotal += dailyHomeCookedSpent + dailyRestaurantSpent
+
+    const dataPoint = {
+      date: current.format(interval === 'month' ? 'MMM YYYY' : 'MMM DD'),
+      dateKey,
+      homeCookedSpent: Math.round(cumulativeHomeCooked * 100) / 100,
+      restaurantSpent: Math.round(cumulativeRestaurant * 100) / 100,
+      totalSpent: Math.round(cumulativeTotal * 100) / 100,
+      dailyHomeCooked: Math.round(dailyHomeCookedSpent * 100) / 100,
+      dailyRestaurant: Math.round(dailyRestaurantSpent * 100) / 100,
+      dailyTotal: Math.round((dailyHomeCookedSpent + dailyRestaurantSpent) * 100) / 100
+    }
+    
+    dataPoints.push(dataPoint)
+    current = current.add(1, interval)
+  }
+
+  return dataPoints
+}
+
+/**
+ * Get meal spending legend configuration
+ * @returns {Object} Object containing colors and labels for meal spending legend
+ */
+export const getMealSpendingLegendConfig = () => {
+  return {
+    colors: {
+      totalSpent: '#1890ff',
+      homeCookedSpent: '#52c41a',
+      restaurantSpent: '#fa8c16',
+    },
+    labels: {
+      totalSpent: 'Total Spent',
+      homeCookedSpent: 'Home Cooked',
+      restaurantSpent: 'Restaurant',
+    }
+  }
+}
+
+/**
+ * Create tooltip formatter for meal spending data
+ * @param {Object} legendLabels - Legend labels object
+ * @returns {Function} Tooltip formatter function
+ */
+export const createMealSpendingTooltipFormatter = (legendLabels) => {
+  return (value, name, props) => {
+    const dailyHomeCooked = props.payload.dailyHomeCooked || 0
+    const dailyRestaurant = props.payload.dailyRestaurant || 0
+    const dailyTotal = props.payload.dailyTotal || 0
+    const baseLabel = legendLabels[name] || name
+    
+    if (name === 'totalSpent') {
+      return [`$${value}`, `${baseLabel} (Added today: $${dailyTotal})`]
+    } else if (name === 'homeCookedSpent') {
+      return [`$${value}`, `${baseLabel} (Added today: $${dailyHomeCooked})`]
+    } else if (name === 'restaurantSpent') {
+      return [`$${value}`, `${baseLabel} (Added today: $${dailyRestaurant})`]
+    }
+    
+    return [`$${value}`, baseLabel]
+  }
+}
+
+/**
+ * Calculate total spending by meal type
+ * @param {Array} meals - Array of meal objects
+ * @returns {Object} Object with totalSpent, homeCookedSpent, restaurantSpent
+ */
+export const calculateMealSpendingByType = (meals) => {
+  let homeCookedSpent = 0
+  let restaurantSpent = 0
+  
+  meals.forEach(meal => {
+    const cost = meal.total_cost || 0
+    if (meal.meal_type === 'restaurant') {
+      restaurantSpent += cost
+    } else {
+      homeCookedSpent += cost
+    }
+  })
+  
+  const totalSpent = homeCookedSpent + restaurantSpent
+  
+  return {
+    totalSpent: Math.round(totalSpent * 100) / 100,
+    homeCookedSpent: Math.round(homeCookedSpent * 100) / 100,
+    restaurantSpent: Math.round(restaurantSpent * 100) / 100
+  }
+} 

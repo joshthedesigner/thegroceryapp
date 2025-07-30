@@ -42,7 +42,10 @@ const ToggleFilter = ({
       padding: '6px',
       display: 'inline-flex',
       alignItems: 'center',
-      gap: '8px',
+      gap: '4px',
+      minWidth: 'fit-content',
+      maxWidth: '100%',
+      overflow: 'hidden',
       ...style
     }}>
       {options.map((option, index) => {
@@ -63,10 +66,13 @@ const ToggleFilter = ({
               alignItems: 'center',
               justifyContent: 'center',
               minHeight: '24px',
-              minWidth: '120px',
+              minWidth: '80px',
               transition: 'background-color 0.2s ease, border-radius 0.2s ease',
               userSelect: 'none',
-              boxShadow: isSelected ? '0 1px 2px rgba(0, 0, 0, 0.06)' : 'none'
+              boxShadow: isSelected ? '0 1px 2px rgba(0, 0, 0, 0.06)' : 'none',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}
           >
             {option.label}

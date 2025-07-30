@@ -9,12 +9,12 @@ import { WELCOME_STEPS, getStepById } from '../utils/welcomeSteps'
  * Individual Welcome Step Component
  * Displays step content with center-aligned layout
  */
-const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
+const WelcomeStep = ({ stepNumber, isActive, onComplete, isMobile = false }) => {
   const step = getStepById(stepNumber)
   
   if (!step) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div style={{ textAlign: 'center', padding: isMobile ? '1rem' : '2rem' }}>
         <p>Step not found</p>
       </div>
     )
@@ -26,15 +26,15 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
       flexDirection: 'column',
       alignItems: 'center',
       textAlign: 'center',
-      padding: '2rem 0',
-      minHeight: '400px',
+      padding: isMobile ? '1rem 0' : '2rem 0',
+      minHeight: isMobile ? '300px' : '400px',
       justifyContent: 'center'
     }}>
 
 
       {/* Header */}
       <h2 style={{
-        fontSize: '2.5rem',
+        fontSize: isMobile ? '2rem' : '2.5rem',
         fontWeight: '700',
         color: '#1e293b',
         marginBottom: '1rem',
@@ -45,7 +45,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
 
       {/* Subheader */}
       <p style={{
-        fontSize: '1.2rem',
+        fontSize: isMobile ? '1rem' : '1.2rem',
         color: '#64748b',
         marginBottom: '2.5rem',
         lineHeight: '1.6',
@@ -58,17 +58,17 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
       {/* Simplified Guidance */}
       <div style={{
         display: 'flex',
-        flexDirection: 'row',
-        gap: '2rem',
-        marginBottom: '3rem',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '1rem' : '2rem',
+        marginBottom: isMobile ? '2rem' : '3rem',
         maxWidth: '1000px',
         animation: isActive ? 'fadeInUp 0.6s ease-out 0.2s both' : 'none',
         justifyContent: 'center'
       }}>
         <Card 
           style={{ 
-            width: '308px',
-            height: '248px',
+            width: isMobile ? '280px' : '308px',
+            height: isMobile ? '220px' : '248px',
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
@@ -89,7 +89,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
             Step 1
           </Tag>
           <h3 style={{
-            fontSize: '1.1rem',
+            fontSize: isMobile ? '1rem' : '1.1rem',
             fontWeight: '600',
             color: '#1e293b',
             margin: '0 0 1rem 0',
@@ -103,7 +103,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
             Add your Ingredients
           </h3>
           <p style={{
-            fontSize: '0.95rem',
+            fontSize: isMobile ? '0.85rem' : '0.95rem',
             color: '#475569',
             lineHeight: '1.5',
             margin: 0,
@@ -115,8 +115,8 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
         
         <Card 
           style={{ 
-            width: '308px',
-            height: '248px',
+            width: isMobile ? '280px' : '308px',
+            height: isMobile ? '220px' : '248px',
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
@@ -137,7 +137,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
             Step 2
           </Tag>
           <h3 style={{
-            fontSize: '1.1rem',
+            fontSize: isMobile ? '1rem' : '1.1rem',
             fontWeight: '600',
             color: '#1e293b',
             margin: '0 0 1rem 0',
@@ -151,7 +151,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
             Log your Meals
           </h3>
           <p style={{
-            fontSize: '0.95rem',
+            fontSize: isMobile ? '0.85rem' : '0.95rem',
             color: '#475569',
             lineHeight: '1.5',
             margin: 0,
@@ -163,15 +163,15 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
         
         <Card 
           style={{ 
-            width: '308px',
-            height: '248px',
+            width: isMobile ? '280px' : '308px',
+            height: isMobile ? '240px' : '248px',
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
             background: '#fff',
-            padding: '12px'
+            padding: '12px 12px 20px 12px'
           }}
         >
           <Tag 
@@ -185,7 +185,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
             Step 3
           </Tag>
           <h3 style={{
-            fontSize: '1.1rem',
+            fontSize: isMobile ? '1rem' : '1.1rem',
             fontWeight: '600',
             color: '#1e293b',
             margin: '0 0 1rem 0',
@@ -199,7 +199,7 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
             Explore your Dashboard
           </h3>
           <p style={{
-            fontSize: '0.95rem',
+            fontSize: isMobile ? '0.85rem' : '0.95rem',
             color: '#475569',
             lineHeight: '1.5',
             margin: 0,
@@ -217,8 +217,8 @@ const WelcomeStep = ({ stepNumber, isActive, onComplete }) => {
         onClick={onComplete}
         style={{
           padding: '0 32px',
-          fontSize: '1.1rem',
-          fontWeight: '600',
+          fontSize: isMobile ? '1rem' : '1.1rem',
+          fontWeight: '700',
           height: '48px',
           animation: isActive ? 'fadeInUp 0.6s ease-out 0.3s both' : 'none'
         }}

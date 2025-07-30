@@ -147,26 +147,33 @@ const IngredientForm = ({
           loading={loading}
           icon={initialValues ? <SaveOutlined /> : <PlusOutlined />}
           onClick={() => form.submit()}
+          style={{ fontWeight: '700' }}
         >
           {initialValues ? 'Update Ingredient' : 'Add Ingredient'}
         </Button>
       ]}
       width={600}
       destroyOnHidden
+      styles={{
+        header: {
+          paddingBottom: '8px'
+        }
+      }}
     >
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
         initialValues={{
-          unit: 'g',
+          unit: 'items',
           purchase_date: dayjs().utc()
         }}
       >
         <Form.Item
-          label="Ingredient Name"
+          label="Ingredient Name *"
           name="name"
           rules={[{ required: true, message: 'Please enter ingredient name' }]}
+          required={false}
         >
           <div style={{ position: 'relative' }}>
             <Input
@@ -208,9 +215,10 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
-          label="Purchase Date"
+          label="Purchase Date *"
           name="purchase_date"
           rules={[{ required: true, message: 'Please select purchase date' }]}
+          required={false}
         >
           <DatePicker
             style={{ width: '100%' }}
@@ -219,9 +227,10 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
-          label="Amount"
+          label="Amount *"
           name="amount_purchased"
           rules={[{ required: true, message: 'Please enter amount' }]}
+          required={false}
           style={{ display: 'inline-block', width: 'calc(33.33% - 8px)', marginRight: '16px' }}
         >
           <InputNumber
@@ -232,9 +241,10 @@ const IngredientForm = ({
         </Form.Item>
 
         <Form.Item
-          label="Unit"
+          label="Unit *"
           name="unit"
           rules={[{ required: true, message: 'Please select unit' }]}
+          required={false}
           style={{ display: 'inline-block', width: 'calc(33.33% - 8px)' }}
         >
           <Select>
@@ -246,13 +256,16 @@ const IngredientForm = ({
             <Option value="l">Liters (l)</Option>
             <Option value="units">Units</Option>
             <Option value="pieces">Pieces</Option>
+            <Option value="items">Items</Option>
+            <Option value="containers">Containers</Option>
           </Select>
         </Form.Item>
 
         <Form.Item
-          label="Price"
+          label="Price *"
           name="price"
           rules={[{ required: true, message: 'Please enter price' }]}
+          required={false}
         >
           <InputNumber
             placeholder="e.g., 5.99"

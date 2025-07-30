@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Table, 
   Button, 
@@ -13,13 +13,15 @@ import {
   Col,
   Radio,
   Empty,
-  Typography
+  Typography,
+  Dropdown
 } from 'antd'
 import { 
   EditOutlined, 
   DeleteOutlined, 
   SearchOutlined,
-  FilterOutlined 
+  FilterOutlined,
+  MoreOutlined
 } from '@ant-design/icons'
 import { 
   getIngredientUsageStatus, 
@@ -42,6 +44,19 @@ const IngredientsTable = ({
 }) => {
   const [searchText, setSearchText] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Filter ingredients based on search and status
   const filteredIngredients = ingredients.filter(ingredient => {
@@ -64,7 +79,106 @@ const IngredientsTable = ({
     }
   }
 
-  const columns = [
+  // Mobile table columns
+  const mobileColumns = [
+    {
+      title: '',
+      key: 'mobile_content',
+      render: (_, record) => {
+        const percentage = getUsagePercentage(record)
+        const status = getIngredientUsageStatus(record)
+        const remainingValue = calculateIngredientRemainingValue(record)
+        
+        const menuItems = [
+          {
+            key: 'delete',
+            label: 'Delete',
+            onClick: () => {
+              // Use Popconfirm logic
+              if (window.confirm('Delete this ingredient? This action cannot be undone.')) {
+                handleDelete(record.id)
+              }
+            }
+          }
+        ]
+
+        return (
+          <div style={{ padding: '0 0 16px 0' }}>
+            {/* Header Row */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '4px',
+              paddingTop: '4px',
+              paddingLeft: '12px',
+              paddingRight: '8px',
+              minWidth: 0,
+              overflow: 'hidden'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                <Text strong style={{ fontSize: '16px' }}>
+                  {record.name}
+                </Text>
+                <Tag color={getStatusColor(status)}>
+                  {getStatusText(status)}
+                </Tag>
+              </div>
+              <div style={{ flexShrink: 0, minWidth: 0 }}>
+                <Dropdown
+                  menu={{ items: menuItems }}
+                  placement="bottomLeft"
+                  trigger={['click']}
+                >
+                  <Button
+                    type="text"
+                    icon={<MoreOutlined />}
+                    style={{ 
+                      padding: '8px 8px',
+                      height: 'auto',
+                      color: '#666',
+                      fontSize: '18px'
+                    }}
+                  />
+                </Dropdown>
+              </div>
+            </div>
+            
+            {/* Stacked Data */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '12px', paddingRight: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Text strong style={{ color: '#666' }}>Used:</Text>
+                <div style={{ width: '25%' }}>
+                  <Progress 
+                    percent={percentage} 
+                    size="small" 
+                    status={getIngredientUsageStatus(record)}
+                    format={(percent) => `${percent}%`}
+                    style={{ marginBottom: 0, width: '100%' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px', color: '#666' }}>Date:</Text>
+                <Text>{formatDate(record.purchase_date)}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px', color: '#666' }}>Price:</Text>
+                <Text>${record.price.toFixed(2)}</Text>
+              </div>
+              <div>
+                <Text strong style={{ marginRight: '8px', color: '#666' }}>Remaining:</Text>
+                <Text>${remainingValue.toFixed(2)}</Text>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    }
+  ]
+
+  // Desktop table columns
+  const desktopColumns = [
     {
       title: 'Name',
       dataIndex: 'name',
@@ -142,15 +256,6 @@ const IngredientsTable = ({
       align: 'right',
       render: (_, record) => (
         <Space>
-          <Button 
-            type="text" 
-            size="small" 
-            onClick={() => onEdit(record)}
-            icon={<EditOutlined />}
-            style={{ color: '#262626' }}
-          >
-            Edit
-          </Button>
           <Popconfirm
             title="Delete this ingredient?"
             description="This action cannot be undone."
@@ -172,6 +277,9 @@ const IngredientsTable = ({
     }
   ]
 
+  // Use mobile or desktop columns based on screen size
+  const columns = isMobile ? mobileColumns : desktopColumns
+
   return (
     <Table
       columns={columns}
@@ -185,11 +293,11 @@ const IngredientsTable = ({
         showTotal: (total, range) => 
           `${range[0]}-${range[1]} of ${total} ingredients`
       }}
-      scroll={{ x: 800 }}
+      scroll={isMobile ? undefined : { x: 800 }}
       locale={{
         emptyText: (
           <Empty
-            description="You haven’t added any ingredients yet."
+            description="You haven't added any ingredients yet."
             image={Empty.PRESENTED_IMAGE_SIMPLE}
           >
             <Text type="secondary">
@@ -198,6 +306,11 @@ const IngredientsTable = ({
           </Empty>
         )
       }}
+      // Mobile-specific table props
+      {...(isMobile && {
+        showHeader: false,
+        style: { paddingTop: 0 }
+      })}
     />
   )
 }

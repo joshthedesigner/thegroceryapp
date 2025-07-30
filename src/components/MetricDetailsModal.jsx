@@ -1,14 +1,16 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Modal, Typography, Table, Space, Tag, Card, Row, Col, Statistic } from 'antd'
 import { 
   DollarOutlined, 
   ShoppingCartOutlined, 
   FireOutlined,
   ClockCircleOutlined,
-  TrophyOutlined
+  TrophyOutlined,
+  ShopOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { formatDate, getFilteredDataForPeriod } from '../utils/calculationUtils'
+import IngredientTags from './IngredientTags'
 
 const { Title, Text } = Typography
 
@@ -22,6 +24,20 @@ const MetricDetailsModal = ({
   periodOffset = 0,
   getDateRange
 }) => {
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   // Get filtered data using shared utility
   const { filteredIngredients, filteredMeals } = getFilteredDataForPeriod(
     ingredients, meals, timeFilter, periodOffset, getDateRange
@@ -29,6 +45,92 @@ const MetricDetailsModal = ({
 
   const getMetricInfo = () => {
     switch (metricType) {
+      case 'totalMeals':
+        return {
+          title: 'Total Meals',
+          description: 'All meals logged (home cooked + restaurant)',
+          icon: <FireOutlined />,
+          color: '#1890ff',
+          data: filteredMeals,
+          columns: [
+            {
+              title: 'Meal Name',
+              dataIndex: 'meal_name',
+              key: 'meal_name',
+              render: (text) => <Text strong>{text}</Text>
+            },
+            {
+              title: 'Type',
+              key: 'meal_type',
+              render: (_, record) => (
+                <Tag color={record.meal_type === 'restaurant' ? '#fa8c16' : '#52c41a'}>
+                  {record.meal_type === 'restaurant' ? 'Restaurant' : 'Home Cooked'}
+                </Tag>
+              )
+            },
+            {
+              title: 'Date',
+              dataIndex: 'date_cooked',
+              key: 'date_cooked',
+              render: (date) => formatDate(date)
+            },
+            {
+              title: 'Cost',
+              dataIndex: 'total_cost',
+              key: 'total_cost',
+              render: (cost) => (
+                <Space>
+                  <DollarOutlined />
+                  <Text strong>${cost ? cost.toFixed(2) : '0.00'}</Text>
+                </Space>
+              )
+            }
+          ]
+        }
+      
+      case 'totalMealCost':
+        return {
+          title: 'Total Meal Cost',
+          description: 'Total cost of all meals (home cooked + restaurant)',
+          icon: <DollarOutlined />,
+          color: '#1890ff',
+          data: filteredMeals,
+          columns: [
+            {
+              title: 'Meal Name',
+              dataIndex: 'meal_name',
+              key: 'meal_name',
+              render: (text) => <Text strong>{text}</Text>
+            },
+            {
+              title: 'Type',
+              key: 'meal_type',
+              render: (_, record) => (
+                <Tag color={record.meal_type === 'restaurant' ? '#fa8c16' : '#52c41a'}>
+                  {record.meal_type === 'restaurant' ? 'Restaurant' : 'Home Cooked'}
+                </Tag>
+              )
+            },
+            {
+              title: 'Cost',
+              dataIndex: 'total_cost',
+              key: 'total_cost',
+              render: (cost) => (
+                <Space>
+                  <DollarOutlined />
+                  <Text strong>${cost ? cost.toFixed(2) : '0.00'}</Text>
+                </Space>
+              )
+            },
+            {
+              title: 'Date',
+              dataIndex: 'date_cooked',
+              key: 'date_cooked',
+              render: (date) => dayjs(date).format('MMM DD, YYYY')
+            }
+          ]
+        }
+      
       case 'totalIngredients':
         return {
           title: 'Total Ingredients Added',
@@ -288,13 +390,13 @@ const MetricDetailsModal = ({
           ]
         }
       
-      case 'mealsLogged':
+      case 'homeCookedMealsTotal':
         return {
-          title: 'Meals Logged',
-          description: 'Total number of meals prepared',
+          title: 'Home Cooked Meals Total',
+          description: 'Total number of home cooked meals logged',
           icon: <FireOutlined />,
-          color: '#eb2f96',
-          data: filteredMeals,
+          color: '#52c41a',
+          data: filteredMeals.filter(meal => meal.meal_type === 'home_cooked'),
           columns: [
             {
               title: 'Meal Name',
@@ -329,13 +431,13 @@ const MetricDetailsModal = ({
           ]
         }
       
-      case 'averageMealCost':
+      case 'homeCookedMealsCost':
         return {
-          title: 'Average Meal Cost',
-          description: 'Average cost per meal prepared',
+          title: 'Home Cooked Meals Cost',
+          description: 'Total cost of home cooked meals',
           icon: <DollarOutlined />,
-          color: '#fa8c16',
-          data: filteredMeals,
+          color: '#52c41a',
+          data: filteredMeals.filter(meal => meal.meal_type === 'home_cooked'),
           columns: [
             {
               title: 'Meal Name',
@@ -361,20 +463,79 @@ const MetricDetailsModal = ({
               render: (date) => dayjs(date).format('MMM DD, YYYY')
             },
             {
-              title: 'vs Average',
-              key: 'vs_average',
-              render: (_, record) => {
-                const avgCost = filteredMeals.length > 0 
-                  ? filteredMeals.reduce((sum, meal) => sum + (meal.total_cost || 0), 0) / filteredMeals.length
-                  : 0
-                const diff = (record.total_cost || 0) - avgCost
-                const color = diff > 0 ? 'danger' : diff < 0 ? 'success' : 'default'
-                return (
-                  <Text type={color}>
-                    {diff > 0 ? '+' : ''}${diff.toFixed(2)}
-                  </Text>
-                )
-              }
+              title: 'Ingredients',
+              key: 'ingredients_count',
+              render: (_, record) => (
+                <Text>{record.meal_ingredients?.length || 0} ingredients</Text>
+              )
+            }
+          ]
+        }
+      
+      case 'restaurantMealsTotal':
+        return {
+          title: 'Restaurant Meals Total',
+          description: 'Total number of restaurant meals logged',
+          icon: <ShopOutlined />,
+          color: '#fa8c16',
+          data: filteredMeals.filter(meal => meal.meal_type === 'restaurant'),
+          columns: [
+            {
+              title: 'Restaurant Name',
+              dataIndex: 'restaurant_name',
+              key: 'restaurant_name',
+              render: (text) => <Text strong>{text}</Text>
+            },
+            {
+              title: 'Date',
+              dataIndex: 'date_cooked',
+              key: 'date_cooked',
+              render: (date) => formatDate(date)
+            },
+            {
+              title: 'Cost',
+              dataIndex: 'restaurant_cost',
+              key: 'restaurant_cost',
+              render: (cost) => (
+                <Space>
+                  <DollarOutlined />
+                  <Text strong>${cost ? cost.toFixed(2) : '0.00'}</Text>
+                </Space>
+              )
+            }
+          ]
+        }
+      
+      case 'restaurantMealsCost':
+        return {
+          title: 'Restaurant Meals Cost',
+          description: 'Total cost of restaurant meals',
+          icon: <DollarOutlined />,
+          color: '#fa8c16',
+          data: filteredMeals.filter(meal => meal.meal_type === 'restaurant'),
+          columns: [
+            {
+              title: 'Restaurant Name',
+              dataIndex: 'restaurant_name',
+              key: 'restaurant_name',
+              render: (text) => <Text strong>{text}</Text>
+            },
+            {
+              title: 'Cost',
+              dataIndex: 'restaurant_cost',
+              key: 'restaurant_cost',
+              render: (cost) => (
+                <Space>
+                  <DollarOutlined />
+                  <Text strong>${cost ? cost.toFixed(2) : '0.00'}</Text>
+                </Space>
+              )
+            },
+            {
+              title: 'Date',
+              dataIndex: 'date_cooked',
+              key: 'date_cooked',
+              render: (date) => dayjs(date).format('MMM DD, YYYY')
             }
           ]
         }
@@ -405,13 +566,13 @@ const MetricDetailsModal = ({
           Close
         </Button>
       ]}
-      width={800}
+      width={isMobile ? '95%' : 800}
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         <Text type="secondary">{metricInfo.description}</Text>
         
         <Row gutter={16}>
-          <Col span={8}>
+          <Col span={isMobile ? 24 : 8}>
             <Card size="small">
               <Statistic
                 title="Total Count"
@@ -420,7 +581,7 @@ const MetricDetailsModal = ({
               />
             </Card>
           </Col>
-          <Col span={8}>
+          <Col span={isMobile ? 24 : 8}>
             <Card size="small">
               <Statistic
                 title="Total Value"
@@ -431,7 +592,7 @@ const MetricDetailsModal = ({
               />
             </Card>
           </Col>
-          <Col span={8}>
+          <Col span={isMobile ? 24 : 8}>
             <Card size="small">
               <Statistic
                 title="Time Period"
@@ -460,6 +621,11 @@ const MetricDetailsModal = ({
               </div>
             )
           }}
+          // Mobile-specific table props
+          {...(isMobile && {
+            scroll: { x: 300 },
+            size: "small"
+          })}
         />
       </Space>
     </Modal>

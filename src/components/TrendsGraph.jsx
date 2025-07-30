@@ -2,7 +2,6 @@ import React, { useMemo } from 'react'
 import { 
   Card, 
   Typography, 
-  Space, 
   Empty
 } from 'antd'
 import { 
@@ -24,7 +23,7 @@ import {
   calculateUnusedValue
 } from '../utils/calculationUtils'
 
-const { Title, Text } = Typography
+const { Text } = Typography
 
 // Custom legend for top right
 const legendColors = {
@@ -168,18 +167,8 @@ const TrendsGraph = ({
   }
 
   return (
-    <Card>
-      <Space direction="vertical" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Trends Over Time
-          </Title>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            <TrendsLegend />
-          </div>
-        </div>
-
-        <ResponsiveContainer width="100%" height={400}>
+    <Card bodyStyle={{ padding: '32px 16px 4px 16px' }}>
+      <ResponsiveContainer width="100%" height={350}>
           <LineChart data={chartData} key={chartKey}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
@@ -187,7 +176,7 @@ const TrendsGraph = ({
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={60}
             />
             <YAxis 
               tick={{ fontSize: 12 }}
@@ -228,7 +217,6 @@ const TrendsGraph = ({
             />
           </LineChart>
         </ResponsiveContainer>
-      </Space>
     </Card>
   )
 }
