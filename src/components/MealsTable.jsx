@@ -81,11 +81,9 @@ const MealsTable = ({
                 <Text strong style={{ fontSize: '16px' }}>
                   {record.meal_name}
                 </Text>
-                {record.meal_type === 'restaurant' && (
-                  <Tag color="orange" style={{ fontSize: '10px' }}>
-                    Restaurant
-                  </Tag>
-                )}
+                <Tag color={record.meal_type === 'restaurant' ? 'orange' : 'green'} style={{ fontSize: '10px' }}>
+                  {record.meal_type === 'restaurant' ? 'Restaurant' : 'Home Cooked'}
+                </Tag>
               </div>
               <Dropdown
                 menu={{ items: menuItems }}
@@ -137,17 +135,21 @@ const MealsTable = ({
       dataIndex: 'meal_name',
       key: 'meal_name',
       render: (text, record) => (
-        <div>
-          <Text strong>{text}</Text>
-          {record.meal_type === 'restaurant' && (
-            <Tag color="orange" style={{ marginLeft: 8, fontSize: '11px' }}>
-              Restaurant
-            </Tag>
-          )}
-        </div>
+        <Text strong>{text}</Text>
       ),
       sorter: (a, b) => a.meal_name.localeCompare(b.meal_name),
       filterable: true
+    },
+    {
+      title: 'Meal Type',
+      dataIndex: 'meal_type',
+      key: 'meal_type',
+      render: (type) => (
+        <Tag color={type === 'restaurant' ? 'orange' : 'green'}>
+          {type === 'restaurant' ? 'Restaurant' : 'Home Cooked'}
+        </Tag>
+      ),
+      sorter: (a, b) => a.meal_type.localeCompare(b.meal_type)
     },
     {
       title: 'Date',

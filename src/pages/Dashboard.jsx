@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { Typography, Row, Col, Alert, Button, Space } from 'antd'
-import { LeftOutlined, RightOutlined } from '@ant-design/icons'
+import { Typography, Row, Col, Alert, Button, Space, Tooltip } from 'antd'
+import { LeftOutlined, RightOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { useIngredients } from '../hooks/useIngredients'
 import { useMeals } from '../hooks/useMeals'
 import DashboardMetrics from '../components/DashboardMetrics'
@@ -8,6 +8,8 @@ import IngredientsMetrics from '../components/IngredientsMetrics'
 import TimeFilter from '../components/TimeFilter'
 import TrendsGraph from '../components/TrendsGraph'
 import MealSpendingGraph from '../components/MealSpendingGraph'
+import MealTypeBreakdownChart from '../components/MealTypeBreakdownChart'
+import ViewSelector from '../components/ViewSelector'
 
 import MetricDetailsModal from '../components/MetricDetailsModal'
 import dayjs from 'dayjs'
@@ -17,34 +19,12 @@ import { getDateRange } from '../utils/calculationUtils'
 
 const { Title } = Typography
 
-// Custom legend for top right
-const legendColors = {
-  totalValue: '#1890ff',
-  usedValue: '#00d084',
-  unusedValue: '#f5222d',
-}
-const legendLabels = {
-  totalValue: 'Total Value',
-  usedValue: 'Consumed Value',
-  unusedValue: 'Unused Value',
-}
 
-function TrendsLegend() {
-  return (
-    <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'flex-end' }}>
-      {Object.keys(legendLabels).map(key => (
-        <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ display: 'inline-block', width: 14, height: 4, borderRadius: 2, background: legendColors[key] }} />
-          <span style={{ fontSize: 13, color: '#555' }}>{legendLabels[key]}</span>
-        </span>
-      ))}
-    </div>
-  )
-}
 
 const Dashboard = ({ user }) => {
   const [timeFilter, setTimeFilter] = useState('week')
   const [periodOffset, setPeriodOffset] = useState(0)
+  const [viewType, setViewType] = useState('meals')
   const [metricDetailsVisible, setMetricDetailsVisible] = useState(false)
   const [selectedMetricType, setSelectedMetricType] = useState(null)
   
@@ -70,6 +50,10 @@ const Dashboard = ({ user }) => {
     setPeriodOffset(0) // Reset to current period when changing filter type
   }
 
+  const handleViewTypeChange = (newViewType) => {
+    setViewType(newViewType)
+  }
+
   const handleNavigate = (direction) => {
     if (direction === 'prev') {
       setPeriodOffset(prev => prev + 1)
@@ -93,6 +77,10 @@ const Dashboard = ({ user }) => {
             Dashboard
           </Title>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <ViewSelector
+              value={viewType}
+              onChange={handleViewTypeChange}
+            />
             <PeriodSelector
               value={timeFilter}
               onChange={handleTimeFilterChange}
@@ -181,75 +169,109 @@ const Dashboard = ({ user }) => {
         <LoadingSpinner message="Loading dashboard data..." variant="immersive" />
       ) : (
         <>
-          {/* Meals Overview */}
-          <div style={{ marginBottom: 36 }}>
-            <DashboardMetrics
-              meals={meals || []}
-              timeFilter={timeFilter}
-              periodOffset={periodOffset}
-              getDateRange={getDateRange}
-              onMetricClick={handleMetricClick}
-            />
-          </div>
+          {viewType === 'meals' ? (
+            <>
+              {/* Meals Overview */}
+              <div style={{ marginBottom: 36 }}>
+                <DashboardMetrics
+                  meals={meals || []}
+                  timeFilter={timeFilter}
+                  periodOffset={periodOffset}
+                  getDateRange={getDateRange}
+                  onMetricClick={handleMetricClick}
+                />
+              </div>
 
-          {/* Meal Spending Breakdown */}
-          <div style={{ marginBottom: 36 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
-                Meal Spending Breakdown
-              </Title>
-            </div>
-            
-            <MealSpendingGraph
-              meals={meals || []}
-              timeFilter={timeFilter}
-              periodOffset={periodOffset}
-              getDateRange={getDateRange}
-            />
-          </div>
-
-          {/* Ingredients Overview */}
-          <div style={{ marginBottom: 36 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
-                Ingredients Overview
-              </Title>
-            </div>
-            <IngredientsMetrics
-              ingredients={ingredients || []}
-              meals={meals || []}
-              timeFilter={timeFilter}
-              periodOffset={periodOffset}
-              getDateRange={getDateRange}
-              onMetricClick={handleMetricClick}
-            />
-          </div>
-
-          {/* Trends Section */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
-                Trends Over Time
-              </Title>
-              <TrendsLegend />
-            </div>
-            
-            {/* Main Content Grid */}
-            <Row gutter={[0, 0]}>
-              {/* Trends Graph */}
-              <Col xs={24}>
-                <TrendsGraph
-                  ingredients={ingredients || []}
+              {/* Meal Cost Breakdown */}
+              <div style={{ marginBottom: 36 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
+                      Meal Cost Breakdown
+                    </Title>
+                    <Tooltip title="Shows the breakdown of meal costs by type (home cooked vs restaurant) for each time period, with total cost displayed above each bar.">
+                      <QuestionCircleOutlined style={{ color: '#666', fontSize: 16, cursor: 'help' }} />
+                    </Tooltip>
+                  </div>
+                </div>
+                
+                <MealTypeBreakdownChart
                   meals={meals || []}
                   timeFilter={timeFilter}
                   periodOffset={periodOffset}
                   getDateRange={getDateRange}
                 />
-              </Col>
-            </Row>
-          </div>
+              </div>
 
+              {/* Cumulative Meal Spending Over Time */}
+              <div style={{ marginBottom: 36 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
+                      Cumulative Meal Spending Over Time
+                    </Title>
+                    <Tooltip title="Tracking how your spending grows cumulatively over the time period set in the filters, showing your total expense growth.">
+                      <QuestionCircleOutlined style={{ color: '#666', fontSize: 16, cursor: 'help' }} />
+                    </Tooltip>
+                  </div>
+                </div>
+                
+                <MealSpendingGraph
+                  meals={meals || []}
+                  timeFilter={timeFilter}
+                  periodOffset={periodOffset}
+                  getDateRange={getDateRange}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Ingredients Overview */}
+              <div style={{ marginBottom: 36 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
+                    Ingredients Overview
+                  </Title>
+                </div>
+                <IngredientsMetrics
+                  ingredients={ingredients || []}
+                  meals={meals || []}
+                  timeFilter={timeFilter}
+                  periodOffset={periodOffset}
+                  getDateRange={getDateRange}
+                  onMetricClick={handleMetricClick}
+                />
+              </div>
 
+              {/* Cumulative Ingredient Usage Over Time Section */}
+              <div style={{ marginBottom: 36 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Title level={4} style={{ margin: 0, color: '#222', fontWeight: 600 }}>
+                      Cumulative Ingredient Usage Over Time
+                    </Title>
+                    <Tooltip title="Shows how your ingredient values accumulate over time, including total value, consumed value, and unused value based on the selected time period.">
+                      <QuestionCircleOutlined style={{ color: '#666', fontSize: 16, cursor: 'help' }} />
+                    </Tooltip>
+                  </div>
+                </div>
+                
+                {/* Main Content Grid */}
+                <Row gutter={[0, 0]}>
+                  {/* Trends Graph */}
+                  <Col xs={24}>
+                    <TrendsGraph
+                      ingredients={ingredients || []}
+                      meals={meals || []}
+                      timeFilter={timeFilter}
+                      periodOffset={periodOffset}
+                      getDateRange={getDateRange}
+                    />
+                  </Col>
+                </Row>
+              </div>
+            </>
+          )}
         </>
       )}
 

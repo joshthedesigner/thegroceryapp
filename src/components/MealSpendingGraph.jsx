@@ -39,7 +39,7 @@ const MealSpendingGraph = ({
 
   // Custom legend component
   const SpendingLegend = () => (
-    <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
+    <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 28, marginTop: 12 }}>
       {Object.keys(legendLabels).map(key => (
         <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ display: 'inline-block', width: 14, height: 4, borderRadius: 2, background: legendColors[key] }} />
@@ -63,7 +63,7 @@ const MealSpendingGraph = ({
   }
 
   return (
-    <Card bodyStyle={{ padding: '32px 16px 4px 16px' }}>
+    <Card bodyStyle={{ padding: '16px 28px 16px 28px' }}>
       <SpendingLegend />
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={chartData} key={chartKey}>
